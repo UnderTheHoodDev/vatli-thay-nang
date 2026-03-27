@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lớp học Vật Lí Thầy Năng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Paytone+One&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple: #723bcf;
+      --pink: #f14d87;
+      --light-bg: #fdf8f4;
+      --white: #ffffff;
+    }
+
+    body {
+      font-family: 'Cabin', sans-serif;
+      color: #333;
+      background: var(--light-bg);
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .bold-text {
+      font-family: 'Paytone One', sans-serif;
+    }
+
+    /* ===== HEADER / NAV ===== */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: var(--white);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .nav-brand img {
+      height: 48px;
+    }
+
+    .nav-brand span {
+      font-family: 'Paytone One', sans-serif;
+      font-size: 1.1rem;
+      color: var(--purple);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--purple);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--pink);
+    }
+
+    .btn-register {
+      display: inline-block;
+      background: var(--purple);
+      color: var(--white) !important;
+      padding: 12px 28px;
+      border-radius: 30px;
+      font-family: 'Paytone One', sans-serif;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-register:hover {
+      background: #5e2db5;
+      transform: translateY(-2px);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 28px;
+      height: 3px;
+      background: var(--purple);
+      border-radius: 2px;
+      transition: 0.3s;
+    }
+
+    /* ===== HERO SECTION ===== */
+    .hero {
+      padding-top: 100px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      background: var(--light-bg);
+    }
+
+    .hero .decoration-line {
+      position: absolute;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero .line-bg {
+      position: absolute;
+      top: 10%;
+      left: -5%;
+      width: 50%;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-text h1 {
+      font-size: 2.8rem;
+      color: var(--purple);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .hero-text h1 span {
+      display: block;
+      color: var(--pink);
+      font-style: italic;
+      font-size: 2.2rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+
+    .hero-features {
+      display: flex;
+      gap: 32px;
+    }
+
+    .hero-feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-feature .icon-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-feature .icon-circle img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .hero-feature .feature-label {
+      font-family: 'Paytone One', sans-serif;
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    .hero-feature .feature-value {
+      font-family: 'Paytone One', sans-serif;
+      font-size: 1.1rem;
+      color: var(--purple);
+    }
+
+    .hero-feature:nth-child(2) .feature-value {
+      color: var(--pink);
+    }
+
+    .hero-feature:nth-child(3) .feature-value {
+      color: var(--purple);
+    }
+
+    .hero-image {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      position: relative;
+    }
+
+    .hero-image img {
+      max-height: 520px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-image .atom-icon {
+      position: absolute;
+      top: 0;
+      right: 10%;
+      width: 100px;
+      opacity: 0.8;
+      z-index: 2;
+    }
+
+    /* ===== TEACHER SECTION ===== */
+    .teacher {
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .teacher .line-decor {
+      position: absolute;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .teacher-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .teacher-image {
+      flex: 0 0 380px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .teacher-image img {
+      max-height: 480px;
+      object-fit: contain;
+    }
+
+    .teacher-info {
+      flex: 1;
+    }
+
+    .teacher-info .label {
+      font-family: 'Paytone One', sans-serif;
+      font-size: 1rem;
+      color: var(--purple);
+      margin-bottom: 4px;
+    }
+
+    .teacher-info h2 {
+      font-size: 2.6rem;
+      color: var(--purple);
+      margin-bottom: 8px;
+    }
+
+    .teacher-info .underline {
+      width: 180px;
+      height: 4px;
+      background: #f0c040;
+      border-radius: 2px;
+      margin-bottom: 32px;
+    }
+
+    .achievements {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .achievement-card {
+      background: var(--white);
+      border: 2px solid #f0eff5;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .achievement-card h3 {
+      font-size: 1.1rem;
+      color: var(--pink);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .achievement-card h3 .medal {
+      font-size: 1.4rem;
+    }
+
+    .achievement-card ul {
+      list-style: disc;
+      padding-left: 18px;
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .achievement-card:nth-child(2) h3,
+    .achievement-card:nth-child(4) h3 {
+      color: var(--purple);
+    }
+
+    /* ===== COURSES SECTION ===== */
+    .courses {
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--light-bg);
+    }
+
+    .courses-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .courses-main {
+      flex: 2;
+      display: flex;
+      gap: 24px;
+    }
+
+    .course-card {
+      flex: 1;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .course-card .course-image {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .course-card .course-image img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    .course-card h3 {
+      font-size: 1.2rem;
+      color: var(--purple);
+      margin-bottom: 4px;
+    }
+
+    .course-card h3 span {
+      display: block;
+      font-size: 1.4rem;
+    }
+
+    .course-card .price {
+      font-size: 0.95rem;
+      color: #999;
+      text-decoration: line-through;
+      margin-bottom: 4px;
+    }
+
+    .course-card .promo {
+      font-size: 0.85rem;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .course-card .promo strong {
+      color: var(--pink);
+    }
+
+    .course-card .card-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-pink {
+      display: inline-block;
+      background: var(--pink);
+      color: var(--white);
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-family: 'Paytone One', sans-serif;
+      font-size: 0.9rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-pink:hover {
+      background: #d93d73;
+      transform: translateY(-2px);
+    }
+
+    .course-date {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .courses-sidebar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar-label {
+      display: inline-block;
+      background: #ffeab6;
+      color: #b8860b;
+      font-family: 'Paytone One', sans-serif;
+      font-size: 0.85rem;
+      padding: 8px 20px;
+      border-radius: 20px;
+      align-self: flex-end;
+    }
+
+    .sidebar-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .sidebar-card .sidebar-text h4 {
+      font-size: 0.95rem;
+      color: var(--pink);
+      margin-bottom: 2px;
+    }
+
+    .sidebar-card .sidebar-text p {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    /* ===== SCHEDULE SECTION ===== */
+    .schedule {
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .schedule-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .schedule-text {
+      flex: 1;
+    }
+
+    .schedule-text h2 {
+      font-size: 2.4rem;
+      color: var(--purple);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .schedule-text h2 span {
+      display: block;
+      font-size: 2.8rem;
+      color: #333;
+    }
+
+    .schedule-text .year-badge {
+      display: inline-block;
+      background: var(--pink);
+      color: var(--white);
+      font-family: 'Paytone One', sans-serif;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+      margin-top: 16px;
+    }
+
+    .schedule-image {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .schedule-image img {
+      max-width: 100%;
+      max-height: 440px;
+      border-radius: 20px;
+      object-fit: contain;
+    }
+
+    /* ===== CONTACT SECTION ===== */
+    .contact {
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--light-bg);
+    }
+
+    .contact .line-decor {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .contact-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 64px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .contact-form {
+      flex: 1;
+    }
+
+    .contact-form .form-group {
+      margin-bottom: 16px;
+    }
+
+    .contact-form label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0dde8;
+      border-radius: 10px;
+      font-family: 'Cabin', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: var(--purple);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .btn-submit {
+      background: var(--pink);
+      color: var(--white);
+      padding: 12px 28px;
+      border: none;
+      border-radius: 30px;
+      font-family: 'Paytone One', sans-serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover {
+      background: #d93d73;
+      transform: translateY(-2px);
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .social-icons img {
+      height: 80px;
+    }
+
+    .contact-info {
+      flex: 1;
+    }
+
+    .contact-info h2 {
+      font-size: 2.4rem;
+      color: var(--purple);
+      margin-bottom: 8px;
+    }
+
+    .contact-info .business-name {
+      font-family: 'Paytone One', sans-serif;
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .contact-detail img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    .contact-detail span {
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .business-info {
+      margin-top: 24px;
+      padding-left: 16px;
+      border-left: 3px solid var(--pink);
+    }
+
+    .business-info li {
+      font-size: 0.85rem;
+      color: #777;
+      line-height: 1.8;
+      list-style: disc;
+      margin-left: 12px;
+    }
+
+    .pattern-decor {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 968px) {
+      .hero-container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .hero-text p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-features {
+        justify-content: center;
+      }
+
+      .hero-image img {
+        max-height: 380px;
+      }
+
+      .teacher-container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .teacher-image {
+        flex: unset;
+      }
+
+      .achievements {
+        grid-template-columns: 1fr;
+      }
+
+      .courses-container {
+        flex-direction: column;
+      }
+
+      .courses-main {
+        flex-direction: column;
+      }
+
+      .schedule-container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .contact-container {
+        flex-direction: column;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        flex-direction: column;
+        padding: 24px;
+        gap: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .hero-text h1 {
+        font-size: 2rem;
+      }
+
+      .hero-text h1 span {
+        font-size: 1.6rem;
+      }
+
+      .teacher-info h2 {
+        font-size: 2rem;
+      }
+
+      .schedule-text h2 {
+        font-size: 1.8rem;
+      }
+
+      .schedule-text h2 span {
+        font-size: 2.2rem;
+      }
+    }
+
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    section {
+      scroll-margin-top: 80px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <nav class="nav-container">
+      <a href="#" class="nav-brand">
+        <img src="assets/LOGO.png" alt="Vật Lí Thầy Năng">
+        <span>Lớp học Vật lí thầy Năng</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#hero">Trang chủ</a></li>
+        <li><a href="#courses">Khoá học</a></li>
+        <li><a href="#teacher">Giáo viên</a></li>
+        <li><a href="#schedule">Lịch học</a></li>
+        <li><a href="#contact" class="btn-register">ĐĂNG KÍ</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <img src="assets/Line 3.png" alt="" class="line-bg" style="position:absolute;top:5%;left:-10%;width:60%;opacity:0.12;pointer-events:none;z-index:0;">
+    <img src="assets/Line 1.png" alt="" style="position:absolute;top:10%;left:5%;width:30%;opacity:0.08;pointer-events:none;z-index:0;">
+    <div class="hero-container">
+      <div class="hero-text">
+        <h1>
+          CHINH PHỤC
+          <span>các kì thi học sinh giỏi môn Vật Lí</span>
+        </h1>
+        <p>Chắp cánh ước mơ chinh phục các kì thi Vật lí cho học sinh trên mọi miền cả nước cùng thầy giáo trẻ Nguyễn Năng Linh</p>
+        <div class="hero-features">
+          <div class="hero-feature">
+            <div class="icon-circle">
+              <img src="assets/1.png" alt="Toàn diện">
+            </div>
+            <span class="feature-label">Nội dung học</span>
+            <span class="feature-value">TOÀN DIỆN</span>
+          </div>
+          <div class="hero-feature">
+            <div class="icon-circle">
+              <img src="assets/2.png" alt="Bản chất">
+            </div>
+            <span class="feature-label">Cách tiếp cận</span>
+            <span class="feature-value">BẢN CHẤT</span>
+          </div>
+          <div class="hero-feature">
+            <div class="icon-circle">
+              <img src="assets/3.png" alt="Online">
+            </div>
+            <span class="feature-label">Lớp học</span>
+            <span class="feature-value">ONLINE</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="assets/Icon Physic.png" alt="" class="atom-icon">
+        <img src="assets/anh-ao-xanh.png" alt="Thầy Nguyễn Năng Linh">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TEACHER ===== -->
+  <section class="teacher" id="teacher">
+    <img src="assets/Line 3.png" alt="" class="line-decor" style="top:0;right:-10%;width:35%;opacity:0.08;">
+    <div class="teacher-container">
+      <div class="teacher-image">
+        <img src="assets/anh-ao-den.png" alt="Thầy Nguyễn Năng Linh">
+      </div>
+      <div class="teacher-info">
+        <div class="label">GIÁO VIÊN</div>
+        <h2>NGUYỄN NĂNG LINH</h2>
+        <div class="underline"></div>
+        <div class="achievements">
+          <div class="achievement-card">
+            <h3><span class="medal">🥈</span> GIẢI NHÌ</h3>
+            <ul>
+              <li>Kì thi HSG Quốc gia Vật lí, tham dự kì thi TST chọn đội tuyển quốc tế</li>
+            </ul>
+          </div>
+          <div class="achievement-card">
+            <h3><span class="medal">🥇</span> THỦ KHOA</h3>
+            <ul>
+              <li>Chuyên Vật lí THPT chuyên Lam Sơn, tỉnh Thanh Hoá</li>
+            </ul>
+          </div>
+          <div class="achievement-card">
+            <h3><span class="medal">🏆</span> GIẢI NHẤT</h3>
+            <ul>
+              <li>02 Giải Nhất giải bài tập Olympic Vật lí sinh viên Khoa Vật lí Trường Đại học Sư phạm Hà Nội</li>
+            </ul>
+          </div>
+          <div class="achievement-card">
+            <h3><span class="medal">🥉</span> HUY CHƯƠNG BẠC</h3>
+            <ul>
+              <li>Kì thi Duyên hải & Đồng bằng bắc bộ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== COURSES ===== -->
+  <section class="courses" id="courses">
+    <div class="courses-container">
+      <div class="courses-main">
+        <!-- Course 1: HSG Quốc Gia -->
+        <div class="course-card">
+          <div class="course-image">
+            <img src="assets/HSGQG.png" alt="Khoá học ôn thi HSG Quốc Gia">
+          </div>
+          <h3>Khoá học<br><span>ÔN THI HSG QUỐC GIA</span></h3>
+          <p class="price">800.000 VNĐ/Tháng</p>
+          <p class="promo">Nhận toàn bộ bài giảng từ đầu khoá với mức giá ưu đãi hiện tại: <strong>4.000.000 VNĐ</strong><br>từ tháng 10/2025 - 05/2026</p>
+          <div class="card-footer">
+            <a href="#contact" class="btn-pink">ĐĂNG KÍ</a>
+            <span class="course-date">10/2025 đến 08/2026</span>
+          </div>
+        </div>
+        <!-- Course 2: HSG Tỉnh/TP -->
+        <div class="course-card">
+          <div class="course-image">
+            <img src="assets/hsg-tinh.png" alt="Khoá học ôn thi HSG Tỉnh/TP">
+          </div>
+          <h3>Khoá học<br><span>ÔN THI HSG Tỉnh/Thành phố</span></h3>
+          <p class="price">800.000 VNĐ/Tháng</p>
+          <p class="promo">Nhận toàn bộ bài giảng từ đầu khoá với mức giá ưu đãi hiện tại: <strong>4.000.000 VNĐ</strong><br>từ tháng 10/2025 - 05/2026</p>
+          <div class="card-footer">
+            <a href="#contact" class="btn-pink">ĐĂNG KÍ</a>
+            <span class="course-date">10/2025 đến 05/2026</span>
+          </div>
+        </div>
+      </div>
+      <!-- Sidebar: Upcoming -->
+      <div class="courses-sidebar">
+        <span class="sidebar-label">SẮP TỚI</span>
+        <div class="sidebar-card">
+          <img src="assets/tong-on.png" alt="Tổng ôn vào 10 Chuyên Lí">
+          <div class="sidebar-text">
+            <h4>Khoá Tổng ôn vào 10 Chuyên Lí</h4>
+            <p>Miễn phí</p>
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <img src="assets/Coming soon.png" alt="Coming soon">
+          <div class="sidebar-text">
+            <h4>Khoá Ôn thi vào 10 Chuyên Lí</h4>
+            <p>06/2026</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCHEDULE ===== -->
+  <section class="schedule" id="schedule">
+    <img src="assets/Line 4.png" alt="" style="position:absolute;bottom:0;left:-5%;width:40%;opacity:0.1;pointer-events:none;z-index:0;">
+    <div class="schedule-container">
+      <div class="schedule-text">
+        <h2>
+          Lịch học
+          <span>Các lớp năm học</span>
+        </h2>
+        <div class="year-badge">2025-2026</div>
+      </div>
+      <div class="schedule-image">
+        <img src="assets/lich-hoc.png" alt="Lịch học các lớp">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section class="contact" id="contact">
+    <img src="assets/Line 2.png" alt="" class="line-decor" style="top:0;left:-5%;width:35%;opacity:0.3;">
+    <img src="assets/Pattern.png" alt="" class="pattern-decor" style="bottom:0;right:0;width:250px;">
+    <div class="contact-container">
+      <div class="contact-form">
+        <form>
+          <div class="form-group">
+            <label for="fullname">Họ và tên</label>
+            <input type="text" id="fullname" name="fullname" placeholder="Nhập họ và tên">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="Nhập email">
+            </div>
+            <div class="form-group">
+              <label for="phone">Số điện thoại</label>
+              <input type="tel" id="phone" name="phone" placeholder="Nhập số điện thoại">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Gửi thông tin</button>
+        </form>
+        <div class="social-icons">
+          <img src="assets/Icon Social.png" alt="Facebook, TikTok, YouTube">
+        </div>
+      </div>
+      <div class="contact-info">
+        <h2>Liên hệ</h2>
+        <p class="business-name">Hộ kinh doanh VẬT LÍ THẦY NĂNG</p>
+        <div class="contact-detail">
+          <img src="assets/Icon Phone.png" alt="Phone">
+          <span>085.767.3859 (Quản lí Xuân Hương)</span>
+        </div>
+        <div class="contact-detail">
+          <img src="assets/Icon Mail.png" alt="Email">
+          <span>vatlithaynang@gmail.com</span>
+        </div>
+        <div class="contact-detail">
+          <img src="assets/Icon Location.png" alt="Location">
+          <span>21A, ngõ 255, Cầu Giấy, Hà Nội</span>
+        </div>
+        <ul class="business-info">
+          <li>Mã số thuế: 0382030​03063</li>
+          <li>Cấp ngày: 31/10/2025</li>
+          <li>Nơi cấp: Sở kế hoạch đầu tư Thành phố Hà Nội</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    document.getElementById('hamburger').addEventListener('click', function() {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>
