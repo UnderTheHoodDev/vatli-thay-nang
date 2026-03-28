@@ -17,13 +17,13 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     medal: "\u{1F947}",
     title: "THỦ KHOA",
-    titleColor: "purple",
+    titleColor: "pink",
     items: ["Chuyên Vật lí THPT chuyên Lam Sơn, tỉnh Thanh Hoá"],
   },
   {
     medal: "\u{1F3C6}",
     title: "GIẢI NHẤT",
-    titleColor: "pink",
+    titleColor: "purple",
     items: [
       "02 Giải Nhất giải bài tập Olympic Vật lí sinh viên Khoa Vật lí Trường Đại học Sư phạm Hà Nội",
     ],

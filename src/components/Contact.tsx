@@ -1,34 +1,49 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "motion/react";
 import { ASSETS } from "@/data/assets";
+import { FaFacebook, FaYoutube } from "react-icons/fa";
+import { SiTiktok } from "react-icons/si";
+import { Phone, Mail, MapPin, LucideIcon } from "lucide-react";
 
 interface ContactDetail {
-  icon: string;
-  iconAlt: string;
+  Icon: LucideIcon;
+  label: string;
   text: string;
 }
 
 const CONTACT_DETAILS: ContactDetail[] = [
-  {
-    icon: ASSETS.iconPhone,
-    iconAlt: "Phone",
-    text: "085.767.3859 (Quản lí Xuân Hương)",
-  },
-  {
-    icon: ASSETS.iconMail,
-    iconAlt: "Email",
-    text: "vatlithaynang@gmail.com",
-  },
-  {
-    icon: ASSETS.iconLocation,
-    iconAlt: "Location",
-    text: "21A, ngõ 255, Cầu Giấy, Hà Nội",
-  },
+  { Icon: Phone,  label: "Phone",    text: "085.767.3859 (Quản lí Xuân Hương)" },
+  { Icon: Mail,   label: "Email",    text: "vatlithaynang@gmail.com" },
+  { Icon: MapPin, label: "Location", text: "21A, ngõ 255, Cầu Giấy, Hà Nội" },
 ];
 
 const BUSINESS_INFO = [
   "Mã số thuế: 038203003063",
   "Cấp ngày: 31/10/2025",
   "Nơi cấp: Sở kế hoạch đầu tư Thành phố Hà Nội",
+];
+
+const SOCIAL_LINKS = [
+  {
+    href: "https://facebook.com/vatlithaynang",
+    label: "Facebook",
+    icon: <FaFacebook size={32} />,
+    color: "#1877F2",
+  },
+  {
+    href: "https://tiktok.com/@vatlithaynang",
+    label: "TikTok",
+    icon: <SiTiktok size={28} />,
+    color: "#000000",
+  },
+  {
+    href: "https://youtube.com/@vatlithaynang",
+    label: "YouTube",
+    icon: <FaYoutube size={32} />,
+    color: "#FF0000",
+  },
 ];
 
 export default function Contact() {
@@ -40,24 +55,36 @@ export default function Contact() {
         alt=""
         width={400}
         height={400}
-        className="pointer-events-none absolute top-0 left-[-5%] z-0 w-[35%] opacity-30"
+        className="pointer-events-none absolute top-0 left-[-5%] z-0 w-[35%]"
       />
       <Image
         src={ASSETS.pattern}
         alt=""
         width={250}
         height={250}
-        className="pointer-events-none absolute right-0 bottom-0 z-0 w-[250px] opacity-15"
+        className="pointer-events-none absolute right-0 bottom-0 z-0 w-[250px]"
       />
 
       <div className="relative z-[1] mx-auto flex max-w-[1200px] gap-16 px-6 max-[968px]:flex-col">
         {/* Form */}
-        <div className="flex-1">
+        <motion.div
+          className="flex-1"
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           <form>
-            <div className="mb-4">
+            <motion.div
+              className="mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+            >
               <label
                 htmlFor="fullname"
-                className="mb-1.5 block text-[0.95rem] font-semibold text-[#555]"
+                className="mb-1.5 block text-[0.95rem] font-semibold text-[#503c39]"
               >
                 Họ và tên
               </label>
@@ -68,12 +95,18 @@ export default function Contact() {
                 placeholder="Nhập họ và tên"
                 className="w-full rounded-[10px] border-2 border-input-border px-4 py-3 font-cabin text-base outline-none transition-colors duration-200 focus:border-purple"
               />
-            </div>
+            </motion.div>
             <div className="flex gap-4 max-[968px]:flex-col">
-              <div className="mb-4 flex-1">
+              <motion.div
+                className="mb-4 flex-1"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+              >
                 <label
                   htmlFor="email"
-                  className="mb-1.5 block text-[0.95rem] font-semibold text-[#555]"
+                  className="mb-1.5 block text-[0.95rem] font-semibold text-[#503c39]"
                 >
                   Email
                 </label>
@@ -84,11 +117,17 @@ export default function Contact() {
                   placeholder="Nhập email"
                   className="w-full rounded-[10px] border-2 border-input-border px-4 py-3 font-cabin text-base outline-none transition-colors duration-200 focus:border-purple"
                 />
-              </div>
-              <div className="mb-4 flex-1">
+              </motion.div>
+              <motion.div
+                className="mb-4 flex-1"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
+              >
                 <label
                   htmlFor="phone"
-                  className="mb-1.5 block text-[0.95rem] font-semibold text-[#555]"
+                  className="mb-1.5 block text-[0.95rem] font-semibold text-[#503c39]"
                 >
                   Số điện thoại
                 </label>
@@ -99,57 +138,91 @@ export default function Contact() {
                   placeholder="Nhập số điện thoại"
                   className="w-full rounded-[10px] border-2 border-input-border px-4 py-3 font-cabin text-base outline-none transition-colors duration-200 focus:border-purple"
                 />
-              </div>
+              </motion.div>
             </div>
-            <button
+            <motion.button
               type="submit"
               className="mt-2 cursor-pointer rounded-full border-none bg-pink px-7 py-3 font-paytone text-[0.95rem] text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-pink-dark"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.4 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
             >
               Gửi thông tin
-            </button>
+            </motion.button>
           </form>
-          <div className="mt-5 flex gap-2">
-            <Image
-              src={ASSETS.iconSocial}
-              alt="Facebook, TikTok, YouTube"
-              width={80}
-              height={80}
-              className="h-20 w-auto"
-            />
+
+          {/* Social icons */}
+          <div className="mt-6 flex items-center gap-4">
+            {SOCIAL_LINKS.map(({ href, label, icon, color }, i) => (
+              <motion.a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                style={{ color }}
+                className="transition-transform duration-200 hover:-translate-y-0.5"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.35, ease: "easeOut", delay: 0.5 + i * 0.08 }}
+                whileHover={{ scale: 1.2, y: -3 }}
+              >
+                {icon}
+              </motion.a>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Contact info */}
-        <div className="flex-1">
+        <motion.div
+          className="flex-1"
+          initial={{ opacity: 0, x: 40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+        >
           <h2 className="mb-2 font-paytone text-[2.4rem] text-purple">
             Liên hệ
           </h2>
-          <p className="mb-6 font-paytone text-base text-[#555]">
+          <p className="mb-6 font-paytone text-base text-[#503c39]">
             Hộ kinh doanh VẬT LÍ THẦY NĂNG
           </p>
-          {CONTACT_DETAILS.map((detail) => (
-            <div key={detail.iconAlt} className="mb-4 flex items-center gap-3">
-              <Image
-                src={detail.icon}
-                alt={detail.iconAlt}
-                width={36}
-                height={36}
-                className="h-9 w-9 rounded-lg"
-              />
-              <span className="text-[0.95rem] text-[#555]">{detail.text}</span>
-            </div>
+          {CONTACT_DETAILS.map(({ Icon, label, text }, i) => (
+            <motion.div
+              key={label}
+              className="mb-4 flex items-center gap-3"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 + i * 0.1 }}
+            >
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-pink">
+                <Icon size={20} color="white" strokeWidth={1.8} />
+              </div>
+              <span className="text-[0.95rem] text-[#503c39]">{text}</span>
+            </motion.div>
           ))}
-          <ul className="mt-6 border-l-[3px] border-pink pl-4">
+          <motion.ul
+            className="mt-6 border-l-[3px] border-pink pl-4"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.55 }}
+          >
             {BUSINESS_INFO.map((info) => (
               <li
                 key={info}
-                className="ml-3 list-disc text-[0.85rem] leading-[1.8] text-[#777]"
+                className="ml-3 list-disc text-[0.85rem] leading-[1.8] text-[#503c39]"
               >
                 {info}
               </li>
             ))}
-          </ul>
-        </div>
+          </motion.ul>
+        </motion.div>
       </div>
     </section>
   );
