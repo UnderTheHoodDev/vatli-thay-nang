@@ -14,15 +14,19 @@ interface ContactDetail {
 }
 
 const CONTACT_DETAILS: ContactDetail[] = [
-  { Icon: Phone,  label: "Phone",    text: "085.767.3859 (Quản lí Xuân Hương)" },
-  { Icon: Mail,   label: "Email",    text: "vatlithaynang@gmail.com" },
-  { Icon: MapPin, label: "Location", text: "21A, ngõ 255, Cầu Giấy, Hà Nội" },
+  { Icon: Phone, label: "Phone", text: "085.767.3859 (Quản lí Xuân Hương)" },
+  { Icon: Mail, label: "Email", text: "vatlithaynang@gmail.com" },
+  {
+    Icon: MapPin,
+    label: "Location",
+    text: "21A, ngõ 255, đường Cầu Giấy, phường Cầu Giấy, Hà Nội",
+  },
 ];
 
 const BUSINESS_INFO = [
   "Mã số thuế: 038203003063",
-  "Cấp ngày: 31/10/2025",
-  "Nơi cấp: Sở kế hoạch đầu tư Thành phố Hà Nội",
+  "Cấp ngày: 30/11/2025",
+  "Nơi cấp: Phòng Kinh tế, Hạ tầng và Đô thị UBND Phường Cầu Giấy",
 ];
 
 const SOCIAL_LINKS = [
@@ -48,7 +52,10 @@ const SOCIAL_LINKS = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="relative overflow-hidden bg-light-bg py-20">
+    <section
+      id="contact"
+      className="relative overflow-hidden bg-light-bg py-20"
+    >
       {/* Decorative elements */}
       <Image
         src={ASSETS.line2}
@@ -168,7 +175,11 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.35, ease: "easeOut", delay: 0.5 + i * 0.08 }}
+                transition={{
+                  duration: 0.35,
+                  ease: "easeOut",
+                  delay: 0.5 + i * 0.08,
+                }}
                 whileHover={{ scale: 1.2, y: -3 }}
               >
                 {icon}
@@ -198,7 +209,11 @@ export default function Contact() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 + i * 0.1 }}
+              transition={{
+                duration: 0.4,
+                ease: "easeOut",
+                delay: 0.2 + i * 0.1,
+              }}
             >
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-pink">
                 <Icon size={20} color="white" strokeWidth={1.8} />
