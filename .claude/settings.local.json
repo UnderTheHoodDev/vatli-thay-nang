@@ -6,7 +6,11 @@
       "mcp__canva__get-design-pages",
       "WebFetch(domain:document-export.canva.com)",
       "Bash(yarn add:*)",
-      "Bash(npm install:*)"
+      "Bash(yarn install)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)"
     ]
   }
 }
