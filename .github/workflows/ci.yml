@@ -1,12 +1,9 @@
-name: CI
+name: NextJS CI
 
-on:
-  push:
-  pull_request:
+on: push
 
 jobs:
-  quality:
-    name: Lint, Format & Type Check
+  code-quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +26,7 @@ jobs:
       - name: TypeScript check
         run: yarn tsc --noEmit
 
-  audit:
-    name: Security Audit
+  package-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,9 +44,8 @@ jobs:
         run: yarn audit --groups dependencies
 
   build:
-    name: Build
     runs-on: ubuntu-latest
-    needs: [quality]
+    needs: [code-quality]
     steps:
       - uses: actions/checkout@v4
 
