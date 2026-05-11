@@ -1,10 +1,10 @@
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import Teacher from "@/components/Teacher";
-import Courses from "@/components/Courses";
-import Schedule from "@/components/Schedule";
-import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
+import Header from '@/components/features/home/Header';
+import Hero from '@/components/features/home/Hero';
+import Teacher from '@/components/features/home/Teacher';
+import Courses from '@/components/features/home/Courses';
+import Schedule from '@/components/features/home/Schedule';
+import Contact from '@/components/features/home/Contact';
+import Footer from '@/components/features/home/Footer';
 
 export default function Home() {
   return (
