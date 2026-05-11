@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Dev Commands
 
-Package manager is **yarn**.
+Package manager is **pnpm**.
 
-- `yarn dev` — start dev server with Turbopack (localhost:3000)
-- `yarn build` — production build
-- `yarn lint` — ESLint (`eslint ./src`)
-- `yarn format` — Prettier write (`./src`)
-- `yarn format:check` — Prettier check
+- `pnpm dev` — start dev server with Turbopack (localhost:3000)
+- `pnpm build` — production build
+- `pnpm lint` — ESLint (`eslint ./src`)
+- `pnpm format` — Prettier write (`./src`)
+- `pnpm format:check` — Prettier check
 - No test runner configured yet
 
 ## Architecture
