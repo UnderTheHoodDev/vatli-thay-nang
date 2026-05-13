@@ -1,25 +1,20 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-export const Table = React.forwardRef<
-  HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table
-      ref={ref}
-      className={cn('w-full caption-bottom text-sm', className)}
-      {...props}
-    />
-  </div>
-));
+export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
+  ({ className, ...props }, ref) => (
+    <div className="relative w-full overflow-auto">
+      <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+    </div>
+  ),
+);
 Table.displayName = 'Table';
 
 export const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn('[&_tr]:border-b border-divider', className)} {...props} />
+  <thead ref={ref} className={cn('border-divider [&_tr]:border-b', className)} {...props} />
 ));
 TableHeader.displayName = 'TableHeader';
 
@@ -38,8 +33,8 @@ export const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'border-b border-divider transition-colors hover:bg-divider/30 data-[state=selected]:bg-divider',
-      className
+      'border-divider hover:bg-divider/30 data-[state=selected]:bg-divider border-b transition-colors',
+      className,
     )}
     {...props}
   />
@@ -53,8 +48,8 @@ export const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-11 px-3 text-left align-middle font-semibold text-dark text-xs uppercase tracking-wider',
-      className
+      'text-dark h-11 px-3 text-left align-middle text-xs font-semibold tracking-wider uppercase',
+      className,
     )}
     {...props}
   />

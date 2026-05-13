@@ -45,7 +45,7 @@ export default function ChangePasswordPage() {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="space-y-1">
-        <h1 className="font-paytone text-2xl text-purple">Đổi mật khẩu</h1>
+        <h1 className="font-paytone text-purple text-2xl">Đổi mật khẩu</h1>
         <p className="text-sm text-gray-500">
           Mật khẩu cần có ít nhất 1 chữ hoa, 1 số, độ dài tối thiểu 6 ký tự.
         </p>

@@ -51,12 +51,10 @@ export default function ActivationForm({ token, email }: Props) {
   if (step === 'intro') {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="font-paytone text-2xl text-purple">
-          Kích hoạt tài khoản
-        </h1>
+        <h1 className="font-paytone text-purple text-2xl">Kích hoạt tài khoản</h1>
         <p className="text-sm text-gray-600">
-          Tài khoản <span className="font-medium">{email}</span> đã sẵn sàng.
-          Vui lòng ấn vào nút dưới đây để đặt mật khẩu và kích hoạt tài khoản.
+          Tài khoản <span className="font-medium">{email}</span> đã sẵn sàng. Vui lòng ấn vào nút
+          dưới đây để đặt mật khẩu và kích hoạt tài khoản.
         </p>
         <Button className="w-full" onClick={() => setStep('form')}>
           Kích hoạt tài khoản
@@ -68,7 +66,7 @@ export default function ActivationForm({ token, email }: Props) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="space-y-1">
-        <h1 className="font-paytone text-2xl text-purple">Đặt mật khẩu</h1>
+        <h1 className="font-paytone text-purple text-2xl">Đặt mật khẩu</h1>
         <p className="text-sm text-gray-500">
           Mật khẩu cần có ít nhất 1 chữ hoa, 1 số, độ dài tối thiểu 6 ký tự.
         </p>

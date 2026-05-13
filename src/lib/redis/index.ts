@@ -17,9 +17,7 @@ function getClient(): Redis {
   return global.__redis;
 }
 
-export async function readSessionFromRedis(
-  sessionId: string,
-): Promise<SessionInfo | null> {
+export async function readSessionFromRedis(sessionId: string): Promise<SessionInfo | null> {
   try {
     const raw = await getClient().get(`session:${sessionId}`);
     if (!raw) return null;

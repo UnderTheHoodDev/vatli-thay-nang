@@ -3,10 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { LogOut, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Avatar,
-  AvatarFallback,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,17 +37,15 @@ export default function AppTopbar({ email, role }: Props) {
   const initial = email.charAt(0).toUpperCase();
 
   return (
-    <header className="flex h-16 items-center justify-end border-b border-divider bg-white px-6">
+    <header className="border-divider flex h-16 items-center justify-end border-b bg-white px-6">
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-divider">
+        <DropdownMenuTrigger className="hover:bg-divider flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
           <Avatar>
             <AvatarFallback>{initial}</AvatarFallback>
           </Avatar>
           <div className="hidden text-left sm:block">
-            <div className="text-sm font-medium text-dark">{email}</div>
-            <div className="text-xs text-gray-500">
-              {role === 'ADMIN' ? 'Admin' : 'Học sinh'}
-            </div>
+            <div className="text-dark text-sm font-medium">{email}</div>
+            <div className="text-xs text-gray-500">{role === 'ADMIN' ? 'Admin' : 'Học sinh'}</div>
           </div>
           <ChevronDown className="h-4 w-4 opacity-60" />
         </DropdownMenuTrigger>

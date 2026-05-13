@@ -53,8 +53,7 @@ interface Props {
 export default function UsersTable({ rows, isLoading }: Props) {
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: UserStatus }) =>
-      setUserStatus(id, status),
+    mutationFn: ({ id, status }: { id: number; status: UserStatus }) => setUserStatus(id, status),
     onSuccess: (res) => {
       toast.success(res.message);
       qc.invalidateQueries({ queryKey: ['users'] });
@@ -65,7 +64,7 @@ export default function UsersTable({ rows, isLoading }: Props) {
   });
 
   return (
-    <div className="rounded-lg border border-divider bg-white">
+    <div className="border-divider rounded-lg border bg-white">
       <Table>
         <TableHeader>
           <TableRow>
@@ -85,13 +84,13 @@ export default function UsersTable({ rows, isLoading }: Props) {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={11} className="text-center py-12 text-gray-400">
+              <TableCell colSpan={11} className="py-12 text-center text-gray-400">
                 Đang tải...
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="text-center py-12 text-gray-400">
+              <TableCell colSpan={11} className="py-12 text-center text-gray-400">
                 Không tìm thấy user nào
               </TableCell>
             </TableRow>

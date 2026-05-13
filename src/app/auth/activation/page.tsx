@@ -15,12 +15,10 @@ export default async function ActivationPage({ searchParams }: Props) {
   if (!payload) {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="font-paytone text-2xl text-purple">
-          Token không hợp lệ
-        </h1>
+        <h1 className="font-paytone text-purple text-2xl">Token không hợp lệ</h1>
         <p className="text-sm text-gray-500">
-          Đường dẫn kích hoạt đã hết hạn hoặc không tồn tại. Vui lòng liên hệ
-          quản trị viên để được gửi lại.
+          Đường dẫn kích hoạt đã hết hạn hoặc không tồn tại. Vui lòng liên hệ quản trị viên để được
+          gửi lại.
         </p>
       </div>
     );

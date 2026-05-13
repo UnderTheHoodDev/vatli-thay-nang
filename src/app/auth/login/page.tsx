@@ -35,10 +35,8 @@ export default function LoginPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="font-paytone text-2xl text-purple">Đăng nhập</h1>
-        <p className="text-sm text-gray-500">
-          Vui lòng nhập email và mật khẩu để đăng nhập.
-        </p>
+        <h1 className="font-paytone text-purple text-2xl">Đăng nhập</h1>
+        <p className="text-sm text-gray-500">Vui lòng nhập email và mật khẩu để đăng nhập.</p>
       </div>
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-1.5">

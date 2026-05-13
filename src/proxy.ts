@@ -8,9 +8,7 @@ const LOGIN_PATH = '/auth/login';
 const PROTECTED_PREFIXES = ['/admin', '/dashboard'];
 
 function isProtected(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function isChangePassword(pathname: string): boolean {

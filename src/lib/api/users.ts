@@ -18,10 +18,9 @@ export async function listUsers(params: ListUsersParams) {
   const cleaned = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null),
   );
-  const { data } = await api.get<{ data: UserRow[]; meta: ListMeta }>(
-    '/users',
-    { params: cleaned },
-  );
+  const { data } = await api.get<{ data: UserRow[]; meta: ListMeta }>('/users', {
+    params: cleaned,
+  });
   return data;
 }
 
@@ -31,10 +30,7 @@ export async function createUser(email: string) {
 }
 
 export async function setUserStatus(id: number, status: UserStatus) {
-  const { data } = await api.patch<{ message: string }>(
-    `/users/${id}/status`,
-    { status },
-  );
+  const { data } = await api.patch<{ message: string }>(`/users/${id}/status`, { status });
   return data;
 }
 

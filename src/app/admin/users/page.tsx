@@ -50,7 +50,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="font-paytone text-2xl text-purple">Quản lý người dùng</h1>
+        <h1 className="font-paytone text-purple text-2xl">Quản lý người dùng</h1>
       </div>
 
       <UserSearchForm

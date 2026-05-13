@@ -12,11 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -25,12 +21,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import {
-  ALL_VALUE,
-  GENDER_OPTIONS,
-  ROLE_OPTIONS,
-  STATUS_OPTIONS,
-} from '@/lib/constants';
+import { ALL_VALUE, GENDER_OPTIONS, ROLE_OPTIONS, STATUS_OPTIONS } from '@/lib/constants';
 import type { Province } from '@/types/auth';
 import type { ListUsersParams } from '@/lib/api/users';
 
@@ -100,7 +91,7 @@ export default function UserSearchForm({ provinces, onSearch }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="grid grid-cols-1 gap-4 rounded-lg border border-divider bg-white p-4 md:grid-cols-4"
+      className="border-divider grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 md:grid-cols-4"
     >
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
@@ -223,7 +214,7 @@ export default function UserSearchForm({ provinces, onSearch }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <div className="md:col-span-4 flex justify-end gap-2">
+      <div className="flex justify-end gap-2 md:col-span-4">
         <Button type="button" variant="outline" onClick={reset}>
           <X /> Xoá
         </Button>

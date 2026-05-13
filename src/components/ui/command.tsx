@@ -11,7 +11,10 @@ export const Command = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive
     ref={ref}
-    className={cn('flex h-full w-full flex-col overflow-hidden rounded-md bg-white text-dark', className)}
+    className={cn(
+      'text-dark flex h-full w-full flex-col overflow-hidden rounded-md bg-white',
+      className,
+    )}
     {...props}
   />
 ));
@@ -21,13 +24,13 @@ export const CommandInput = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-divider px-3" cmdk-input-wrapper="">
+  <div className="border-divider flex items-center border-b px-3" cmdk-input-wrapper="">
     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
         'flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50',
-        className
+        className,
       )}
       {...props}
     />
@@ -41,7 +44,7 @@ export const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn('max-h-72 overflow-y-auto overflow-x-hidden', className)}
+    className={cn('max-h-72 overflow-x-hidden overflow-y-auto', className)}
     {...props}
   />
 ));
@@ -61,7 +64,7 @@ export const CommandGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Group
     ref={ref}
-    className={cn('overflow-hidden p-1 text-dark', className)}
+    className={cn('text-dark overflow-hidden p-1', className)}
     {...props}
   />
 ));
@@ -74,8 +77,8 @@ export const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[selected='true']:bg-divider data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50",
-      className
+      "data-[selected='true']:bg-divider relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50",
+      className,
     )}
     {...props}
   />

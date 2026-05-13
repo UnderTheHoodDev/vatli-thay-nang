@@ -29,9 +29,9 @@ export const DASHBOARD_NAV: NavItem[] = [
 export default function AppSidebar({ title, items }: Props) {
   const pathname = usePathname();
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-divider md:bg-white">
-      <div className="flex h-16 items-center border-b border-divider px-6">
-        <Link href="/" className="font-paytone text-lg text-purple">
+    <aside className="md:border-divider hidden md:flex md:w-64 md:flex-col md:border-r md:bg-white">
+      <div className="border-divider flex h-16 items-center border-b px-6">
+        <Link href="/" className="font-paytone text-purple text-lg">
           {title}
         </Link>
       </div>
@@ -44,9 +44,7 @@ export default function AppSidebar({ title, items }: Props) {
               href={href}
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                active
-                  ? 'bg-purple/10 text-purple'
-                  : 'text-dark hover:bg-divider',
+                active ? 'bg-purple/10 text-purple' : 'text-dark hover:bg-divider',
               )}
             >
               <Icon className="h-4 w-4" />
