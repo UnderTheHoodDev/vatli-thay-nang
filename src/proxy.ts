@@ -44,7 +44,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*', '/auth/change-password'],
-  runtime: 'nodejs',
-};
+export const matcher = [
+  '/admin/:path*',
+  '/dashboard/:path*',
+  '/auth/change-password',
+];
