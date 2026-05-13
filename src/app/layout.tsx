@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Paytone_One, Cabin } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
+import { Toaster } from 'sonner';
 import { ReactQueryProvider } from '@/lib/react-query/provider';
 import '@/styles/globals.css';
 
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-light-bg font-cabin overflow-x-hidden text-[#333]">
         <NextTopLoader color="#723bcf" showSpinner={false} />
         <ReactQueryProvider>{children}</ReactQueryProvider>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

@@ -1,16 +1,18 @@
 import axios from 'axios';
 
-const API_ENDPOINT = process.env.NEXT_PUBLIC_API_URL ?? '';
-
 const api = axios.create({
-  baseURL: API_ENDPOINT,
+  baseURL: '/api',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-api.interceptors.request.use();
+export type ApiError = { errors: string[] };
 
-api.interceptors.response.use();
+export function extractErrors(err: unknown): string[] {
+  const e = err as { response?: { data?: ApiError }; message?: string };
+  return e?.response?.data?.errors ?? [e?.message ?? 'Đã có lỗi xảy ra'];
+}
 
 export default api;
