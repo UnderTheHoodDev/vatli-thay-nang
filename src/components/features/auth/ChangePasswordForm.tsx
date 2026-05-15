@@ -55,9 +55,7 @@ export default function ChangePasswordForm({ isInitialSetup, role }: Props) {
         }
       });
       if (succeeded) {
-        toast.success(
-          isInitialSetup ? 'Đặt mật khẩu thành công' : 'Đổi mật khẩu thành công',
-        );
+        toast.success(isInitialSetup ? 'Đặt mật khẩu thành công' : 'Đổi mật khẩu thành công');
       }
     });
   }

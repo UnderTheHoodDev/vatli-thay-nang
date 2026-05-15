@@ -45,7 +45,7 @@ export default function AppSidebar({ title, items, userEmail }: Props) {
       <SidebarHeader className="border-sidebar-border border-b">
         <Link
           href="/"
-          className="font-paytone group-data-[collapsible=icon]:hidden flex h-12 items-center px-2 text-base text-sidebar-foreground"
+          className="font-paytone text-sidebar-foreground flex h-12 items-center px-2 text-base group-data-[collapsible=icon]:hidden"
         >
           {title}
         </Link>
@@ -75,7 +75,7 @@ export default function AppSidebar({ title, items, userEmail }: Props) {
 
       {userEmail && (
         <SidebarFooter className="border-sidebar-border border-t">
-          <div className="truncate px-2 py-1 text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+          <div className="text-sidebar-foreground/70 truncate px-2 py-1 text-xs group-data-[collapsible=icon]:hidden">
             {userEmail}
           </div>
         </SidebarFooter>
