@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import { readActivationFromRedis } from '@/lib/redis';
-import ActivationForm from './ActivationForm';
+import { readActivation } from '@/actions/v1/auth/read-activation';
+import ActivationForm from '@/components/features/auth/ActivationForm';
 
 interface Props {
   searchParams: Promise<{ tk?: string }>;
@@ -10,7 +10,7 @@ export default async function ActivationPage({ searchParams }: Props) {
   const { tk } = await searchParams;
   if (!tk) redirect('/auth/login');
 
-  const payload = await readActivationFromRedis(tk);
+  const payload = await readActivation(tk);
 
   if (!payload) {
     return (

@@ -1,117 +1,52 @@
-'use client';
+import { listUsers } from '@/actions/v1/users/list-users';
+import { listProvinces } from '@/actions/v1/provinces';
+import { ALL_VALUE } from '@/lib/constants';
+import UsersPageClient, { type UrlState } from './UsersPageClient';
 
-import { useMemo, useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import UserSearchForm, {
-  EMPTY_SEARCH,
-  toApiParams,
-  UserSearchValues,
-} from '@/components/admin/UserSearchForm';
-import UsersTable from '@/components/admin/UsersTable';
-import CreateUserDialog from '@/components/admin/CreateUserDialog';
-import { listUsers } from '@/lib/api/users';
-import { listProvinces } from '@/lib/api/provinces';
-import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
+interface Props {
+  searchParams: Promise<Record<string, string | undefined>>;
+}
 
-export default function UsersPage() {
-  const [search, setSearch] = useState<UserSearchValues>(EMPTY_SEARCH);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+function readUrlState(sp: Record<string, string | undefined>): UrlState {
+  return {
+    email: sp.email ?? '',
+    fullName: sp.fullName ?? '',
+    gender: sp.gender ?? ALL_VALUE,
+    provinceId: sp.provinceId ?? ALL_VALUE,
+    schoolName: sp.schoolName ?? '',
+    parentPhonenumber: sp.parentPhonenumber ?? '',
+    role: sp.role ?? ALL_VALUE,
+    status: sp.status ?? ALL_VALUE,
+    page: Number(sp.page) || 1,
+    pageSize: Number(sp.pageSize) || 20,
+  };
+}
 
-  const apiParams = useMemo(() => toApiParams(search), [search]);
+export default async function UsersPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const urlState = readUrlState(sp);
 
-  const provincesQuery = useQuery({
-    queryKey: ['provinces'],
-    queryFn: listProvinces,
-    staleTime: 60 * 60 * 1000,
-  });
+  const apiParams = {
+    email: urlState.email || undefined,
+    fullName: urlState.fullName || undefined,
+    gender: urlState.gender !== ALL_VALUE ? urlState.gender : undefined,
+    provinceId: urlState.provinceId !== ALL_VALUE ? Number(urlState.provinceId) : undefined,
+    schoolName: urlState.schoolName || undefined,
+    parentPhonenumber: urlState.parentPhonenumber || undefined,
+    role: urlState.role !== ALL_VALUE ? urlState.role : undefined,
+    status: urlState.status !== ALL_VALUE ? urlState.status : undefined,
+    page: urlState.page,
+    pageSize: urlState.pageSize,
+  };
 
-  const usersQuery = useQuery({
-    queryKey: ['users', apiParams, page, pageSize],
-    queryFn: () => listUsers({ ...apiParams, page, pageSize }),
-    placeholderData: keepPreviousData,
-  });
-
-  const total = usersQuery.data?.meta.total ?? 0;
-  const rows = usersQuery.data?.data ?? [];
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const [usersRes, provinces] = await Promise.all([listUsers(apiParams), listProvinces()]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="font-paytone text-purple text-2xl">Quản lý người dùng</h1>
-      </div>
-
-      <UserSearchForm
-        provinces={provincesQuery.data ?? []}
-        onSearch={(v) => {
-          setSearch(v);
-          setPage(1);
-        }}
-      />
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-gray-600">
-          {total} học sinh: {start} ~ {end}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => {
-              setPageSize(Number(v));
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CreateUserDialog />
-        </div>
-      </div>
-
-      <UsersTable rows={rows} isLoading={usersQuery.isLoading} />
-
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <div className="text-sm text-gray-500">
-          Trang {page} / {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          <ChevronLeft />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
-    </div>
+    <UsersPageClient
+      urlState={urlState}
+      rows={usersRes.data}
+      meta={usersRes.meta}
+      provinces={provinces}
+    />
   );
 }

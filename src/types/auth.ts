@@ -27,6 +27,7 @@ export interface SessionInfo {
   role: Role;
   fullName?: string | null;
   hasChangedPassword: boolean;
+  hasPassword: boolean;
 }
 
 export interface ListMeta {
