@@ -4,10 +4,7 @@ import { AxiosError } from 'axios';
 import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
-import type {
-  IUpdateProfilePayload,
-  IUpdateProfileResult,
-} from '@/types/actions/profile';
+import type { IUpdateProfilePayload, IUpdateProfileResult } from '@/types/actions/profile';
 
 export async function updateProfileAction(
   payload: IUpdateProfilePayload,

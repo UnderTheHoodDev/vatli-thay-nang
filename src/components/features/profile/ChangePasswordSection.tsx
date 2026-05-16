@@ -84,11 +84,7 @@ export default function ChangePasswordSection({ role }: Props) {
           showConfirmLabel="Xác nhận mật khẩu mới"
         />
         <div>
-          <ActionButton
-            type="submit"
-            isLoading={pending}
-            loadingText="Đang cập nhật..."
-          >
+          <ActionButton type="submit" isLoading={pending} loadingText="Đang cập nhật...">
             Đổi mật khẩu
           </ActionButton>
         </div>

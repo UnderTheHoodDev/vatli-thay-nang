@@ -13,11 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -28,18 +24,11 @@ import {
 } from '@/components/ui/command';
 import { ActionButton } from '@/components/ui/custom';
 import { GENDER_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
-import {
-  FULL_NAME_MAX_LENGTH,
-  VN_PHONE_REGEX,
-  VALIDATION_MESSAGES,
-} from '@/lib/validation';
+import { FULL_NAME_MAX_LENGTH, VN_PHONE_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
 import { handleActionResult } from '@/lib/actions';
 import { updateProfileAction } from '@/actions/v1/profile/update-profile';
 import type { Gender, Province } from '@/types/auth';
-import type {
-  IUpdateProfilePayload,
-  IUserProfile,
-} from '@/types/actions/profile';
+import type { IUpdateProfilePayload, IUserProfile } from '@/types/actions/profile';
 
 interface FormState {
   fullName: string;
@@ -117,22 +106,18 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
     });
   }
 
-  const roleLabel =
-    ROLE_OPTIONS.find((o) => o.value === profile.role)?.label ?? profile.role;
+  const roleLabel = ROLE_OPTIONS.find((o) => o.value === profile.role)?.label ?? profile.role;
   const genderLabel = profile.gender
     ? (GENDER_OPTIONS.find((o) => o.value === profile.gender)?.label ?? '-')
     : '-';
   const provinceLabel =
     form.provinceId === ''
       ? 'Chọn tỉnh'
-      : (provinces.find((p) => String(p.id) === form.provinceId)?.name ??
-        'Chọn tỉnh');
+      : (provinces.find((p) => String(p.id) === form.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
     <section className="border-divider rounded-lg border bg-white p-6">
-      <h2 className="font-paytone text-purple mb-4 text-lg">
-        Thông tin cá nhân
-      </h2>
+      <h2 className="font-paytone text-purple mb-4 text-lg">Thông tin cá nhân</h2>
 
       {!editing ? (
         <>
@@ -141,10 +126,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
             <ViewField label="Giới tính" value={genderLabel} />
             <ViewField label="Tỉnh" value={profile.province} />
             <ViewField label="Trường" value={profile.schoolName} />
-            <ViewField
-              label="Số điện thoại phụ huynh"
-              value={profile.parentPhonenumber}
-            />
+            <ViewField label="Số điện thoại phụ huynh" value={profile.parentPhonenumber} />
             <ViewField label="Vai trò" value={roleLabel} />
           </dl>
           <div className="mt-6 flex justify-start">
@@ -154,10 +136,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
           </div>
         </>
       ) : (
-        <form
-          onSubmit={submit}
-          className="grid grid-cols-1 gap-4 md:grid-cols-2"
-        >
+        <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="fullName">Họ và tên</Label>
             <Input
@@ -248,20 +227,11 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
             <Input value={roleLabel} disabled readOnly />
           </div>
 
-          <div className="md:col-span-2 flex justify-start gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={cancelEdit}
-              disabled={pending}
-            >
+          <div className="flex justify-start gap-2 md:col-span-2">
+            <Button type="button" variant="outline" onClick={cancelEdit} disabled={pending}>
               Hủy
             </Button>
-            <ActionButton
-              type="submit"
-              isLoading={pending}
-              loadingText="Đang lưu..."
-            >
+            <ActionButton type="submit" isLoading={pending} loadingText="Đang lưu...">
               Thay đổi
             </ActionButton>
           </div>
@@ -271,13 +241,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
   );
 }
 
-function ViewField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
+function ViewField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
       <dt className="text-sm text-gray-500">{label}</dt>
