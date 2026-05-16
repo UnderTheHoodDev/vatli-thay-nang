@@ -1,19 +1,21 @@
+import type { Gender, ListMeta, Role, UserRow, UserStatus } from '@/types/auth';
+
 export interface IListUsersParams {
   email?: string;
   fullName?: string;
-  gender?: string;
+  gender?: Gender;
   provinceId?: number;
   schoolName?: string;
   parentPhonenumber?: string;
-  role?: string;
-  status?: string;
+  role?: Role;
+  status?: UserStatus;
   page?: number;
   pageSize?: number;
 }
 
 export interface IListUsersResult {
-  data: any[];
-  meta: any;
+  data: UserRow[];
+  meta: ListMeta;
 }
 
 export interface IActionState {

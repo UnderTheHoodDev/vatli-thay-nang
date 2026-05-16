@@ -26,7 +26,6 @@ export interface SessionInfo {
   email: string;
   role: Role;
   fullName?: string | null;
-  hasChangedPassword: boolean;
   hasPassword: boolean;
 }
 

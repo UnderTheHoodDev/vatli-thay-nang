@@ -1,6 +1,7 @@
 import { listUsers } from '@/actions/v1/users/list-users';
 import { listProvinces } from '@/actions/v1/provinces';
 import { ALL_VALUE } from '@/lib/constants';
+import type { Gender, Role, UserStatus } from '@/types/auth';
 import UsersPageClient, { type UrlState } from './UsersPageClient';
 
 interface Props {
@@ -29,12 +30,12 @@ export default async function UsersPage({ searchParams }: Props) {
   const apiParams = {
     email: urlState.email || undefined,
     fullName: urlState.fullName || undefined,
-    gender: urlState.gender !== ALL_VALUE ? urlState.gender : undefined,
+    gender: urlState.gender !== ALL_VALUE ? (urlState.gender as Gender) : undefined,
     provinceId: urlState.provinceId !== ALL_VALUE ? Number(urlState.provinceId) : undefined,
     schoolName: urlState.schoolName || undefined,
     parentPhonenumber: urlState.parentPhonenumber || undefined,
-    role: urlState.role !== ALL_VALUE ? urlState.role : undefined,
-    status: urlState.status !== ALL_VALUE ? urlState.status : undefined,
+    role: urlState.role !== ALL_VALUE ? (urlState.role as Role) : undefined,
+    status: urlState.status !== ALL_VALUE ? (urlState.status as UserStatus) : undefined,
     page: urlState.page,
     pageSize: urlState.pageSize,
   };

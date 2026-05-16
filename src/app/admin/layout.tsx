@@ -8,7 +8,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentSession();
   if (!session) redirect('/auth/login');
-  if (!session.hasChangedPassword) redirect('/auth/change-password');
+  if (!session.hasPassword) redirect('/auth/change-password');
   if (session.role !== 'ADMIN') redirect('/dashboard');
 
   const cookieStore = await cookies();

@@ -15,7 +15,7 @@ function homeForRole(role: string): string {
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentSession();
   if (!session) redirect('/auth/login');
-  if (!session.hasChangedPassword) redirect('/auth/change-password');
+  if (!session.hasPassword) redirect('/auth/change-password');
   if (session.role !== 'STUDENT') redirect(homeForRole(session.role));
 
   const cookieStore = await cookies();
