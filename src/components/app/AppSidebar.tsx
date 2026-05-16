@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LucideIcon, Users, LayoutDashboard, Settings } from 'lucide-react';
+import { LucideIcon, Users, LayoutDashboard, UserRound } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,12 +23,12 @@ export interface NavItem {
 
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', href: '/admin/users', icon: Users },
-  { label: 'Cài đặt', href: '/admin/settings', icon: Settings },
+  { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound },
 ];
 
 export const DASHBOARD_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Đổi mật khẩu', href: '/auth/change-password', icon: Settings },
+  { label: 'Thông tin cá nhân', href: '/dashboard/profile', icon: UserRound },
 ];
 
 interface Props {
