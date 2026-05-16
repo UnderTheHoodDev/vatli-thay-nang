@@ -1,7 +1,6 @@
 'use server';
 
 import { api } from '@/lib/axios';
-import type { ListMeta, UserRow } from '@/types/auth';
 import type { IListUsersParams, IListUsersResult } from '@/types/actions/users';
 
 export async function listUsers(params: IListUsersParams): Promise<IListUsersResult> {

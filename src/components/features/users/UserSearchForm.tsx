@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,11 +54,13 @@ interface Props {
 
 export default function UserSearchForm({ provinces, initial, onSearch }: Props) {
   const [values, setValues] = useState<UserSearchValues>(initial);
+  const [prevInitial, setPrevInitial] = useState(initial);
   const [provinceOpen, setProvinceOpen] = useState(false);
 
-  useEffect(() => {
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
     setValues(initial);
-  }, [initial]);
+  }
 
   function update<K extends keyof UserSearchValues>(key: K, value: UserSearchValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));

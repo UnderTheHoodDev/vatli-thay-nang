@@ -1,7 +1,6 @@
 'use client';
 
 import { useTransition } from 'react';
-import { toast } from 'sonner';
 import { Mail, Power } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
