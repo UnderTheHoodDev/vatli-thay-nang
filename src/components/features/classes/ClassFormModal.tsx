@@ -39,8 +39,13 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
   const [code, setCode] = useState(initialData?.code ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
   const [status, setStatus] = useState<ClassStatus>(initialData?.status ?? 'ACTIVE');
+  const [submitted, setSubmitted] = useState(false);
+
+  const nameError = submitted && !name.trim() ? 'Vui lòng nhập tên lớp' : '';
+  const codeError = submitted && !code.trim() ? 'Vui lòng nhập mã lớp' : '';
 
   const handleSubmit = async () => {
+    setSubmitted(true);
     if (!name.trim()) return;
     if (!code.trim()) return;
 
@@ -90,6 +95,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+            {nameError && <p className="mt-1 text-xs text-red-500">{nameError}</p>}
           </div>
           <div>
             <Label htmlFor="class-code">Mã lớp <span className="text-red-500">*</span></Label>
@@ -100,6 +106,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
+            {codeError && <p className="mt-1 text-xs text-red-500">{codeError}</p>}
           </div>
           <div>
             <Label htmlFor="class-desc">Mô tả</Label>

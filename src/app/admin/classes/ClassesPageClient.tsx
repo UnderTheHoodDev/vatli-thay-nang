@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Eye, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ interface Props {
   urlState: UrlState;
   rows: ClassRow[];
   meta: ListMeta;
+  errors: string[];
 }
 
 const CLASS_STATUS_OPTIONS = [
@@ -57,11 +59,17 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-export default function ClassesPageClient({ urlState, rows, meta }: Props) {
+export default function ClassesPageClient({ urlState, rows, meta, errors }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassRow | null>(null);
+
+  useEffect(() => {
+    if (errors.length > 0) {
+      errors.forEach((e) => toast.error(e));
+    }
+  }, [errors]);
 
   const [searchName, setSearchName] = useState(urlState.name);
   const [searchCode, setSearchCode] = useState(urlState.code);
@@ -193,14 +201,6 @@ export default function ClassesPageClient({ urlState, rows, meta }: Props) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Xem chi tiết"
-                      onClick={() => router.push(`/admin/classes/${row.id}`)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

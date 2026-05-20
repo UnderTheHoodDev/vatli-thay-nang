@@ -20,8 +20,10 @@ export interface ClassRow {
   description: string | null;
   status: ClassStatus;
   studentCount?: number;
+}
+
+export interface ClassDetail extends ClassRow {
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface ClassStudentRow {
