@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LucideIcon, Users, LayoutDashboard, UserRound } from 'lucide-react';
+import { LucideIcon, Users, LayoutDashboard, UserRound, School } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ export interface NavItem {
 
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', href: '/admin/users', icon: Users },
+  { label: 'Lớp học', href: '/admin/classes', icon: School },
   { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound },
 ];
 

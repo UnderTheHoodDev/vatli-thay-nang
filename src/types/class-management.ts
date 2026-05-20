@@ -1,20 +1,25 @@
-export type ClassStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
-export type ClassStudentStatus = 'ACTIVE' | 'REMOVED';
+export type ClassStatus = 'ACTIVE' | 'CLOSED';
 export type ClassSessionStatus =
   | 'SCHEDULED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED';
-export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
-export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
-export type AttendanceMethod = 'QR_CODE' | 'MANUAL';
+export type LeaveRequestStatus = 'SUBMITTED' | 'ACKNOWLEDGED';
+export type AttendanceSessionStatus = 'ACTIVE' | 'CLOSED';
+export type AttendanceSource = 'STUDENT' | 'MANUAL';
+export type ManualEditAction =
+  | 'MARK_ATTENDED'
+  | 'REMOVE_ATTENDANCE'
+  | 'ADD_NOTE'
+  | 'ACKNOWLEDGE_LEAVE';
 
 export interface ClassRow {
   id: number;
   name: string;
+  code: string;
   description: string | null;
   status: ClassStatus;
-  createdById: number;
+  studentCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,9 +27,8 @@ export interface ClassRow {
 export interface ClassStudentRow {
   id: number;
   classId: number;
-  userId: number;
-  status: ClassStudentStatus;
-  joinedAt: string;
+  studentId: number;
+  createdAt: string;
 }
 
 export interface ClassSessionRow {
@@ -34,7 +38,9 @@ export interface ClassSessionRow {
   description: string | null;
   startTime: string;
   endTime: string;
+  meetingUrl: string | null;
   status: ClassSessionStatus;
+  createdById: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,10 +48,12 @@ export interface ClassSessionRow {
 export interface LeaveRequestRow {
   id: number;
   classSessionId: number;
-  userId: number;
+  studentId: number;
   reason: string;
   status: LeaveRequestStatus;
+  submittedAt: string;
   reviewedById: number | null;
+  reviewedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,9 +61,11 @@ export interface LeaveRequestRow {
 export interface AttendanceSessionRow {
   id: number;
   classSessionId: number;
-  qrCode: string | null;
-  qrExpiresAt: string | null;
-  isOpen: boolean;
+  openedById: number;
+  durationMinutes: number;
+  openedAt: string;
+  closedAt: string;
+  status: AttendanceSessionStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,20 +73,23 @@ export interface AttendanceSessionRow {
 export interface AttendanceLogRow {
   id: number;
   attendanceSessionId: number;
-  userId: number;
-  status: AttendanceStatus;
-  method: AttendanceMethod | null;
-  checkedInAt: string | null;
+  classSessionId: number;
+  studentId: number;
+  checkedAt: string;
+  source: AttendanceSource;
+  note: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface AttendanceManualEditLogRow {
   id: number;
-  attendanceLogId: number;
-  editedById: number;
-  oldStatus: AttendanceStatus;
-  newStatus: AttendanceStatus;
-  reason: string | null;
-  createdAt: string;
+  classSessionId: number;
+  studentId: number;
+  action: ManualEditAction;
+  previousValue: string | null;
+  newValue: string | null;
+  note: string | null;
+  editedBy: number;
+  editedAt: string;
 }
