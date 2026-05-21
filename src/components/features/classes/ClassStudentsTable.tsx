@@ -23,7 +23,7 @@ import { ActionButton } from '@/components/ui/custom';
 import { removeStudentAction } from '@/actions/v1/classes/remove-student';
 import { handleActionResult } from '@/lib/actions';
 import { formatDate } from '@/lib/utils';
-import type { ClassStudentListRow } from '@/types/actions/classes';
+import type { ClassStudentListRow } from '@/types/actions/class-management';
 
 interface Props {
   classId: number;

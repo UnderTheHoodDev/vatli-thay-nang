@@ -5,19 +5,17 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
+import type { ICreateClassPayload } from '@/types/actions/class-management';
 
-export async function removeStudentAction(
-  classId: number,
-  studentId: number,
-): Promise<IActionState> {
+export async function createClassAction(payload: ICreateClassPayload): Promise<IActionState> {
   try {
-    await api.delete(`/api/v1/classes/${classId}/students/${studentId}`);
-    revalidatePath(`/admin/classes/${classId}`);
+    await api.post('/api/v1/classes', payload);
+    revalidatePath('/admin/classes');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Xoá học sinh thất bại'] };
+    return { errors: ['Tạo lớp thất bại'] };
   }
 }

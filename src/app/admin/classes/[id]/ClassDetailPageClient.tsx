@@ -7,7 +7,8 @@ import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
 import type { ListMeta } from '@/types/auth';
-import type { ClassDetail, ClassStudentListRow } from '@/types/actions/classes';
+import type { ClassStudentListRow } from '@/types/actions/class-management';
+import type { ClassDetail } from '@/types/class-management';
 
 export type ClassDetailTab = 'info' | 'students';
 

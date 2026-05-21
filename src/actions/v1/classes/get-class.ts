@@ -2,7 +2,7 @@
 
 import { AxiosError } from 'axios';
 import { api } from '@/lib/axios';
-import type { ClassDetail } from '@/types/actions/classes';
+import type { ClassDetail } from '@/types/class-management';
 
 export async function getClass(id: number): Promise<ClassDetail | null> {
   try {

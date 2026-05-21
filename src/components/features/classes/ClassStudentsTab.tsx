@@ -14,7 +14,7 @@ import ClassStudentsSearchForm, { type ClassStudentSearchValues } from './ClassS
 import ClassStudentsTable from './ClassStudentsTable';
 import AddStudentsDialog from './AddStudentsDialog';
 import type { ListMeta } from '@/types/auth';
-import type { ClassStudentListRow } from '@/types/actions/classes';
+import type { ClassStudentListRow } from '@/types/actions/class-management';
 
 interface Props {
   classId: number;

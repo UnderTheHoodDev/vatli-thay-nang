@@ -2,13 +2,11 @@
 
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
-import type { ClassDetail } from '@/types/actions/classes';
-import type { ClassStatus } from '@/types/class-management';
+import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 function statusBadge(s: ClassStatus) {
   if (s === 'ACTIVE') return <Badge variant="success">Đang mở</Badge>;
-  if (s === 'ARCHIVED') return <Badge variant="warning">Đã đóng</Badge>;
-  return <Badge variant="destructive">Đã xoá</Badge>;
+  return <Badge variant="warning">Đã đóng</Badge>;
 }
 
 interface Props {
@@ -21,7 +19,7 @@ export default function ClassInfoTab({ classDetail }: Props) {
     { label: 'Mã lớp', value: <span className="font-mono">{classDetail.code}</span> },
     { label: 'Mô tả', value: classDetail.description || <span className="text-gray-400">—</span> },
     { label: 'Trạng thái', value: statusBadge(classDetail.status) },
-    { label: 'Số học sinh', value: classDetail.studentCount },
+    { label: 'Số học sinh', value: classDetail.studentCount ?? 0 },
     { label: 'Ngày tạo', value: formatDate(classDetail.createdAt) },
   ];
 

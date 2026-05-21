@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
-import type { IActionState } from '@/types/actions/classes';
+import type { IActionState } from '@/types/actions/users';
 
 export async function addStudentsAction(
   classId: number,

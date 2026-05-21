@@ -1,7 +1,7 @@
 'use server';
 
 import { api } from '@/lib/axios';
-import type { IListClassStudentsParams, IListClassStudentsResult } from '@/types/actions/classes';
+import type { IListClassStudentsParams, IListClassStudentsResult } from '@/types/actions/class-management';
 
 export async function listClassStudents(
   classId: number,
