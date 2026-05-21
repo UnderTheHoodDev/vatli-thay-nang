@@ -41,7 +41,11 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
           page: urlState.page,
           pageSize: urlState.pageSize,
         })
-      : { data: [], meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize } };
+      : {
+          data: [],
+          meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
+          errors: [],
+        };
 
   return (
     <ClassDetailPageClient
@@ -49,6 +53,7 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
       urlState={urlState}
       students={studentsRes.data}
       studentsMeta={studentsRes.meta}
+      studentsErrors={studentsRes.errors}
     />
   );
 }

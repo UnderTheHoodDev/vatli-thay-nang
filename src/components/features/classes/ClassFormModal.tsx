@@ -57,10 +57,14 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           code: code.trim(),
           description: description.trim() || undefined,
         });
-        handleActionResult(result.errors, () => {
-          onOpenChange(false);
-          router.refresh();
-        }, 'Tạo lớp thành công');
+        handleActionResult(
+          result.errors,
+          () => {
+            onOpenChange(false);
+            router.refresh();
+          },
+          'Tạo lớp thành công',
+        );
       } else if (initialData) {
         const result = await updateClassAction(initialData.id, {
           name: name.trim(),
@@ -68,10 +72,14 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           description: description.trim() || undefined,
           status,
         });
-        handleActionResult(result.errors, () => {
-          onOpenChange(false);
-          router.refresh();
-        }, 'Cập nhật lớp thành công');
+        handleActionResult(
+          result.errors,
+          () => {
+            onOpenChange(false);
+            router.refresh();
+          },
+          'Cập nhật lớp thành công',
+        );
       }
     } finally {
       setLoading(false);
@@ -87,7 +95,9 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
 
         <div className="space-y-4 py-2">
           <div>
-            <Label htmlFor="class-name">Tên lớp <span className="text-red-500">*</span></Label>
+            <Label htmlFor="class-name">
+              Tên lớp <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="class-name"
               placeholder="VD: Lớp Vật lý 10A1"
@@ -98,7 +108,9 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
             {nameError && <p className="mt-1 text-xs text-red-500">{nameError}</p>}
           </div>
           <div>
-            <Label htmlFor="class-code">Mã lớp <span className="text-red-500">*</span></Label>
+            <Label htmlFor="class-code">
+              Mã lớp <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="class-code"
               placeholder="VD: VL10A1"

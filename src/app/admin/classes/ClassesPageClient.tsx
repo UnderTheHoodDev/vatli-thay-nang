@@ -255,16 +255,14 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
         </Button>
       </div>
 
-      <ClassFormModal
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        mode="create"
-      />
+      <ClassFormModal open={createOpen} onOpenChange={setCreateOpen} mode="create" />
 
       {editingClass && (
         <ClassFormModal
           open={!!editingClass}
-          onOpenChange={(open) => { if (!open) setEditingClass(null); }}
+          onOpenChange={(open) => {
+            if (!open) setEditingClass(null);
+          }}
           mode="edit"
           initialData={editingClass}
         />

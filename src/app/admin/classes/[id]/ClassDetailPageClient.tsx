@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
@@ -23,6 +24,7 @@ interface Props {
   urlState: ClassDetailUrlState;
   students: ClassStudentListRow[];
   studentsMeta: ListMeta;
+  studentsErrors: string[];
 }
 
 const TABS: Array<{ id: ClassDetailTab; label: string }> = [
@@ -48,9 +50,14 @@ export default function ClassDetailPageClient({
   urlState,
   students,
   studentsMeta,
+  studentsErrors,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    studentsErrors.forEach((e) => toast.error(e));
+  }, [studentsErrors]);
 
   const updateUrl = useCallback(
     (next: Partial<ClassDetailUrlState>) => {

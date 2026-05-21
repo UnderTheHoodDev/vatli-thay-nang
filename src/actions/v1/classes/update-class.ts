@@ -7,7 +7,10 @@ import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
 import type { IUpdateClassPayload } from '@/types/actions/class-management';
 
-export async function updateClassAction(id: number, payload: IUpdateClassPayload): Promise<IActionState> {
+export async function updateClassAction(
+  id: number,
+  payload: IUpdateClassPayload,
+): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/classes/${id}`, payload);
     revalidatePath('/admin/classes');
