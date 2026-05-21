@@ -10,9 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
-import ClassStudentsSearchForm, {
-  type ClassStudentSearchValues,
-} from './ClassStudentsSearchForm';
+import ClassStudentsSearchForm, { type ClassStudentSearchValues } from './ClassStudentsSearchForm';
 import ClassStudentsTable from './ClassStudentsTable';
 import AddStudentsDialog from './AddStudentsDialog';
 import type { ListMeta } from '@/types/auth';

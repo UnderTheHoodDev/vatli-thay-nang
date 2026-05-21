@@ -119,7 +119,10 @@ export default function AddStudentsDialog({ classId }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submitSearch} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <form
+          onSubmit={submitSearch}
+          className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="add-student-email">Email</Label>
             <Input
@@ -160,7 +163,7 @@ export default function AddStudentsDialog({ classId }: Props) {
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggle(u.id)}
-                        className="size-4 accent-purple"
+                        className="accent-purple size-4"
                       />
                       <span className="flex-1 truncate">
                         <span className="font-medium">{u.fullName ?? '-'}</span>

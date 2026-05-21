@@ -1,10 +1,6 @@
 export type ClassStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
 export type ClassStudentStatus = 'ACTIVE' | 'REMOVED';
-export type ClassSessionStatus =
-  | 'SCHEDULED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'CANCELLED';
+export type ClassSessionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
 export type AttendanceMethod = 'QR_CODE' | 'MANUAL';
