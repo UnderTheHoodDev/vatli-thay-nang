@@ -130,11 +130,7 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
     setDeleting(true);
     try {
       const result = await deleteClassAction(deletingClass.id);
-      const ok = handleActionResult(
-        result.errors,
-        () => router.refresh(),
-        'Xoá lớp thành công',
-      );
+      const ok = handleActionResult(result.errors, () => router.refresh(), 'Xoá lớp thành công');
       if (ok) setDeletingClass(null);
     } finally {
       setDeleting(false);

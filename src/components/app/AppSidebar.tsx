@@ -3,14 +3,7 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LucideIcon,
-  Users,
-  LayoutDashboard,
-  UserRound,
-  School,
-  GraduationCap,
-} from 'lucide-react';
+import { LucideIcon, Users, LayoutDashboard, UserRound, School, GraduationCap } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,

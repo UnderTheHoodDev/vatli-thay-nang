@@ -57,9 +57,7 @@ export default function UsersTable({ rows }: Props) {
     startTransition(async () => {
       const res = await setUserStatusAction(id, next);
       const successMessage =
-        next === 'ACTIVATED'
-          ? 'Gửi mail kích hoạt thành công'
-          : 'Vô hiệu hoá tài khoản thành công';
+        next === 'ACTIVATED' ? 'Gửi mail kích hoạt thành công' : 'Vô hiệu hoá tài khoản thành công';
       handleActionResult(res.errors, undefined, successMessage);
     });
   }

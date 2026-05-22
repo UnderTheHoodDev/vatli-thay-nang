@@ -120,9 +120,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Thông tin chi tiết</CardTitle>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Thông tin liên hệ và hồ sơ học sinh.
-        </p>
+        <p className="text-muted-foreground mt-1 text-sm">Thông tin liên hệ và hồ sơ học sinh.</p>
       </CardHeader>
       <CardContent className="pb-6">
         {!editing ? (
@@ -262,9 +260,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
 function ViewField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="space-y-1">
-      <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {label}
-      </dt>
+      <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</dt>
       <dd className="text-foreground text-sm font-medium">
         {value && value.length > 0 ? value : <span className="text-muted-foreground">—</span>}
       </dd>

@@ -64,9 +64,7 @@ export default function AppTopbar({ email, role }: Props) {
             </AvatarFallback>
           </Avatar>
           <div className="hidden text-left sm:block">
-            <div className="text-foreground max-w-45 truncate text-sm font-medium">
-              {email}
-            </div>
+            <div className="text-foreground max-w-45 truncate text-sm font-medium">{email}</div>
             <div className="text-muted-foreground text-xs">{roleLabel}</div>
           </div>
           <ChevronDown className="text-muted-foreground size-4" />

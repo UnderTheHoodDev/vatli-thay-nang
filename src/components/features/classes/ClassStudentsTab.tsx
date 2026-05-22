@@ -86,11 +86,7 @@ export default function ClassStudentsTab({
             <div className="text-muted-foreground text-sm">
               Trang {page} / {totalPages}
             </div>
-            <DataPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
+            <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
           </div>
         )}
       </Card>

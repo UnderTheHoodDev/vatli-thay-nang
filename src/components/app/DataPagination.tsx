@@ -39,7 +39,12 @@ function buildRange(page: number, totalPages: number, siblings: number): (number
   return range;
 }
 
-export default function DataPagination({ page, totalPages, onPageChange, siblingCount = 1 }: Props) {
+export default function DataPagination({
+  page,
+  totalPages,
+  onPageChange,
+  siblingCount = 1,
+}: Props) {
   if (totalPages <= 1) return null;
   const items = buildRange(page, totalPages, siblingCount);
 
