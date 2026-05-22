@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, Info, Users as UsersIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Users as UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +108,12 @@ export default function ClassDetailPageClient({
               <span>{classDetail.studentCount ?? 0} học sinh</span>
             </p>
           </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/classes/${classDetail.id}/class-sessions`}>
+              <Calendar className="mr-1 h-4 w-4" />
+              Buổi học
+            </Link>
+          </Button>
         </div>
       </div>
 
