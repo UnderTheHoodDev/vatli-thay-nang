@@ -48,10 +48,7 @@ export default function ClassStudentsSearchForm({ initial, onSearch }: Props) {
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="border-divider grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 md:grid-cols-3"
-    >
+    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div className="space-y-1.5">
         <Label htmlFor="class-student-email">Email</Label>
         <Input
@@ -67,13 +64,14 @@ export default function ClassStudentsSearchForm({ initial, onSearch }: Props) {
           id="class-student-fullName"
           value={values.fullName}
           onChange={(e) => update('fullName', e.target.value)}
+          placeholder="Nguyễn Văn A"
         />
       </div>
-      <div className="flex items-end justify-end gap-2">
-        <Button type="button" variant="outline" onClick={reset}>
+      <div className="flex flex-col justify-end gap-2 sm:flex-row">
+        <Button type="button" variant="outline" onClick={reset} className="cursor-pointer">
           <X /> Xoá
         </Button>
-        <Button type="submit">
+        <Button type="submit" className="cursor-pointer">
           <Search /> Tìm kiếm
         </Button>
       </div>

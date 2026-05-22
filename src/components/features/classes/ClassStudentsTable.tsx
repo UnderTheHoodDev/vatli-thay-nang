@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -19,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ActionButton } from '@/components/ui/custom';
+import EmptyState from '@/components/app/EmptyState';
 import { removeStudentAction } from '@/actions/v1/classes/remove-student';
 import { handleActionResult } from '@/lib/actions';
 import { formatDate } from '@/lib/utils';
@@ -44,81 +46,80 @@ export default function ClassStudentsTable({ classId, rows }: Props) {
     });
   }
 
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={UserPlus}
+        title="Chưa có học sinh nào trong lớp"
+        description='Sử dụng nút "Thêm học sinh" ở trên để bắt đầu thêm học sinh vào lớp.'
+      />
+    );
+  }
+
   return (
     <>
-      <div className="border-divider rounded-lg border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Họ và tên</TableHead>
-              <TableHead>Ngày thêm</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            <TableHead className="w-14">ID</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Họ và tên</TableHead>
+            <TableHead>Ngày thêm</TableHead>
+            <TableHead className="w-40 text-right">Hành động</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((s) => (
+            <TableRow key={s.studentId}>
+              <TableCell className="text-muted-foreground">{s.studentId}</TableCell>
+              <TableCell className="text-foreground font-medium">{s.email}</TableCell>
+              <TableCell>{s.fullName ?? '—'}</TableCell>
+              <TableCell>{formatDate(s.createdAt)}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive cursor-pointer"
+                  onClick={() => setTarget(s)}
+                  disabled={pending}
+                >
+                  <Trash2 /> Xoá khỏi lớp
+                </Button>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-gray-400">
-                  Chưa có học sinh nào trong lớp
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((s) => (
-                <TableRow key={s.studentId}>
-                  <TableCell>{s.studentId}</TableCell>
-                  <TableCell className="font-medium">{s.email}</TableCell>
-                  <TableCell>{s.fullName ?? '-'}</TableCell>
-                  <TableCell>{formatDate(s.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => setTarget(s)}
-                      disabled={pending}
-                    >
-                      <Trash2 /> Xoá khỏi lớp
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
 
-      <Dialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Xác nhận xoá học sinh</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xoá học sinh</AlertDialogTitle>
+            <AlertDialogDescription>
               Bạn có chắc muốn xoá học sinh{' '}
-              <span className="font-medium">{target?.fullName ?? target?.email}</span> khỏi lớp này
-              không?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setTarget(null)}
-              disabled={pending}
-            >
+              <span className="text-foreground font-medium">
+                {target?.fullName ?? target?.email}
+              </span>{' '}
+              khỏi lớp này không?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending} className="cursor-pointer">
               Huỷ
-            </Button>
-            <ActionButton
-              type="button"
-              variant="destructive"
-              onClick={confirmRemove}
-              isLoading={pending}
-              loadingText="Đang xoá..."
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmRemove();
+              }}
+              disabled={pending}
+              className="bg-destructive hover:bg-destructive/90 cursor-pointer"
             >
-              Xoá
-            </ActionButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {pending ? 'Đang xoá...' : 'Xoá'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

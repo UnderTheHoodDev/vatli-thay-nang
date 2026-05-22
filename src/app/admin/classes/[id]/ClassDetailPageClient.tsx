@@ -1,15 +1,19 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { ArrowLeft, Info, Users as UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
 import type { ListMeta } from '@/types/auth';
 import type { ClassStudentListRow } from '@/types/actions/class-management';
-import type { ClassDetail } from '@/types/class-management';
+import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 export type ClassDetailTab = 'info' | 'students';
 
@@ -27,11 +31,6 @@ interface Props {
   studentsErrors: string[];
 }
 
-const TABS: Array<{ id: ClassDetailTab; label: string }> = [
-  { id: 'info', label: 'Thông tin lớp học' },
-  { id: 'students', label: 'Danh sách học sinh' },
-];
-
 const DEFAULT_TAB: ClassDetailTab = 'info';
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -43,6 +42,11 @@ function buildUrlParams(state: ClassDetailUrlState): URLSearchParams {
   if (state.page !== 1) sp.set('page', String(state.page));
   if (state.pageSize !== DEFAULT_PAGE_SIZE) sp.set('pageSize', String(state.pageSize));
   return sp;
+}
+
+function statusBadge(s: ClassStatus) {
+  if (s === 'ACTIVE') return <Badge variant="success">Đang hoạt động</Badge>;
+  return <Badge variant="secondary">Đã đóng</Badge>;
 }
 
 export default function ClassDetailPageClient({
@@ -75,50 +79,66 @@ export default function ClassDetailPageClient({
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="font-paytone text-purple text-2xl">{classDetail.name}</h1>
-        <p className="text-sm text-gray-500">
-          Mã lớp: <span className="font-mono">{classDetail.code}</span>
-        </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
+        >
+          <Link href="/admin/classes">
+            <ArrowLeft /> Danh sách lớp học
+          </Link>
+        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-paytone text-foreground text-2xl tracking-tight">
+                {classDetail.name}
+              </h1>
+              {statusBadge(classDetail.status)}
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Mã lớp:{' '}
+              <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                {classDetail.code}
+              </code>
+              <span className="mx-2">·</span>
+              <span>{classDetail.studentCount ?? 0} học sinh</span>
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div role="tablist" className="border-divider flex gap-1 border-b">
-        {TABS.map((t) => {
-          const active = urlState.tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => updateUrl({ tab: t.id })}
-              className={cn(
-                'border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-                active
-                  ? 'border-purple text-purple'
-                  : 'border-transparent text-gray-500 hover:text-gray-700',
-              )}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {urlState.tab === 'info' ? (
-        <ClassInfoTab classDetail={classDetail} />
-      ) : (
-        <ClassStudentsTab
-          classId={classDetail.id}
-          search={studentsSearch}
-          rows={students}
-          meta={studentsMeta}
-          onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
-          onPageChange={(p) => updateUrl({ page: p })}
-          onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
-        />
-      )}
+      <Tabs
+        value={urlState.tab}
+        onValueChange={(v) => updateUrl({ tab: v as ClassDetailTab })}
+        className="gap-4"
+      >
+        <TabsList>
+          <TabsTrigger value="info" className="cursor-pointer">
+            <Info className="size-4" /> Thông tin
+          </TabsTrigger>
+          <TabsTrigger value="students" className="cursor-pointer">
+            <UsersIcon className="size-4" /> Học sinh
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="info">
+          <ClassInfoTab classDetail={classDetail} />
+        </TabsContent>
+        <TabsContent value="students">
+          <ClassStudentsTab
+            classId={classDetail.id}
+            search={studentsSearch}
+            rows={students}
+            meta={studentsMeta}
+            onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
+            onPageChange={(p) => updateUrl({ page: p })}
+            onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

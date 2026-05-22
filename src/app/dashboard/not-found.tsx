@@ -1,17 +1,30 @@
 import Link from 'next/link';
+import { ArrowLeft, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DashboardNotFound() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-      <div className="space-y-2">
-        <p className="text-purple text-6xl font-bold">404</p>
-        <h1 className="font-paytone text-purple text-2xl">Trang không tồn tại</h1>
-        <p className="text-sm text-gray-500">Đường dẫn bạn vừa truy cập không có sẵn.</p>
-      </div>
-      <Button asChild>
-        <Link href="/dashboard">Quay về Dashboard</Link>
-      </Button>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+          <span className="bg-primary/10 text-primary flex size-14 items-center justify-center rounded-full">
+            <Compass className="size-7" />
+          </span>
+          <div className="space-y-1.5">
+            <p className="text-primary font-paytone text-5xl tracking-tight">404</p>
+            <h1 className="text-foreground text-lg font-semibold">Trang không tồn tại</h1>
+            <p className="text-muted-foreground text-sm">
+              Đường dẫn bạn vừa truy cập không có sẵn hoặc đã được di chuyển.
+            </p>
+          </div>
+          <Button asChild className="cursor-pointer">
+            <Link href="/dashboard">
+              <ArrowLeft /> Quay về Dashboard
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

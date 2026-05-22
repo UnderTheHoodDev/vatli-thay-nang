@@ -1,12 +1,14 @@
 'use client';
 
+import { Calendar, FileText, Hash, Tag, Users as UsersIcon, Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 function statusBadge(s: ClassStatus) {
-  if (s === 'ACTIVE') return <Badge variant="success">Đang mở</Badge>;
-  return <Badge variant="warning">Đã đóng</Badge>;
+  if (s === 'ACTIVE') return <Badge variant="success">Đang hoạt động</Badge>;
+  return <Badge variant="secondary">Đã đóng</Badge>;
 }
 
 interface Props {
@@ -14,25 +16,68 @@ interface Props {
 }
 
 export default function ClassInfoTab({ classDetail }: Props) {
-  const fields: Array<{ label: string; value: React.ReactNode }> = [
-    { label: 'Tên lớp', value: classDetail.name },
-    { label: 'Mã lớp', value: <span className="font-mono">{classDetail.code}</span> },
-    { label: 'Mô tả', value: classDetail.description || <span className="text-gray-400">—</span> },
-    { label: 'Trạng thái', value: statusBadge(classDetail.status) },
-    { label: 'Số học sinh', value: classDetail.studentCount ?? 0 },
-    { label: 'Ngày tạo', value: formatDate(classDetail.createdAt) },
+  const fields: Array<{
+    label: string;
+    value: React.ReactNode;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    { label: 'Tên lớp', value: classDetail.name, icon: Tag },
+    {
+      label: 'Mã lớp',
+      icon: Hash,
+      value: (
+        <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+          {classDetail.code}
+        </code>
+      ),
+    },
+    { label: 'Trạng thái', value: statusBadge(classDetail.status), icon: Activity },
+    { label: 'Số học sinh', value: classDetail.studentCount ?? 0, icon: UsersIcon },
+    { label: 'Ngày tạo', value: formatDate(classDetail.createdAt), icon: Calendar },
   ];
 
   return (
-    <div className="border-divider rounded-lg border bg-white p-6">
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
-        {fields.map(({ label, value }) => (
-          <div key={label} className="flex flex-col gap-1">
-            <dt className="text-sm text-gray-500">{label}</dt>
-            <dd className="text-sm">{value}</dd>
+    <Card>
+      <CardHeader>
+        <CardTitle>Thông tin lớp học</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6 pb-6">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+          {fields.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="flex items-start gap-3">
+              <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+                <Icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1 space-y-1">
+                <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                  {label}
+                </dt>
+                <dd className="text-foreground text-sm font-medium">{value}</dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+
+        <div className="border-divider border-t pt-5">
+          <div className="flex items-start gap-3">
+            <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <FileText className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                Mô tả
+              </dt>
+              <dd className="text-foreground text-sm">
+                {classDetail.description ? (
+                  <p className="whitespace-pre-wrap">{classDetail.description}</p>
+                ) : (
+                  <span className="text-muted-foreground italic">Không có mô tả</span>
+                )}
+              </dd>
+            </div>
           </div>
-        ))}
-      </dl>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

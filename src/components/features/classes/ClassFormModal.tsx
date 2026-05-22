@@ -7,11 +7,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -19,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ActionButton } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
 import { createClassAction } from '@/actions/v1/classes/create-class';
 import { updateClassAction } from '@/actions/v1/classes/update-class';
@@ -44,7 +47,8 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
   const nameError = submitted && !name.trim() ? 'Vui lòng nhập tên lớp' : '';
   const codeError = submitted && !code.trim() ? 'Vui lòng nhập mã lớp' : '';
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitted(true);
     if (!name.trim()) return;
     if (!code.trim()) return;
@@ -91,12 +95,17 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Tạo lớp học' : 'Chỉnh sửa lớp học'}</DialogTitle>
+          <DialogDescription>
+            {mode === 'create'
+              ? 'Nhập thông tin để tạo lớp học mới.'
+              : 'Cập nhật thông tin lớp học hiện tại.'}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
             <Label htmlFor="class-name">
-              Tên lớp <span className="text-red-500">*</span>
+              Tên lớp <span className="text-destructive">*</span>
             </Label>
             <Input
               id="class-name"
@@ -104,12 +113,13 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               maxLength={100}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              aria-invalid={!!nameError}
             />
-            {nameError && <p className="mt-1 text-xs text-red-500">{nameError}</p>}
+            {nameError && <p className="text-destructive text-xs">{nameError}</p>}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="class-code">
-              Mã lớp <span className="text-red-500">*</span>
+              Mã lớp <span className="text-destructive">*</span>
             </Label>
             <Input
               id="class-code"
@@ -117,14 +127,14 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               maxLength={20}
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              aria-invalid={!!codeError}
             />
-            {codeError && <p className="mt-1 text-xs text-red-500">{codeError}</p>}
+            {codeError && <p className="text-destructive text-xs">{codeError}</p>}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="class-desc">Mô tả</Label>
-            <textarea
+            <Textarea
               id="class-desc"
-              className="border-input bg-background flex w-full rounded-md border px-3 py-2 text-sm"
               rows={3}
               placeholder="Mô tả lớp học (không bắt buộc)"
               value={description}
@@ -132,10 +142,10 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
             />
           </div>
           {mode === 'edit' && (
-            <div>
+            <div className="space-y-1.5">
               <Label>Trạng thái</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as ClassStatus)}>
-                <SelectTrigger>
+                <SelectTrigger className="cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,16 +155,27 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               </Select>
             </div>
           )}
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Huỷ
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Đang lưu...' : 'Lưu'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="cursor-pointer"
+            >
+              Huỷ
+            </Button>
+            <ActionButton
+              type="submit"
+              isLoading={loading}
+              loadingText="Đang lưu..."
+              className="cursor-pointer"
+            >
+              {mode === 'create' ? 'Tạo lớp' : 'Lưu thay đổi'}
+            </ActionButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

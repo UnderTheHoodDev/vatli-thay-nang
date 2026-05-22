@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { Users, UserCheck, UserX, ShieldCheck } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -9,8 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/app/PageHeader';
+import StatsCard from '@/components/app/StatsCard';
+import DataPagination from '@/components/app/DataPagination';
 import UserSearchForm, { type UserSearchValues } from '@/components/features/users/UserSearchForm';
 import UsersTable from '@/components/features/users/UsersTable';
 import CreateUserDialog from '@/components/features/users/CreateUserDialog';
@@ -70,66 +73,104 @@ export default function UsersPageClient({ urlState, rows, meta, provinces }: Pro
   const end = Math.min(page * pageSize, total);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="font-paytone text-purple text-2xl">Quản lý người dùng</h1>
-      </div>
+  const pageStats = useMemo(() => {
+    const activated = rows.filter((u) => u.status === 'ACTIVATED').length;
+    const pending = rows.filter((u) => u.status === 'UNACTIVATED').length;
+    const admins = rows.filter((u) => u.role === 'ADMIN').length;
+    return { activated, pending, admins };
+  }, [rows]);
 
-      <UserSearchForm
-        provinces={provinces}
-        initial={urlState}
-        onSearch={(v) => updateUrl({ ...v, page: 1 })}
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Quản lý người dùng"
+        description="Thêm, kích hoạt và quản lý tài khoản học sinh, quản trị viên."
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-gray-600">
-          {total} học sinh: {start} ~ {end}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
-          >
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CreateUserDialog />
-        </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatsCard label="Tổng người dùng" value={total} icon={Users} tone="primary" />
+        <StatsCard
+          label="Đã kích hoạt"
+          value={pageStats.activated}
+          icon={UserCheck}
+          tone="success"
+          hint="trong trang hiện tại"
+        />
+        <StatsCard
+          label="Chờ kích hoạt"
+          value={pageStats.pending}
+          icon={UserX}
+          tone="warning"
+          hint="trong trang hiện tại"
+        />
+        <StatsCard
+          label="Quản trị viên"
+          value={pageStats.admins}
+          icon={ShieldCheck}
+          tone="muted"
+          hint="trong trang hiện tại"
+        />
       </div>
 
-      <UsersTable rows={rows} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Bộ lọc</CardTitle>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <UserSearchForm
+            provinces={provinces}
+            initial={urlState}
+            onSearch={(v) => updateUrl({ ...v, page: 1 })}
+          />
+        </CardContent>
+      </Card>
 
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <div className="text-sm text-gray-500">
-          Trang {page} / {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => updateUrl({ page: Math.max(1, page - 1) })}
-        >
-          <ChevronLeft />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => updateUrl({ page: page + 1 })}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Danh sách người dùng</CardTitle>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {total === 0
+                ? 'Chưa có người dùng nào'
+                : `Hiển thị ${start}–${end} trên tổng ${total} người dùng`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">Hiển thị</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
+            >
+              <SelectTrigger className="w-24 cursor-pointer">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <CreateUserDialog />
+          </div>
+        </CardHeader>
+        <CardContent className="px-3 pb-0">
+          <UsersTable rows={rows} />
+        </CardContent>
+        {totalPages > 1 && (
+          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
+            <div className="text-muted-foreground text-sm">
+              Trang {page} / {totalPages}
+            </div>
+            <DataPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={(p) => updateUrl({ page: p })}
+            />
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

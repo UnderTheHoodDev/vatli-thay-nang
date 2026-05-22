@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { Plus, Search, UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,10 +14,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { ActionButton } from '@/components/ui/custom';
+import DataPagination from '@/components/app/DataPagination';
+import EmptyState from '@/components/app/EmptyState';
 import { listUsers } from '@/actions/v1/users/list-users';
 import { addStudentsAction } from '@/actions/v1/classes/add-students';
 import { handleActionResult } from '@/lib/actions';
+import { cn } from '@/lib/utils';
 import type { UserRow } from '@/types/auth';
 
 const MODAL_PAGE_SIZE = 10;
@@ -107,7 +111,7 @@ export default function AddStudentsDialog({ classId }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="cursor-pointer">
           <Plus /> Thêm học sinh
         </Button>
       </DialogTrigger>
@@ -115,7 +119,7 @@ export default function AddStudentsDialog({ classId }: Props) {
         <DialogHeader>
           <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
           <DialogDescription>
-            Chọn học sinh muốn thêm vào lớp. Nếu học sinh đã có trong lớp, hệ thống sẽ báo lỗi.
+            Chọn học sinh muốn thêm vào lớp. Học sinh đã có trong lớp sẽ không hiển thị.
           </DialogDescription>
         </DialogHeader>
 
@@ -138,36 +142,47 @@ export default function AddStudentsDialog({ classId }: Props) {
               id="add-student-name"
               value={nameQuery}
               onChange={(e) => setNameQuery(e.target.value)}
+              placeholder="Nguyễn Văn A"
             />
           </div>
           <div className="flex items-end">
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+            <Button type="submit" disabled={loading} className="w-full cursor-pointer sm:w-auto">
               <Search /> Tìm
             </Button>
           </div>
         </form>
 
-        <div className="border-divider max-h-80 min-h-40 overflow-y-auto rounded-lg border">
+        <div className="border-divider bg-background max-h-80 min-h-44 overflow-y-auto rounded-lg border">
           {loading ? (
-            <div className="py-8 text-center text-sm text-gray-400">Đang tải...</div>
+            <div className="text-muted-foreground py-8 text-center text-sm">Đang tải...</div>
           ) : rows.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-400">Không tìm thấy học sinh</div>
+            <EmptyState
+              icon={Users}
+              title="Không tìm thấy học sinh phù hợp"
+              description="Thử thay đổi từ khoá tìm kiếm."
+              className="py-6"
+            />
           ) : (
             <ul className="divide-divider divide-y">
               {rows.map((u) => {
                 const isChecked = selected.has(u.id);
                 return (
                   <li key={u.id}>
-                    <label className="hover:bg-muted/40 flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm">
+                    <label
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
+                        isChecked ? 'bg-primary/5' : 'hover:bg-muted/60',
+                      )}
+                    >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggle(u.id)}
-                        className="accent-purple size-4"
+                        className="accent-primary size-4 cursor-pointer"
                       />
-                      <span className="flex-1 truncate">
-                        <span className="font-medium">{u.fullName ?? '-'}</span>
-                        <span className="ml-2 text-gray-500">{u.email}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        <span className="text-foreground font-medium">{u.fullName ?? '—'}</span>
+                        <span className="text-muted-foreground ml-2">{u.email}</span>
                       </span>
                     </label>
                   </li>
@@ -177,31 +192,17 @@ export default function AddStudentsDialog({ classId }: Props) {
           )}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Đã chọn {selected.size} học sinh</span>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500">
-              Trang {page} / {totalPages}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page === 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight />
-            </Button>
+        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <div className="text-muted-foreground text-sm">
+            {selected.size > 0 ? (
+              <Badge variant="default">Đã chọn {selected.size}</Badge>
+            ) : (
+              <span>Chưa chọn học sinh nào</span>
+            )}
           </div>
+          {totalPages > 1 && (
+            <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          )}
         </div>
 
         <DialogFooter className="gap-2">
@@ -210,6 +211,7 @@ export default function AddStudentsDialog({ classId }: Props) {
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={submitting}
+            className="cursor-pointer"
           >
             Huỷ
           </Button>
@@ -219,8 +221,9 @@ export default function AddStudentsDialog({ classId }: Props) {
             disabled={selected.size === 0}
             isLoading={submitting}
             loadingText="Đang thêm..."
+            className="cursor-pointer"
           >
-            Thêm {selected.size > 0 ? `(${selected.size})` : ''}
+            <UserPlus /> Thêm {selected.size > 0 ? `(${selected.size})` : ''}
           </ActionButton>
         </DialogFooter>
       </DialogContent>

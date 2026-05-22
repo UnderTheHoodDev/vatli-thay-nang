@@ -1,7 +1,5 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -9,6 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DataPagination from '@/components/app/DataPagination';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import ClassStudentsSearchForm, { type ClassStudentSearchValues } from './ClassStudentsSearchForm';
 import ClassStudentsTable from './ClassStudentsTable';
@@ -41,54 +41,59 @@ export default function ClassStudentsTab({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="space-y-4">
-      <ClassStudentsSearchForm initial={search} onSearch={onSearchChange} />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Tìm kiếm học sinh</CardTitle>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <ClassStudentsSearchForm initial={search} onSearch={onSearchChange} />
+        </CardContent>
+      </Card>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-gray-600">
-          {total} học sinh: {start} ~ {end}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <AddStudentsDialog classId={classId} />
-        </div>
-      </div>
-
-      <ClassStudentsTable classId={classId} rows={rows} />
-
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <div className="text-sm text-gray-500">
-          Trang {page} / {totalPages}
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-        >
-          <ChevronLeft />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Học sinh trong lớp</CardTitle>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {total === 0
+                ? 'Chưa có học sinh nào trong lớp'
+                : `Hiển thị ${start}–${end} trên tổng ${total} học sinh`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">Hiển thị</span>
+            <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+              <SelectTrigger className="w-24 cursor-pointer">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <AddStudentsDialog classId={classId} />
+          </div>
+        </CardHeader>
+        <CardContent className="px-3 pb-0">
+          <ClassStudentsTable classId={classId} rows={rows} />
+        </CardContent>
+        {totalPages > 1 && (
+          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
+            <div className="text-muted-foreground text-sm">
+              Trang {page} / {totalPages}
+            </div>
+            <DataPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

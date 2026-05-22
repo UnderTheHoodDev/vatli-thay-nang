@@ -2,8 +2,9 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { handleActionResult } from '@/lib/actions';
 import {
@@ -29,45 +30,66 @@ export default function AppTopbar({ email, role }: Props) {
 
   function handleLogout() {
     startTransition(async () => {
-      try {
-        const result = await logoutAction();
-        const succeeded = handleActionResult(result.errors, () => {
-          if (result.redirectTo) {
-            router.push(result.redirectTo);
-          }
-        });
-        if (succeeded) {
-          toast.success('Đăng xuất thành công');
+      const result = await logoutAction();
+      const succeeded = handleActionResult(result.errors, () => {
+        if (result.redirectTo) {
+          router.push(result.redirectTo);
         }
-      } finally {
+      });
+      if (succeeded) {
+        toast.success('Đăng xuất thành công');
       }
     });
   }
 
   const initial = email.charAt(0).toUpperCase();
+  const isAdmin = role === 'ADMIN';
+  const roleLabel = isAdmin ? 'Quản trị viên' : 'Học sinh';
+  const profileHref = isAdmin ? '/admin/profile' : '/dashboard/profile';
 
   return (
-    <header className="border-divider flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+    <header className="border-divider bg-background/85 sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur md:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-5" />
+        <Separator orientation="vertical" className="mr-1 h-5" />
+        <span className="text-muted-foreground hidden text-xs font-medium tracking-wide uppercase sm:inline">
+          {roleLabel}
+        </span>
       </div>
       <DropdownMenu>
-        <DropdownMenuTrigger className="hover:bg-divider flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
-          <Avatar>
-            <AvatarFallback>{initial}</AvatarFallback>
+        <DropdownMenuTrigger className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors">
+          <Avatar className="bg-primary text-primary-foreground size-8">
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+              {initial}
+            </AvatarFallback>
           </Avatar>
           <div className="hidden text-left sm:block">
-            <div className="text-dark text-sm font-medium">{email}</div>
-            <div className="text-xs text-gray-500">{role === 'ADMIN' ? 'Admin' : 'Học sinh'}</div>
+            <div className="text-foreground max-w-45 truncate text-sm font-medium">
+              {email}
+            </div>
+            <div className="text-muted-foreground text-xs">{roleLabel}</div>
           </div>
-          <ChevronDown className="h-4 w-4 opacity-60" />
+          <ChevronDown className="text-muted-foreground size-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>{email}</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="text-foreground truncate text-sm">{email}</span>
+            <span className="text-muted-foreground text-xs font-normal">{roleLabel}</span>
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleLogout} disabled={pending} className="text-red-600">
-            <LogOut className="mr-2 h-4 w-4" />
+          <DropdownMenuItem asChild>
+            <Link href={profileHref} className="cursor-pointer">
+              <UserRound className="mr-2 size-4" />
+              Thông tin cá nhân
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={handleLogout}
+            disabled={pending}
+            className="text-destructive focus:text-destructive cursor-pointer"
+          >
+            <LogOut className="mr-2 size-4" />
             {pending ? 'Đang đăng xuất...' : 'Đăng xuất'}
           </DropdownMenuItem>
         </DropdownMenuContent>
