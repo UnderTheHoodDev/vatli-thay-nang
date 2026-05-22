@@ -1,5 +1,5 @@
 import type { ListMeta } from '@/types/auth';
-import type { ClassRow, ClassStatus } from '@/types/class-management';
+import type { ClassRow, ClassSessionStatus, ClassStatus } from '@/types/class-management';
 
 export interface IListClassesParams {
   name?: string;
@@ -44,4 +44,41 @@ export interface IListClassStudentsParams {
 export interface IListClassStudentsResult {
   data: ClassStudentListRow[];
   meta: ListMeta;
+}
+
+export interface ClassSessionListRow {
+  id: number;
+  title: string;
+  description: string | null;
+  startTime: string;
+  endTime: string;
+  meetingUrl: string | null;
+  status: ClassSessionStatus;
+}
+
+export interface IListClassSessionsParams {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface IListClassSessionsResult {
+  data: ClassSessionListRow[];
+  meta: ListMeta;
+}
+
+export interface ICreateClassSessionPayload {
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  meetingUrl?: string;
+}
+
+export interface IUpdateClassSessionPayload {
+  title?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  meetingUrl?: string;
+  status?: ClassSessionStatus;
 }

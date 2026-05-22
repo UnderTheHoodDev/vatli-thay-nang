@@ -1,8 +1,11 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
@@ -76,11 +79,19 @@ export default function ClassDetailPageClient({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="font-paytone text-purple text-2xl">{classDetail.name}</h1>
-        <p className="text-sm text-gray-500">
-          Mã lớp: <span className="font-mono">{classDetail.code}</span>
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-paytone text-purple text-2xl">{classDetail.name}</h1>
+          <p className="text-sm text-gray-500">
+            Mã lớp: <span className="font-mono">{classDetail.code}</span>
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/admin/classes/${classDetail.id}/class-sessions`}>
+            <Calendar className="mr-1 h-4 w-4" />
+            Buổi học
+          </Link>
+        </Button>
       </div>
 
       <div role="tablist" className="border-divider flex gap-1 border-b">
