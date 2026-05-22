@@ -21,8 +21,16 @@ export async function listClasses(params: IListClassesParams): Promise<ListClass
     return { data: result.data, meta: result.meta, errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
-      return { data: [], meta: { total: 0, page: 1, pageSize: 20 }, errors: extractErrors(error.response.data) };
+      return {
+        data: [],
+        meta: { total: 0, page: 1, pageSize: 20 },
+        errors: extractErrors(error.response.data),
+      };
     }
-    return { data: [], meta: { total: 0, page: 1, pageSize: 20 }, errors: ['Lấy danh sách lớp thất bại'] };
+    return {
+      data: [],
+      meta: { total: 0, page: 1, pageSize: 20 },
+      errors: ['Lấy danh sách lớp thất bại'],
+    };
   }
 }

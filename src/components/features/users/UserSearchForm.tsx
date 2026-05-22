@@ -82,10 +82,7 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
       : (provinces.find((p) => String(p.id) === values.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
-    <form
-      onSubmit={submit}
-      className="border-divider grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 md:grid-cols-4"
-    >
+    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -101,12 +98,13 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           id="fullName"
           value={values.fullName}
           onChange={(e) => update('fullName', e.target.value)}
+          placeholder="Nguyễn Văn A"
         />
       </div>
       <div className="space-y-1.5">
         <Label>Giới tính</Label>
         <Select value={values.gender} onValueChange={(v) => update('gender', v)}>
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -123,11 +121,15 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
         <Label>Tỉnh</Label>
         <Popover open={provinceOpen} onOpenChange={setProvinceOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" type="button" className="w-full justify-between font-normal">
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full cursor-pointer justify-between font-normal"
+            >
               <span className="truncate">{provinceLabel}</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+          <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
             <Command>
               <CommandInput placeholder="Tìm tỉnh..." />
               <CommandList>
@@ -165,6 +167,7 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           id="schoolName"
           value={values.schoolName}
           onChange={(e) => update('schoolName', e.target.value)}
+          placeholder="THPT ..."
         />
       </div>
       <div className="space-y-1.5">
@@ -173,12 +176,13 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           id="parentPhone"
           value={values.parentPhonenumber}
           onChange={(e) => update('parentPhonenumber', e.target.value)}
+          placeholder="0xxxxxxxxx"
         />
       </div>
       <div className="space-y-1.5">
         <Label>Vai trò</Label>
         <Select value={values.role} onValueChange={(v) => update('role', v)}>
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -194,7 +198,7 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
       <div className="space-y-1.5">
         <Label>Trạng thái</Label>
         <Select value={values.status} onValueChange={(v) => update('status', v)}>
-          <SelectTrigger>
+          <SelectTrigger className="cursor-pointer">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -207,11 +211,11 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           </SelectContent>
         </Select>
       </div>
-      <div className="flex justify-end gap-2 md:col-span-4">
-        <Button type="button" variant="outline" onClick={reset}>
-          <X /> Xoá
+      <div className="flex flex-col justify-end gap-2 sm:flex-row md:col-span-2 lg:col-span-4">
+        <Button type="button" variant="outline" onClick={reset} className="cursor-pointer">
+          <X /> Xoá bộ lọc
         </Button>
-        <Button type="submit">
+        <Button type="submit" className="cursor-pointer">
           <Search /> Tìm kiếm
         </Button>
       </div>

@@ -22,12 +22,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false';
 
   return (
-    <div className="font-opensans bg-light-bg">
+    <div className="font-opensans bg-muted/40 min-h-svh">
       <SidebarProvider defaultOpen={defaultOpen}>
         <AppSidebar title="VLTN" items={DASHBOARD_NAV} userEmail={session.email} />
-        <SidebarInset>
+        <SidebarInset className="bg-muted/40">
           <AppTopbar email={session.email} role={session.role} />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </div>

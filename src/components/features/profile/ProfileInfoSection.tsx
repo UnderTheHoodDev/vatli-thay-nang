@@ -22,6 +22,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButton } from '@/components/ui/custom';
 import { GENDER_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
 import { FULL_NAME_MAX_LENGTH, VN_PHONE_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
@@ -108,145 +109,160 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
 
   const roleLabel = ROLE_OPTIONS.find((o) => o.value === profile.role)?.label ?? profile.role;
   const genderLabel = profile.gender
-    ? (GENDER_OPTIONS.find((o) => o.value === profile.gender)?.label ?? '-')
-    : '-';
+    ? (GENDER_OPTIONS.find((o) => o.value === profile.gender)?.label ?? '—')
+    : '—';
   const provinceLabel =
     form.provinceId === ''
       ? 'Chọn tỉnh'
       : (provinces.find((p) => String(p.id) === form.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
-    <section className="border-divider rounded-lg border bg-white p-6">
-      <h2 className="font-paytone text-purple mb-4 text-lg">Thông tin cá nhân</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle>Thông tin chi tiết</CardTitle>
+        <p className="text-muted-foreground mt-1 text-sm">Thông tin liên hệ và hồ sơ học sinh.</p>
+      </CardHeader>
+      <CardContent className="pb-6">
+        {!editing ? (
+          <div className="space-y-6">
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+              <ViewField label="Họ và tên" value={profile.fullName} />
+              <ViewField label="Giới tính" value={genderLabel} />
+              <ViewField label="Tỉnh" value={profile.province} />
+              <ViewField label="Trường" value={profile.schoolName} />
+              <ViewField label="Số điện thoại phụ huynh" value={profile.parentPhonenumber} />
+              <ViewField label="Vai trò" value={roleLabel} />
+            </dl>
+            <div className="flex justify-start pt-2">
+              <Button onClick={enterEdit} className="cursor-pointer">
+                <Pencil /> Chỉnh sửa
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="fullName">Họ và tên</Label>
+              <Input
+                id="fullName"
+                maxLength={FULL_NAME_MAX_LENGTH}
+                value={form.fullName}
+                onChange={(e) => update('fullName', e.target.value)}
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Giới tính</Label>
+              <Select
+                value={form.gender || undefined}
+                onValueChange={(v) => update('gender', v as Gender)}
+                disabled={pending}
+              >
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Chọn giới tính" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tỉnh</Label>
+              <Popover open={provinceOpen} onOpenChange={setProvinceOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full cursor-pointer justify-between font-normal"
+                    disabled={pending}
+                  >
+                    <span className="truncate">{provinceLabel}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
+                  <Command>
+                    <CommandInput placeholder="Tìm tỉnh..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy tỉnh</CommandEmpty>
+                      <CommandGroup>
+                        {provinces.map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.name}
+                            onSelect={() => {
+                              update('provinceId', String(p.id));
+                              setProvinceOpen(false);
+                            }}
+                          >
+                            {p.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="schoolName">Trường</Label>
+              <Input
+                id="schoolName"
+                value={form.schoolName}
+                onChange={(e) => update('schoolName', e.target.value)}
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="parentPhonenumber">Số điện thoại phụ huynh</Label>
+              <Input
+                id="parentPhonenumber"
+                value={form.parentPhonenumber}
+                onChange={(e) => update('parentPhonenumber', e.target.value)}
+                placeholder="0xxxxxxxxx"
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vai trò</Label>
+              <Input value={roleLabel} disabled readOnly />
+            </div>
 
-      {!editing ? (
-        <>
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-            <ViewField label="Họ và tên" value={profile.fullName} />
-            <ViewField label="Giới tính" value={genderLabel} />
-            <ViewField label="Tỉnh" value={profile.province} />
-            <ViewField label="Trường" value={profile.schoolName} />
-            <ViewField label="Số điện thoại phụ huynh" value={profile.parentPhonenumber} />
-            <ViewField label="Vai trò" value={roleLabel} />
-          </dl>
-          <div className="mt-6 flex justify-start">
-            <Button onClick={enterEdit}>
-              <Pencil /> Chỉnh sửa
-            </Button>
-          </div>
-        </>
-      ) : (
-        <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="fullName">Họ và tên</Label>
-            <Input
-              id="fullName"
-              maxLength={FULL_NAME_MAX_LENGTH}
-              value={form.fullName}
-              onChange={(e) => update('fullName', e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Giới tính</Label>
-            <Select
-              value={form.gender || undefined}
-              onValueChange={(v) => update('gender', v as Gender)}
-              disabled={pending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn giới tính" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENDER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Tỉnh</Label>
-            <Popover open={provinceOpen} onOpenChange={setProvinceOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="w-full justify-between font-normal"
-                  disabled={pending}
-                >
-                  <span className="truncate">{provinceLabel}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                <Command>
-                  <CommandInput placeholder="Tìm tỉnh..." />
-                  <CommandList>
-                    <CommandEmpty>Không tìm thấy tỉnh</CommandEmpty>
-                    <CommandGroup>
-                      {provinces.map((p) => (
-                        <CommandItem
-                          key={p.id}
-                          value={p.name}
-                          onSelect={() => {
-                            update('provinceId', String(p.id));
-                            setProvinceOpen(false);
-                          }}
-                        >
-                          {p.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="schoolName">Trường</Label>
-            <Input
-              id="schoolName"
-              value={form.schoolName}
-              onChange={(e) => update('schoolName', e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="parentPhonenumber">Số điện thoại phụ huynh</Label>
-            <Input
-              id="parentPhonenumber"
-              value={form.parentPhonenumber}
-              onChange={(e) => update('parentPhonenumber', e.target.value)}
-              placeholder="0xxxxxxxxx"
-              disabled={pending}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Vai trò</Label>
-            <Input value={roleLabel} disabled readOnly />
-          </div>
-
-          <div className="flex justify-start gap-2 md:col-span-2">
-            <Button type="button" variant="outline" onClick={cancelEdit} disabled={pending}>
-              Hủy
-            </Button>
-            <ActionButton type="submit" isLoading={pending} loadingText="Đang lưu...">
-              Thay đổi
-            </ActionButton>
-          </div>
-        </form>
-      )}
-    </section>
+            <div className="flex justify-start gap-2 pt-2 md:col-span-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={cancelEdit}
+                disabled={pending}
+                className="cursor-pointer"
+              >
+                Hủy
+              </Button>
+              <ActionButton
+                type="submit"
+                isLoading={pending}
+                loadingText="Đang lưu..."
+                className="cursor-pointer"
+              >
+                Lưu thay đổi
+              </ActionButton>
+            </div>
+          </form>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
 function ViewField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div>
-      <dt className="text-sm text-gray-500">{label}</dt>
-      <dd className="text-dark mt-1 text-sm font-medium">
-        {value && value.length > 0 ? value : '-'}
+    <div className="space-y-1">
+      <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</dt>
+      <dd className="text-foreground text-sm font-medium">
+        {value && value.length > 0 ? value : <span className="text-muted-foreground">—</span>}
       </dd>
     </div>
   );

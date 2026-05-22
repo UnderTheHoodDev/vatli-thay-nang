@@ -9,6 +9,7 @@ export interface IListUsersParams {
   parentPhonenumber?: string;
   role?: Role;
   status?: UserStatus;
+  notInClassId?: number;
   page?: number;
   pageSize?: number;
 }

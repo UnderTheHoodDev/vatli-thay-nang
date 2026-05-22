@@ -26,3 +26,22 @@ export interface IUpdateClassPayload {
   description?: string;
   status?: ClassStatus;
 }
+
+export interface ClassStudentListRow {
+  studentId: number;
+  email: string;
+  fullName: string | null;
+  createdAt: string;
+}
+
+export interface IListClassStudentsParams {
+  email?: string;
+  fullName?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface IListClassStudentsResult {
+  data: ClassStudentListRow[];
+  meta: ListMeta;
+}

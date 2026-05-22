@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { FormTextField, ActionButton } from '@/components/ui/custom';
@@ -35,15 +35,12 @@ export default function CreateUserDialog() {
       return;
     }
     startTransition(async () => {
-      try {
-        const res = await createUserAction(value);
-        const succeeded = handleActionResult(res.errors);
-        if (succeeded) {
-          toast.success('Tạo user thành công. Mail kích hoạt đã được gửi.');
-          setEmail('');
-          setOpen(false);
-        }
-      } finally {
+      const res = await createUserAction(value);
+      const succeeded = handleActionResult(res.errors);
+      if (succeeded) {
+        toast.success('Tạo user thành công. Mail kích hoạt đã được gửi.');
+        setEmail('');
+        setOpen(false);
       }
     });
   }
@@ -51,13 +48,13 @@ export default function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="cursor-pointer">
           <Plus /> Tạo user
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Tạo user mới</DialogTitle>
+          <DialogTitle>Tạo tài khoản mới</DialogTitle>
           <DialogDescription>
             Hệ thống sẽ gửi mail kích hoạt đến email được nhập bên dưới.
           </DialogDescription>
@@ -73,17 +70,23 @@ export default function CreateUserDialog() {
             required
             disabled={pending}
           />
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={pending}
+              className="cursor-pointer"
             >
               Hủy
             </Button>
-            <ActionButton type="submit" isLoading={pending} loadingText="Đang tạo...">
-              Tạo tài khoản
+            <ActionButton
+              type="submit"
+              isLoading={pending}
+              loadingText="Đang tạo..."
+              className="cursor-pointer"
+            >
+              <UserPlus /> Tạo tài khoản
             </ActionButton>
           </DialogFooter>
         </form>
