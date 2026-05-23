@@ -66,6 +66,17 @@ export interface IListClassSessionsResult {
   meta: ListMeta;
 }
 
+export interface ClassSessionDetail {
+  id: number;
+  title: string;
+  description: string | null;
+  startTime: string;
+  endTime: string;
+  meetingUrl: string | null;
+  status: ClassSessionStatus;
+  activeAttendanceSession: { id: number; closedAt: string } | null;
+}
+
 export interface ICreateClassSessionPayload {
   title: string;
   description?: string;
