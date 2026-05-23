@@ -211,7 +211,7 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col justify-end gap-2 sm:flex-row md:col-span-2 lg:col-span-4">
+      <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-2 lg:col-span-4">
         <Button type="button" variant="outline" onClick={reset} className="cursor-pointer">
           <X /> Xoá bộ lọc
         </Button>

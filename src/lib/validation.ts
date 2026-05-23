@@ -18,4 +18,14 @@ export const VALIDATION_MESSAGES = {
   PROVINCE_REQUIRED: 'Vui lòng chọn tỉnh',
   GENDER_REQUIRED: 'Vui lòng chọn giới tính',
   SCHOOL_REQUIRED: 'Vui lòng nhập tên trường',
+  FACEBOOK_LINK_INVALID: 'Link Facebook không hợp lệ',
 } as const;
+
+export function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

@@ -14,7 +14,7 @@ export async function updateClassSessionAction(
 ): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/class-sessions/${id}`, payload);
-    revalidatePath(`/admin/classes/${classId}/class-sessions`);
+    revalidatePath(`/admin/classes/${classId}`);
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

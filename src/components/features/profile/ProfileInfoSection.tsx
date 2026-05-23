@@ -25,7 +25,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButton } from '@/components/ui/custom';
 import { GENDER_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
-import { FULL_NAME_MAX_LENGTH, VN_PHONE_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
+import {
+  FULL_NAME_MAX_LENGTH,
+  VN_PHONE_REGEX,
+  VALIDATION_MESSAGES,
+  isValidUrl,
+} from '@/lib/validation';
 import { handleActionResult } from '@/lib/actions';
 import { updateProfileAction } from '@/actions/v1/profile/update-profile';
 import type { Gender, Province } from '@/types/auth';
@@ -37,6 +42,7 @@ interface FormState {
   provinceId: string;
   schoolName: string;
   parentPhonenumber: string;
+  facebookLink: string;
 }
 
 function toForm(profile: IUserProfile): FormState {
@@ -46,6 +52,7 @@ function toForm(profile: IUserProfile): FormState {
     provinceId: profile.provinceId ? String(profile.provinceId) : '',
     schoolName: profile.schoolName ?? '',
     parentPhonenumber: profile.parentPhonenumber ?? '',
+    facebookLink: profile.facebookLink ?? '',
   };
 }
 
@@ -88,11 +95,17 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
       toast.error(VALIDATION_MESSAGES.PHONE_INVALID);
       return;
     }
+    const facebookLink = form.facebookLink.trim();
+    if (facebookLink && !isValidUrl(facebookLink)) {
+      toast.error(VALIDATION_MESSAGES.FACEBOOK_LINK_INVALID);
+      return;
+    }
 
     const payload: IUpdateProfilePayload = {
       fullName,
       schoolName,
       parentPhonenumber: phone,
+      facebookLink,
     };
     if (form.gender) payload.gender = form.gender as Gender;
     if (form.provinceId) payload.provinceId = Number(form.provinceId);
@@ -131,6 +144,7 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
               <ViewField label="Tỉnh" value={profile.province} />
               <ViewField label="Trường" value={profile.schoolName} />
               <ViewField label="Số điện thoại phụ huynh" value={profile.parentPhonenumber} />
+              <ViewField label="Link Facebook" value={profile.facebookLink} isLink />
               <ViewField label="Vai trò" value={roleLabel} />
             </dl>
             <div className="flex justify-start pt-2">
@@ -227,6 +241,18 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
               />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="facebookLink">Link Facebook</Label>
+              <Input
+                id="facebookLink"
+                type="url"
+                value={form.facebookLink}
+                onChange={(e) => update('facebookLink', e.target.value)}
+                placeholder="https://facebook.com/..."
+                maxLength={255}
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label>Vai trò</Label>
               <Input value={roleLabel} disabled readOnly />
             </div>
@@ -257,12 +283,35 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
   );
 }
 
-function ViewField({ label, value }: { label: string; value: string | null | undefined }) {
+function ViewField({
+  label,
+  value,
+  isLink,
+}: {
+  label: string;
+  value: string | null | undefined;
+  isLink?: boolean;
+}) {
   return (
     <div className="space-y-1">
       <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</dt>
       <dd className="text-foreground text-sm font-medium">
-        {value && value.length > 0 ? value : <span className="text-muted-foreground">—</span>}
+        {value && value.length > 0 ? (
+          isLink ? (
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple break-all hover:underline"
+            >
+              {value}
+            </a>
+          ) : (
+            value
+          )
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
       </dd>
     </div>
   );

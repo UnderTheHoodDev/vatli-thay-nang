@@ -13,7 +13,7 @@ export async function createClassSessionAction(
 ): Promise<IActionState> {
   try {
     await api.post(`/api/v1/classes/${classId}/class-sessions`, payload);
-    revalidatePath(`/admin/classes/${classId}/class-sessions`);
+    revalidatePath(`/admin/classes/${classId}`);
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

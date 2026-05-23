@@ -20,6 +20,7 @@ export default async function DashboardProfilePage() {
     province: null,
     schoolName: null,
     parentPhonenumber: null,
+    facebookLink: null,
     role: session.role,
     status: 'ACTIVATED',
   };

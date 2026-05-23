@@ -9,6 +9,7 @@ export interface IUserProfile {
   province: string | null;
   schoolName: string | null;
   parentPhonenumber: string | null;
+  facebookLink: string | null;
   role: Role;
   status: UserStatus;
 }
@@ -19,6 +20,7 @@ export interface IUpdateProfilePayload {
   provinceId?: number;
   schoolName?: string;
   parentPhonenumber?: string;
+  facebookLink?: string;
 }
 
 export interface IUpdateProfileResult {
