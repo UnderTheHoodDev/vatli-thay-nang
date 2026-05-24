@@ -22,30 +22,10 @@ export default function AttendanceOverview({ counts }: Props) {
       </CardHeader>
       <CardContent className="pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            label="Tổng học sinh"
-            value={total}
-            icon={Users}
-            tone="primary"
-          />
-          <StatsCard
-            label="Đã điểm danh"
-            value={attended}
-            icon={CheckCircle2}
-            tone="success"
-          />
-          <StatsCard
-            label="Chưa điểm danh"
-            value={notAttended}
-            icon={UserMinus}
-            tone="warning"
-          />
-          <StatsCard
-            label="Xin nghỉ"
-            value={onLeave}
-            icon={CalendarOff}
-            tone="destructive"
-          />
+          <StatsCard label="Tổng học sinh" value={total} icon={Users} tone="primary" />
+          <StatsCard label="Đã điểm danh" value={attended} icon={CheckCircle2} tone="success" />
+          <StatsCard label="Chưa điểm danh" value={notAttended} icon={UserMinus} tone="warning" />
+          <StatsCard label="Xin nghỉ" value={onLeave} icon={CalendarOff} tone="destructive" />
         </div>
       </CardContent>
     </Card>

@@ -14,9 +14,7 @@ export async function getAttendanceSummary(
   classSessionId: number,
 ): Promise<GetAttendanceSummaryResponse> {
   try {
-    const res = await api.get(
-      `/api/v1/class-sessions/${classSessionId}/attendance-summary`,
-    );
+    const res = await api.get(`/api/v1/class-sessions/${classSessionId}/attendance-summary`);
     const result = res.data as { data: AttendanceSummary };
     return { data: result.data, errors: [] };
   } catch (error) {

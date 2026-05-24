@@ -130,8 +130,7 @@ function ManualForm({
   const sortedSessions = useMemo(
     () =>
       [...attendanceSessions].sort(
-        (a, b) =>
-          new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime(),
+        (a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime(),
       ),
     [attendanceSessions],
   );
@@ -139,9 +138,8 @@ function ManualForm({
   const initialSessionId = sortedSessions[0] ? String(sortedSessions[0].id) : '';
   const initialNote =
     mode === 'note' && sortedSessions[0]
-      ? (student.attendances.find(
-          (a) => a.attendanceSessionId === sortedSessions[0].id,
-        )?.note ?? '')
+      ? (student.attendances.find((a) => a.attendanceSessionId === sortedSessions[0].id)?.note ??
+        '')
       : '';
 
   const [sessionId, setSessionId] = useState<string>(initialSessionId);
@@ -180,12 +178,8 @@ function ManualForm({
         <p className="text-muted-foreground text-sm">{config.description}</p>
 
         <div className="bg-muted/40 rounded-md p-3 text-sm">
-          <div className="text-foreground font-medium">
-            {student.fullName ?? student.email}
-          </div>
-          {student.fullName && (
-            <div className="text-muted-foreground text-xs">{student.email}</div>
-          )}
+          <div className="text-foreground font-medium">{student.fullName ?? student.email}</div>
+          {student.fullName && <div className="text-muted-foreground text-xs">{student.email}</div>}
         </div>
 
         {config.requiresSession && (
@@ -239,9 +233,7 @@ function ManualForm({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={
-            loading || noSessionAvailable || (mode === 'note' && !note.trim())
-          }
+          disabled={loading || noSessionAvailable || (mode === 'note' && !note.trim())}
         >
           {loading ? 'Đang lưu...' : 'Xác nhận'}
         </Button>

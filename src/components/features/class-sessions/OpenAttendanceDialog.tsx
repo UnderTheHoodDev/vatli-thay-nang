@@ -60,11 +60,8 @@ function OpenAttendanceForm({ classSessionId, onOpened, onCancel }: FormProps) {
 
   const numericDuration = Number(duration);
   const isValid =
-    Number.isInteger(numericDuration) &&
-    numericDuration >= 1 &&
-    numericDuration <= 60;
-  const error =
-    submitted && !isValid ? 'Vui lòng nhập số phút từ 1 đến 60' : '';
+    Number.isInteger(numericDuration) && numericDuration >= 1 && numericDuration <= 60;
+  const error = submitted && !isValid ? 'Vui lòng nhập số phút từ 1 đến 60' : '';
 
   const handleSubmit = async () => {
     setSubmitted(true);
@@ -74,11 +71,7 @@ function OpenAttendanceForm({ classSessionId, onOpened, onCancel }: FormProps) {
       const result = await openAttendanceAction(classSessionId, {
         durationMinutes: numericDuration,
       });
-      handleActionResult(
-        result.errors,
-        onOpened,
-        `Đã bật điểm danh — ${numericDuration} phút`,
-      );
+      handleActionResult(result.errors, onOpened, `Đã bật điểm danh — ${numericDuration} phút`);
     } finally {
       setLoading(false);
     }

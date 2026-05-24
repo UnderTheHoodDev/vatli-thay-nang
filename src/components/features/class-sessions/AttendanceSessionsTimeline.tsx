@@ -23,11 +23,7 @@ interface Props {
   onChanged: () => void;
 }
 
-export default function AttendanceSessionsTimeline({
-  classSessionId,
-  sessions,
-  onChanged,
-}: Props) {
+export default function AttendanceSessionsTimeline({ classSessionId, sessions, onChanged }: Props) {
   const [closingId, setClosingId] = useState<number | null>(null);
   const now = new Date();
 
@@ -51,7 +47,7 @@ export default function AttendanceSessionsTimeline({
           <li key={s.id} className="relative">
             <span
               className={
-                'absolute -left-[1.625rem] top-1 flex size-4 items-center justify-center rounded-full ' +
+                'absolute top-1 -left-[1.625rem] flex size-4 items-center justify-center rounded-full ' +
                 (isActive ? 'bg-purple text-white' : 'bg-muted text-muted-foreground')
               }
             >
@@ -66,17 +62,13 @@ export default function AttendanceSessionsTimeline({
             <div className="bg-card border-divider flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-0.5 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="text-foreground font-medium">
-                    Phiên #{s.id}
-                  </span>
+                  <span className="text-foreground font-medium">Phiên #{s.id}</span>
                   {isActive ? (
                     <Badge variant="success">Đang mở</Badge>
                   ) : (
                     <Badge variant="secondary">Đã đóng</Badge>
                   )}
-                  <span className="text-muted-foreground text-xs">
-                    {s.durationMinutes} phút
-                  </span>
+                  <span className="text-muted-foreground text-xs">{s.durationMinutes} phút</span>
                 </div>
                 <div className="text-muted-foreground text-xs">
                   Mở: {formatTime(s.openedAt)} · Đóng: {formatTime(s.closedAt)}

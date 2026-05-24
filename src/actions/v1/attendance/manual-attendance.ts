@@ -12,10 +12,7 @@ export async function manualAttendanceAction(
   payload: IManualAttendancePayload,
 ): Promise<IActionState> {
   try {
-    await api.patch(
-      `/api/v1/class-sessions/${classSessionId}/attendance/manual`,
-      payload,
-    );
+    await api.patch(`/api/v1/class-sessions/${classSessionId}/attendance/manual`, payload);
     revalidatePath(`/admin/class-sessions/${classSessionId}`);
     return { errors: [] };
   } catch (error) {

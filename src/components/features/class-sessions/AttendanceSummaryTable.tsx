@@ -22,10 +22,7 @@ import {
 import ManualAttendanceDialog, {
   type ManualDialogMode,
 } from '@/components/features/class-sessions/ManualAttendanceDialog';
-import type {
-  AttendanceSummary,
-  AttendanceSummaryStudent,
-} from '@/types/actions/attendance';
+import type { AttendanceSummary, AttendanceSummaryStudent } from '@/types/actions/attendance';
 
 function formatHm(iso: string): string {
   return new Date(iso).toLocaleTimeString('vi-VN', {
@@ -53,11 +50,7 @@ interface DialogState {
   student: AttendanceSummaryStudent;
 }
 
-export default function AttendanceSummaryTable({
-  classSessionId,
-  summary,
-  onChanged,
-}: Props) {
+export default function AttendanceSummaryTable({ classSessionId, summary, onChanged }: Props) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
 
   const sessions = summary?.attendanceSessions ?? [];
@@ -65,10 +58,7 @@ export default function AttendanceSummaryTable({
   const studentRows = useMemo(() => {
     const students = summary?.students ?? [];
     return students.map((s) => {
-      const logsBySession = new Map<
-        number,
-        AttendanceSummaryStudent['attendances'][number]
-      >();
+      const logsBySession = new Map<number, AttendanceSummaryStudent['attendances'][number]>();
       for (const log of s.attendances) {
         logsBySession.set(log.attendanceSessionId, log);
       }
@@ -104,10 +94,7 @@ export default function AttendanceSummaryTable({
           <TableBody>
             {studentRows.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={colCount}
-                  className="text-muted-foreground text-center"
-                >
+                <TableCell colSpan={colCount} className="text-muted-foreground text-center">
                   Chưa có học sinh trong lớp
                 </TableCell>
               </TableRow>
@@ -117,9 +104,7 @@ export default function AttendanceSummaryTable({
                   <TableCell className="text-foreground font-medium">
                     {row.fullName ?? row.email}
                     {row.fullName && (
-                      <div className="text-muted-foreground text-xs">
-                        {row.email}
-                      </div>
+                      <div className="text-muted-foreground text-xs">{row.email}</div>
                     )}
                   </TableCell>
                   <TableCell className="text-center">
@@ -135,18 +120,14 @@ export default function AttendanceSummaryTable({
                   </TableCell>
                   <TableCell>
                     {row.leaveRequest ? (
-                      <span className="text-foreground text-sm">
-                        {row.leaveRequest.reason}
-                      </span>
+                      <span className="text-foreground text-sm">{row.leaveRequest.reason}</span>
                     ) : (
                       <span className="text-muted-foreground text-xs">—</span>
                     )}
                   </TableCell>
                   {sessions.map((s) => {
                     const log = row.logsBySession.get(s.id);
-                    return (
-                      <SessionColumnCells key={s.id} log={log} />
-                    );
+                    return <SessionColumnCells key={s.id} log={log} />;
                   })}
                   <TableCell>
                     <div className="flex items-center justify-center">
@@ -164,45 +145,38 @@ export default function AttendanceSummaryTable({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={() =>
-                              setDialog({ mode: 'mark', student: row })
-                            }
+                            onClick={() => setDialog({ mode: 'mark', student: row })}
                           >
                             Đánh dấu có mặt
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={() =>
-                              setDialog({ mode: 'remove', student: row })
-                            }
+                            onClick={() => setDialog({ mode: 'remove', student: row })}
                           >
                             Huỷ điểm danh
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={() =>
-                              setDialog({ mode: 'note', student: row })
-                            }
+                            onClick={() => setDialog({ mode: 'note', student: row })}
                           >
                             Thêm ghi chú
                           </DropdownMenuItem>
-                          {row.leaveRequest &&
-                            row.leaveRequest.status === 'SUBMITTED' && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    setDialog({
-                                      mode: 'acknowledgeLeave',
-                                      student: row,
-                                    })
-                                  }
-                                >
-                                  Xác nhận nghỉ
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                          {row.leaveRequest && row.leaveRequest.status === 'SUBMITTED' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  setDialog({
+                                    mode: 'acknowledgeLeave',
+                                    student: row,
+                                  })
+                                }
+                              >
+                                Xác nhận nghỉ
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -243,9 +217,7 @@ function SessionColumnHead({ idx }: { idx: number }) {
       </TableHead>
       <TableHead className="min-w-[100px] text-center">
         Phiên #{idx + 1}
-        <div className="text-muted-foreground text-[10px] font-normal normal-case">
-          Thời gian
-        </div>
+        <div className="text-muted-foreground text-[10px] font-normal normal-case">Thời gian</div>
       </TableHead>
     </>
   );
@@ -254,9 +226,7 @@ function SessionColumnHead({ idx }: { idx: number }) {
 function SessionColumnCells({
   log,
 }: {
-  log:
-    | AttendanceSummaryStudent['attendances'][number]
-    | undefined;
+  log: AttendanceSummaryStudent['attendances'][number] | undefined;
 }) {
   return (
     <>

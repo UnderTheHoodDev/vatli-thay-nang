@@ -13,10 +13,7 @@ import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
 import type { ListMeta } from '@/types/auth';
-import type {
-  ClassSessionListRow,
-  ClassStudentListRow,
-} from '@/types/actions/class-management';
+import type { ClassSessionListRow, ClassStudentListRow } from '@/types/actions/class-management';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 export type ClassDetailTab = 'info' | 'students' | 'sessions';

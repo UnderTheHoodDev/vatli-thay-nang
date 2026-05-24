@@ -100,7 +100,6 @@ export default function AppSidebar({ title, items }: Props) {
           </Fragment>
         ))}
       </SidebarContent>
-
     </Sidebar>
   );
 }

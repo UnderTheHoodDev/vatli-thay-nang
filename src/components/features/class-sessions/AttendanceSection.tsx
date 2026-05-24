@@ -9,10 +9,7 @@ import EmptyState from '@/components/app/EmptyState';
 import OpenAttendanceDialog from '@/components/features/class-sessions/OpenAttendanceDialog';
 import AttendanceSessionsTimeline from '@/components/features/class-sessions/AttendanceSessionsTimeline';
 import AttendanceSummaryTable from '@/components/features/class-sessions/AttendanceSummaryTable';
-import type {
-  AttendanceSessionListRow,
-  AttendanceSummary,
-} from '@/types/actions/attendance';
+import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
 
 interface Props {
   classSessionId: number;
@@ -48,10 +45,7 @@ export default function AttendanceSection({
               Đang có phiên điểm danh
             </span>
           ) : (
-            <Button
-              onClick={() => setOpenDialog(true)}
-              className="cursor-pointer"
-            >
+            <Button onClick={() => setOpenDialog(true)} className="cursor-pointer">
               <Power className="size-4" />
               Bật điểm danh
             </Button>
@@ -60,9 +54,7 @@ export default function AttendanceSection({
       </CardHeader>
       <CardContent className="space-y-6 pb-6">
         <section className="space-y-3">
-          <h3 className="text-foreground text-sm font-semibold">
-            Các phiên điểm danh
-          </h3>
+          <h3 className="text-foreground text-sm font-semibold">Các phiên điểm danh</h3>
           {attendanceSessions.length === 0 ? (
             <div className="bg-muted/40 rounded-md">
               <EmptyState
@@ -81,9 +73,7 @@ export default function AttendanceSection({
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-foreground text-sm font-semibold">
-            Bảng tổng hợp điểm danh
-          </h3>
+          <h3 className="text-foreground text-sm font-semibold">Bảng tổng hợp điểm danh</h3>
           <AttendanceSummaryTable
             classSessionId={classSessionId}
             summary={summary}

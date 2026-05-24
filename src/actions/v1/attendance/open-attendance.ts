@@ -12,10 +12,7 @@ export async function openAttendanceAction(
   payload: IOpenAttendancePayload,
 ): Promise<IActionState> {
   try {
-    await api.post(
-      `/api/v1/class-sessions/${classSessionId}/attendance-sessions`,
-      payload,
-    );
+    await api.post(`/api/v1/class-sessions/${classSessionId}/attendance-sessions`, payload);
     revalidatePath(`/admin/class-sessions/${classSessionId}`);
     return { errors: [] };
   } catch (error) {

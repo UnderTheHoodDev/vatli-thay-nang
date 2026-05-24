@@ -11,10 +11,7 @@ import AttendanceSection from '@/components/features/class-sessions/AttendanceSe
 import AttendanceOverview from '@/components/features/class-sessions/AttendanceOverview';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
-import type {
-  AttendanceSessionListRow,
-  AttendanceSummary,
-} from '@/types/actions/attendance';
+import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
 import type { ClassSessionStatus } from '@/types/class-management';
 
 interface Props {
@@ -28,7 +25,10 @@ interface Props {
 
 const STATUS_LABEL: Record<
   ClassSessionStatus,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
+  }
 > = {
   SCHEDULED: { label: 'Đã lên lịch', variant: 'outline' },
   IN_PROGRESS: { label: 'Đang diễn ra', variant: 'success' },
