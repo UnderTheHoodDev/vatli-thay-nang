@@ -5,20 +5,20 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
-import type { ICreateClassSessionPayload } from '@/types/actions/class-management';
+import type { IManualAttendancePayload } from '@/types/actions/attendance';
 
-export async function createClassSessionAction(
-  classId: number,
-  payload: ICreateClassSessionPayload,
+export async function manualAttendanceAction(
+  classSessionId: number,
+  payload: IManualAttendancePayload,
 ): Promise<IActionState> {
   try {
-    await api.post(`/api/v1/classes/${classId}/class-sessions`, payload);
-    revalidatePath(`/admin/classes/${classId}`);
+    await api.patch(`/api/v1/class-sessions/${classSessionId}/attendance/manual`, payload);
+    revalidatePath(`/admin/class-sessions/${classSessionId}`);
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Tạo buổi học thất bại'] };
+    return { errors: ['Chỉnh sửa điểm danh thất bại'] };
   }
 }

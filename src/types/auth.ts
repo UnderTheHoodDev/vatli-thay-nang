@@ -12,6 +12,7 @@ export interface UserRow {
   province: string | null;
   schoolName: string | null;
   parentPhonenumber: string | null;
+  facebookLink: string | null;
   role: Role;
   status: UserStatus;
 }

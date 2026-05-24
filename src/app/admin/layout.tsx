@@ -17,10 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="font-opensans bg-muted/40 min-h-svh">
       <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar title="VLTN Admin" items={ADMIN_NAV} userEmail={session.email} />
+        <AppSidebar title="VLTN Admin" items={ADMIN_NAV} />
         <SidebarInset className="bg-muted/40">
           <AppTopbar email={session.email} role={session.role} />
-          <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+          <main className="flex-1 px-4 pt-3 pb-4 md:px-6 md:pt-4 md:pb-6 lg:px-8 lg:pt-5 lg:pb-8">
+            {children}
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </div>

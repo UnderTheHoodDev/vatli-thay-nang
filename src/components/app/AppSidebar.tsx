@@ -7,7 +7,6 @@ import { LucideIcon, Users, LayoutDashboard, UserRound, School, GraduationCap } 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -39,7 +38,6 @@ export const DASHBOARD_NAV: NavItem[] = [
 interface Props {
   title: string;
   items: NavItem[];
-  userEmail?: string;
 }
 
 function groupBySection(items: NavItem[]): Array<{ section: string; items: NavItem[] }> {
@@ -52,7 +50,7 @@ function groupBySection(items: NavItem[]): Array<{ section: string; items: NavIt
   return Array.from(groups, ([section, items]) => ({ section, items }));
 }
 
-export default function AppSidebar({ title, items, userEmail }: Props) {
+export default function AppSidebar({ title, items }: Props) {
   const pathname = usePathname();
   const groups = groupBySection(items);
 
@@ -102,14 +100,6 @@ export default function AppSidebar({ title, items, userEmail }: Props) {
           </Fragment>
         ))}
       </SidebarContent>
-
-      {userEmail && (
-        <SidebarFooter className="border-sidebar-border border-t">
-          <div className="text-sidebar-foreground/70 truncate px-2 py-1 text-xs group-data-[collapsible=icon]:hidden">
-            {userEmail}
-          </div>
-        </SidebarFooter>
-      )}
     </Sidebar>
   );
 }

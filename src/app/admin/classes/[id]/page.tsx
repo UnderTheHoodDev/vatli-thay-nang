@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listClassStudents } from '@/actions/v1/classes/list-class-students';
+import { listClassSessions } from '@/actions/v1/class-sessions/list-class-sessions';
 import ClassDetailPageClient, {
   type ClassDetailTab,
   type ClassDetailUrlState,
@@ -12,7 +13,8 @@ interface Props {
 }
 
 function readUrlState(sp: Record<string, string | undefined>): ClassDetailUrlState {
-  const tab: ClassDetailTab = sp.tab === 'students' ? 'students' : 'info';
+  const tab: ClassDetailTab =
+    sp.tab === 'students' ? 'students' : sp.tab === 'sessions' ? 'sessions' : 'info';
   return {
     tab,
     email: sp.email ?? '',
@@ -47,6 +49,18 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
           errors: [],
         };
 
+  const sessionsRes =
+    urlState.tab === 'sessions'
+      ? await listClassSessions(classId, {
+          page: urlState.page,
+          pageSize: urlState.pageSize,
+        })
+      : {
+          data: [],
+          meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
+          errors: [],
+        };
+
   return (
     <ClassDetailPageClient
       classDetail={classDetail}
@@ -54,6 +68,9 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
       students={studentsRes.data}
       studentsMeta={studentsRes.meta}
       studentsErrors={studentsRes.errors}
+      sessions={sessionsRes.data}
+      sessionsMeta={sessionsRes.meta}
+      sessionsErrors={sessionsRes.errors}
     />
   );
 }

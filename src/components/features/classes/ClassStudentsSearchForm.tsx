@@ -48,7 +48,7 @@ export default function ClassStudentsSearchForm({ initial, onSearch }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="space-y-1.5">
         <Label htmlFor="class-student-email">Email</Label>
         <Input
@@ -67,9 +67,9 @@ export default function ClassStudentsSearchForm({ initial, onSearch }: Props) {
           placeholder="Nguyễn Văn A"
         />
       </div>
-      <div className="flex flex-col justify-end gap-2 sm:flex-row">
+      <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-2">
         <Button type="button" variant="outline" onClick={reset} className="cursor-pointer">
-          <X /> Xoá
+          <X /> Xoá bộ lọc
         </Button>
         <Button type="submit" className="cursor-pointer">
           <Search /> Tìm kiếm

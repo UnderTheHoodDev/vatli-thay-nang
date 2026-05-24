@@ -1,11 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import {
-  Eye,
   Pencil,
   Plus,
   Search,
@@ -224,14 +222,14 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col justify-end gap-2 sm:flex-row lg:col-start-4">
+            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-3 lg:col-span-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleResetFilters}
                 className="cursor-pointer"
               >
-                <X /> Xoá
+                <X /> Xoá bộ lọc
               </Button>
               <Button onClick={handleSearch} className="cursor-pointer">
                 <Search /> Tìm kiếm
@@ -299,7 +297,11 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
               </TableHeader>
               <TableBody>
                 {rows.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow
+                    key={row.id}
+                    onClick={() => router.push(`/admin/classes/${row.id}`)}
+                    className="hover:bg-muted cursor-pointer transition-colors"
+                  >
                     <TableCell className="text-muted-foreground">{row.id}</TableCell>
                     <TableCell className="text-foreground font-medium">{row.name}</TableCell>
                     <TableCell>
@@ -315,19 +317,8 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
                         {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="icon-sm"
-                          title="Chi tiết"
-                          className="cursor-pointer"
-                        >
-                          <Link href={`/admin/classes/${row.id}`}>
-                            <Eye />
-                          </Link>
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon-sm"

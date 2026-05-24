@@ -10,12 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
+import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
 import type { ListMeta } from '@/types/auth';
-import type { ClassStudentListRow } from '@/types/actions/class-management';
+import type { ClassSessionListRow, ClassStudentListRow } from '@/types/actions/class-management';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
-export type ClassDetailTab = 'info' | 'students';
+export type ClassDetailTab = 'info' | 'students' | 'sessions';
 
 export interface ClassDetailUrlState extends ClassStudentSearchValues {
   tab: ClassDetailTab;
@@ -29,6 +30,9 @@ interface Props {
   students: ClassStudentListRow[];
   studentsMeta: ListMeta;
   studentsErrors: string[];
+  sessions: ClassSessionListRow[];
+  sessionsMeta: ListMeta;
+  sessionsErrors: string[];
 }
 
 const DEFAULT_TAB: ClassDetailTab = 'info';
@@ -55,6 +59,9 @@ export default function ClassDetailPageClient({
   students,
   studentsMeta,
   studentsErrors,
+  sessions,
+  sessionsMeta,
+  sessionsErrors,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,6 +69,10 @@ export default function ClassDetailPageClient({
   useEffect(() => {
     studentsErrors.forEach((e) => toast.error(e));
   }, [studentsErrors]);
+
+  useEffect(() => {
+    sessionsErrors.forEach((e) => toast.error(e));
+  }, [sessionsErrors]);
 
   const updateUrl = useCallback(
     (next: Partial<ClassDetailUrlState>) => {
@@ -91,35 +102,27 @@ export default function ClassDetailPageClient({
             <ArrowLeft /> Danh sách lớp học
           </Link>
         </Button>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-paytone text-foreground text-2xl tracking-tight">
-                {classDetail.name}
-              </h1>
-              {statusBadge(classDetail.status)}
-            </div>
-            <p className="text-muted-foreground text-sm">
-              Mã lớp:{' '}
-              <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                {classDetail.code}
-              </code>
-              <span className="mx-2">·</span>
-              <span>{classDetail.studentCount ?? 0} học sinh</span>
-            </p>
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-paytone text-foreground text-2xl tracking-tight">
+              {classDetail.name}
+            </h1>
+            {statusBadge(classDetail.status)}
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/classes/${classDetail.id}/class-sessions`}>
-              <Calendar className="mr-1 h-4 w-4" />
-              Buổi học
-            </Link>
-          </Button>
+          <p className="text-muted-foreground text-sm">
+            Mã lớp:{' '}
+            <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+              {classDetail.code}
+            </code>
+            <span className="mx-2">·</span>
+            <span>{classDetail.studentCount ?? 0} học sinh</span>
+          </p>
         </div>
       </div>
 
       <Tabs
         value={urlState.tab}
-        onValueChange={(v) => updateUrl({ tab: v as ClassDetailTab })}
+        onValueChange={(v) => updateUrl({ tab: v as ClassDetailTab, page: 1 })}
         className="gap-4"
       >
         <TabsList>
@@ -128,6 +131,9 @@ export default function ClassDetailPageClient({
           </TabsTrigger>
           <TabsTrigger value="students" className="cursor-pointer">
             <UsersIcon className="size-4" /> Học sinh
+          </TabsTrigger>
+          <TabsTrigger value="sessions" className="cursor-pointer">
+            <Calendar className="size-4" /> Buổi học
           </TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -140,6 +146,15 @@ export default function ClassDetailPageClient({
             rows={students}
             meta={studentsMeta}
             onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
+            onPageChange={(p) => updateUrl({ page: p })}
+            onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+          />
+        </TabsContent>
+        <TabsContent value="sessions">
+          <ClassSessionsTab
+            classId={classDetail.id}
+            rows={sessions}
+            meta={sessionsMeta}
             onPageChange={(p) => updateUrl({ page: p })}
             onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
           />

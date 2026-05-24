@@ -171,7 +171,7 @@ export default function AddStudentsDialog({ classId }: Props) {
                     <label
                       className={cn(
                         'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
-                        isChecked ? 'bg-primary/5' : 'hover:bg-muted/60',
+                        isChecked ? 'bg-primary/5' : 'hover:bg-muted',
                       )}
                     >
                       <input

@@ -20,6 +20,7 @@ export default async function AdminProfilePage() {
     province: null,
     schoolName: null,
     parentPhonenumber: null,
+    facebookLink: null,
     role: session.role,
     status: 'ACTIVATED',
   };
