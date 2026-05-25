@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButton, FormTextField, PasswordFields } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
 import { PASSWORD_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
@@ -53,42 +55,52 @@ export default function ChangePasswordSection({ role }: Props) {
       });
       if (ok) {
         toast.success('Đổi mật khẩu thành công');
+        setCurrentPassword('');
+        setPassword('');
+        setConfirmPassword('');
       }
     });
   }
 
   return (
-    <section className="border-divider rounded-lg border bg-white p-6">
-      <div className="mb-4 space-y-1">
-        <h2 className="font-paytone text-purple text-lg">Đổi mật khẩu</h2>
-        <p className="text-sm text-gray-500">
+    <Card>
+      <CardHeader>
+        <CardTitle>Đổi mật khẩu</CardTitle>
+        <p className="text-muted-foreground text-sm">
           Mật khẩu cần có ít nhất 1 chữ hoa, 1 số, độ dài tối thiểu 8 ký tự.
         </p>
-      </div>
-      <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:max-w-md">
-        <FormTextField
-          id="oldPassword"
-          label="Mật khẩu hiện tại"
-          type="password"
-          value={currentPassword}
-          onChange={setCurrentPassword}
-          required
-          disabled={pending}
-        />
-        <PasswordFields
-          password={password}
-          confirmPassword={confirmPassword}
-          onPasswordChange={setPassword}
-          onConfirmPasswordChange={setConfirmPassword}
-          disabled={pending}
-          showConfirmLabel="Xác nhận mật khẩu mới"
-        />
-        <div>
-          <ActionButton type="submit" isLoading={pending} loadingText="Đang cập nhật...">
-            Đổi mật khẩu
-          </ActionButton>
-        </div>
-      </form>
-    </section>
+      </CardHeader>
+      <CardContent className="pb-6">
+        <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:max-w-md">
+          <FormTextField
+            id="oldPassword"
+            label="Mật khẩu hiện tại"
+            type="password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            required
+            disabled={pending}
+          />
+          <PasswordFields
+            password={password}
+            confirmPassword={confirmPassword}
+            onPasswordChange={setPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            disabled={pending}
+            showConfirmLabel="Xác nhận mật khẩu mới"
+          />
+          <div className="pt-2">
+            <ActionButton
+              type="submit"
+              isLoading={pending}
+              loadingText="Đang cập nhật..."
+              className="cursor-pointer"
+            >
+              <KeyRound /> Đổi mật khẩu
+            </ActionButton>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

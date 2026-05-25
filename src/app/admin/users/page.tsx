@@ -47,6 +47,7 @@ export default async function UsersPage({ searchParams }: Props) {
       urlState={urlState}
       rows={usersRes.data}
       meta={usersRes.meta}
+      stats={usersRes.stats}
       provinces={provinces}
     />
   );
