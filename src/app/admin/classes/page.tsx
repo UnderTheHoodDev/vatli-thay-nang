@@ -36,6 +36,7 @@ export default async function ClassesPage({ searchParams }: Props) {
       urlState={urlState}
       rows={result.data}
       meta={result.meta}
+      stats={result.stats}
       errors={result.errors}
     />
   );

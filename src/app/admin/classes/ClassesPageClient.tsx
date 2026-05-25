@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -48,12 +48,14 @@ import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
+import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { handleActionResult } from '@/lib/actions';
 import { deleteClassAction } from '@/actions/v1/classes/delete-class';
 import ClassFormModal from '@/components/features/classes/ClassFormModal';
 import type { ListMeta } from '@/types/auth';
 import type { ClassRow } from '@/types/class-management';
+import type { ClassesListStats } from '@/types/actions/class-management';
 
 export interface UrlState {
   name: string;
@@ -67,6 +69,7 @@ interface Props {
   urlState: UrlState;
   rows: ClassRow[];
   meta: ListMeta;
+  stats: ClassesListStats;
   errors: string[];
 }
 
@@ -85,13 +88,16 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-export default function ClassesPageClient({ urlState, rows, meta, errors }: Props) {
+const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-28', 'w-20'];
+
+export default function ClassesPageClient({ urlState, rows, meta, stats, errors }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassRow | null>(null);
   const [deletingClass, setDeletingClass] = useState<ClassRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (errors.length > 0) {
@@ -107,7 +113,9 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
     (next: Partial<UrlState>) => {
       const params = buildUrlParams({ ...urlState, ...next });
       const query = params.toString();
-      router.push(query ? `${pathname}?${query}` : pathname);
+      startTransition(() => {
+        router.push(query ? `${pathname}?${query}` : pathname);
+      });
     },
     [router, pathname, urlState],
   );
@@ -141,13 +149,6 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
   const end = Math.min(page * pageSize, total);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const stats = useMemo(() => {
-    const active = rows.filter((r) => r.status === 'ACTIVE').length;
-    const closed = rows.filter((r) => r.status === 'CLOSED').length;
-    const students = rows.reduce((sum, r) => sum + (r.studentCount ?? 0), 0);
-    return { active, closed, students };
-  }, [rows]);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -156,27 +157,14 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatsCard label="Tổng số lớp" value={total} icon={School} tone="primary" />
-        <StatsCard
-          label="Đang hoạt động"
-          value={stats.active}
-          icon={CheckCircle2}
-          tone="success"
-          hint="trong trang hiện tại"
-        />
-        <StatsCard
-          label="Đã đóng"
-          value={stats.closed}
-          icon={Lock}
-          tone="muted"
-          hint="trong trang hiện tại"
-        />
+        <StatsCard label="Tổng số lớp" value={stats.total} icon={School} tone="primary" />
+        <StatsCard label="Đang hoạt động" value={stats.active} icon={CheckCircle2} tone="success" />
+        <StatsCard label="Đã đóng" value={stats.closed} icon={Lock} tone="muted" />
         <StatsCard
           label="Tổng học sinh"
-          value={stats.students}
+          value={stats.totalStudents}
           icon={UsersIcon}
           tone="warning"
-          hint="trong trang hiện tại"
         />
       </div>
 
@@ -272,7 +260,7 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          {rows.length === 0 ? (
+          {!isPending && rows.length === 0 ? (
             <EmptyState
               icon={School}
               title="Không có lớp học nào"
@@ -296,53 +284,57 @@ export default function ClassesPageClient({ urlState, rows, meta, errors }: Prop
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    onClick={() => router.push(`/admin/classes/${row.id}`)}
-                    className="hover:bg-muted cursor-pointer transition-colors"
-                  >
-                    <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                    <TableCell className="text-foreground font-medium">{row.name}</TableCell>
-                    <TableCell>
-                      <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                        {row.code}
-                      </code>
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {row.studentCount ?? 0}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                        {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title="Sửa"
-                          className="cursor-pointer"
-                          onClick={() => setEditingClass(row)}
-                        >
-                          <Pencil />
-                        </Button>
-                        {row.status === 'CLOSED' && (
+                {isPending ? (
+                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+                ) : (
+                  rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      onClick={() => router.push(`/admin/classes/${row.id}`)}
+                      className="hover:bg-muted cursor-pointer transition-colors"
+                    >
+                      <TableCell className="text-muted-foreground">{row.id}</TableCell>
+                      <TableCell className="text-foreground font-medium">{row.name}</TableCell>
+                      <TableCell>
+                        <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                          {row.code}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {row.studentCount ?? 0}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                          {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            title="Xoá"
-                            className="text-destructive hover:text-destructive cursor-pointer"
-                            onClick={() => setDeletingClass(row)}
+                            title="Sửa"
+                            className="cursor-pointer"
+                            onClick={() => setEditingClass(row)}
                           >
-                            <Trash2 />
+                            <Pencil />
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          {row.status === 'CLOSED' && (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title="Xoá"
+                              className="text-destructive hover:text-destructive cursor-pointer"
+                              onClick={() => setDeletingClass(row)}
+                            >
+                              <Trash2 />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           )}

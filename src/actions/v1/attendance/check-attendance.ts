@@ -6,17 +6,15 @@ import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
 
-export async function acknowledgeLeaveRequestAction(leaveRequestId: number): Promise<IActionState> {
+export async function checkAttendanceAction(attendanceSessionId: number): Promise<IActionState> {
   try {
-    await api.patch(`/api/v1/leave-requests/${leaveRequestId}/status`, {
-      status: 'ACKNOWLEDGED',
-    });
-    revalidatePath('/admin/classes/[id]/class-sessions/[sessionId]', 'page');
+    await api.post(`/api/v1/attendance-sessions/${attendanceSessionId}/check`);
+    revalidatePath('/dashboard/classes/[id]/class-sessions/[sessionId]', 'page');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Xác nhận xin nghỉ thất bại'] };
+    return { errors: ['Điểm danh thất bại'] };
   }
 }

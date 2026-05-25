@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
 import { logoutAction } from '@/actions/v1/auth/logout';
 
 interface Props {
@@ -51,10 +50,6 @@ export default function AppTopbar({ email, role }: Props) {
     <header className="border-divider bg-background/85 sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur md:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:-ml-1" />
-        <Separator orientation="vertical" className="mr-1 h-5" />
-        <span className="text-muted-foreground hidden text-xs font-medium tracking-wide uppercase sm:inline">
-          {roleLabel}
-        </span>
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors">

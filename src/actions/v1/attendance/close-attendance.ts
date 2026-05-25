@@ -6,13 +6,10 @@ import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
 
-export async function closeAttendanceAction(
-  attendanceSessionId: number,
-  classSessionId: number,
-): Promise<IActionState> {
+export async function closeAttendanceAction(attendanceSessionId: number): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/attendance-sessions/${attendanceSessionId}/close`);
-    revalidatePath(`/admin/class-sessions/${classSessionId}`);
+    revalidatePath('/admin/classes/[id]/class-sessions/[sessionId]', 'page');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

@@ -13,7 +13,7 @@ export async function submitLeaveRequestAction(
 ): Promise<IActionState> {
   try {
     await api.post(`/api/v1/class-sessions/${classSessionId}/leave-requests`, payload);
-    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/classes/[id]/class-sessions/[sessionId]', 'page');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

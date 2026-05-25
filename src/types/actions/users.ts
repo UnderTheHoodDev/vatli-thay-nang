@@ -14,9 +14,18 @@ export interface IListUsersParams {
   pageSize?: number;
 }
 
+export interface UsersListStats {
+  total: number;
+  activated: number;
+  unactivated: number;
+  admins: number;
+  students: number;
+}
+
 export interface IListUsersResult {
   data: UserRow[];
   meta: ListMeta;
+  stats: UsersListStats;
 }
 
 export interface IActionState {

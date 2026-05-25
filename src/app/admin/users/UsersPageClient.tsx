@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Users, UserCheck, UserX, ShieldCheck } from 'lucide-react';
 import {
@@ -19,6 +19,7 @@ import UsersTable from '@/components/features/users/UsersTable';
 import CreateUserDialog from '@/components/features/users/CreateUserDialog';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import type { ListMeta, Province, UserRow } from '@/types/auth';
+import type { UsersListStats } from '@/types/actions/users';
 
 export interface UrlState extends UserSearchValues {
   page: number;
@@ -29,6 +30,7 @@ interface Props {
   urlState: UrlState;
   rows: UserRow[];
   meta: ListMeta;
+  stats: UsersListStats;
   provinces: Province[];
 }
 
@@ -54,15 +56,18 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-export default function UsersPageClient({ urlState, rows, meta, provinces }: Props) {
+export default function UsersPageClient({ urlState, rows, meta, stats, provinces }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
   const updateUrl = useCallback(
     (next: Partial<UrlState>) => {
       const params = buildUrlParams({ ...urlState, ...next });
       const query = params.toString();
-      router.push(query ? `${pathname}?${query}` : pathname);
+      startTransition(() => {
+        router.push(query ? `${pathname}?${query}` : pathname);
+      });
     },
     [router, pathname, urlState],
   );
@@ -73,13 +78,6 @@ export default function UsersPageClient({ urlState, rows, meta, provinces }: Pro
   const end = Math.min(page * pageSize, total);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const pageStats = useMemo(() => {
-    const activated = rows.filter((u) => u.status === 'ACTIVATED').length;
-    const pending = rows.filter((u) => u.status === 'UNACTIVATED').length;
-    const admins = rows.filter((u) => u.role === 'ADMIN').length;
-    return { activated, pending, admins };
-  }, [rows]);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -88,28 +86,10 @@ export default function UsersPageClient({ urlState, rows, meta, provinces }: Pro
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatsCard label="Tổng người dùng" value={total} icon={Users} tone="primary" />
-        <StatsCard
-          label="Đã kích hoạt"
-          value={pageStats.activated}
-          icon={UserCheck}
-          tone="success"
-          hint="trong trang hiện tại"
-        />
-        <StatsCard
-          label="Chờ kích hoạt"
-          value={pageStats.pending}
-          icon={UserX}
-          tone="warning"
-          hint="trong trang hiện tại"
-        />
-        <StatsCard
-          label="Quản trị viên"
-          value={pageStats.admins}
-          icon={ShieldCheck}
-          tone="muted"
-          hint="trong trang hiện tại"
-        />
+        <StatsCard label="Tổng người dùng" value={stats.total} icon={Users} tone="primary" />
+        <StatsCard label="Đã kích hoạt" value={stats.activated} icon={UserCheck} tone="success" />
+        <StatsCard label="Chờ kích hoạt" value={stats.unactivated} icon={UserX} tone="warning" />
+        <StatsCard label="Quản trị viên" value={stats.admins} icon={ShieldCheck} tone="muted" />
       </div>
 
       <Card>
@@ -156,7 +136,7 @@ export default function UsersPageClient({ urlState, rows, meta, provinces }: Pro
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <UsersTable rows={rows} />
+          <UsersTable rows={rows} loading={isPending} />
         </CardContent>
         {totalPages > 1 && (
           <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">

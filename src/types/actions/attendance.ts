@@ -96,3 +96,8 @@ export interface IListAttendanceLogsResult {
   data: AttendanceLogListRow[];
   meta: ListMeta;
 }
+
+export interface MyAttendanceLog {
+  attendanceSessionId: number;
+  checkedAt: string;
+}

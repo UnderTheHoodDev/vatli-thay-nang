@@ -3,15 +3,7 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LucideIcon,
-  Users,
-  LayoutDashboard,
-  UserRound,
-  School,
-  GraduationCap,
-  CalendarDays,
-} from 'lucide-react';
+import { LucideIcon, Users, LayoutDashboard, UserRound, School, GraduationCap } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -40,7 +32,7 @@ export const ADMIN_NAV: NavItem[] = [
 
 export const DASHBOARD_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, section: 'Học tập' },
-  { label: 'Buổi học', href: '/dashboard/class-sessions', icon: CalendarDays, section: 'Học tập' },
+  { label: 'Lớp học', href: '/dashboard/classes', icon: School, section: 'Học tập' },
   { label: 'Thông tin cá nhân', href: '/dashboard/profile', icon: UserRound, section: 'Tài khoản' },
 ];
 
@@ -59,9 +51,20 @@ function groupBySection(items: NavItem[]): Array<{ section: string; items: NavIt
   return Array.from(groups, ([section, items]) => ({ section, items }));
 }
 
+function findActiveHref(pathname: string, items: NavItem[]): string | null {
+  let best: NavItem | null = null;
+  for (const item of items) {
+    if (pathname === item.href || pathname.startsWith(item.href + '/')) {
+      if (!best || item.href.length > best.href.length) best = item;
+    }
+  }
+  return best?.href ?? null;
+}
+
 export default function AppSidebar({ title, items }: Props) {
   const pathname = usePathname();
   const groups = groupBySection(items);
+  const activeHref = findActiveHref(pathname, items);
 
   return (
     <Sidebar collapsible="icon">
@@ -91,7 +94,7 @@ export default function AppSidebar({ title, items }: Props) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {items.map(({ label, href, icon: Icon }) => {
-                    const active = pathname === href || pathname.startsWith(href + '/');
+                    const active = href === activeHref;
                     return (
                       <SidebarMenuItem key={href}>
                         <SidebarMenuButton asChild isActive={active} tooltip={label}>

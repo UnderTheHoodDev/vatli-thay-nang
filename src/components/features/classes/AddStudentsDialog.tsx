@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ActionButton } from '@/components/ui/custom';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
@@ -115,7 +116,7 @@ export default function AddStudentsDialog({ classId }: Props) {
           <Plus /> Thêm học sinh
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-3xl lg:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
           <DialogDescription>
@@ -152,9 +153,26 @@ export default function AddStudentsDialog({ classId }: Props) {
           </div>
         </form>
 
-        <div className="border-divider bg-background max-h-80 min-h-44 overflow-y-auto rounded-lg border">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground text-sm">
+            {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
+          </span>
+          <Badge variant={selected.size > 0 ? 'default' : 'secondary'}>
+            Đã chọn {selected.size} học sinh
+          </Badge>
+        </div>
+
+        <div className="border-divider bg-background max-h-96 min-h-56 overflow-y-auto rounded-lg border">
           {loading ? (
-            <div className="text-muted-foreground py-8 text-center text-sm">Đang tải...</div>
+            <ul className="divide-divider divide-y">
+              {Array.from({ length: MODAL_PAGE_SIZE }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 px-4 py-2.5">
+                  <Skeleton className="size-4 shrink-0 rounded" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-56" />
+                </li>
+              ))}
+            </ul>
           ) : rows.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -192,18 +210,11 @@ export default function AddStudentsDialog({ classId }: Props) {
           )}
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-          <div className="text-muted-foreground text-sm">
-            {selected.size > 0 ? (
-              <Badge variant="default">Đã chọn {selected.size}</Badge>
-            ) : (
-              <span>Chưa chọn học sinh nào</span>
-            )}
-          </div>
-          {totalPages > 1 && (
+        {totalPages > 1 && (
+          <div className="flex justify-center sm:justify-end">
             <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          )}
-        </div>
+          </div>
+        )}
 
         <DialogFooter className="gap-2">
           <Button

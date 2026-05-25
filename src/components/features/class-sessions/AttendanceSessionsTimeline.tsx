@@ -5,25 +5,16 @@ import { CheckCircle2, Radio, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { handleActionResult } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
 import { closeAttendanceAction } from '@/actions/v1/attendance/close-attendance';
 import type { AttendanceSessionListRow } from '@/types/actions/attendance';
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 interface Props {
-  classSessionId: number;
   sessions: AttendanceSessionListRow[];
   onChanged: () => void;
 }
 
-export default function AttendanceSessionsTimeline({ classSessionId, sessions, onChanged }: Props) {
+export default function AttendanceSessionsTimeline({ sessions, onChanged }: Props) {
   const [closingId, setClosingId] = useState<number | null>(null);
   const now = new Date();
 
@@ -31,7 +22,7 @@ export default function AttendanceSessionsTimeline({ classSessionId, sessions, o
     if (!confirm('Bạn có chắc chắn muốn đóng phiên điểm danh này?')) return;
     setClosingId(id);
     try {
-      const result = await closeAttendanceAction(id, classSessionId);
+      const result = await closeAttendanceAction(id);
       handleActionResult(result.errors, onChanged, 'Đã đóng phiên điểm danh');
     } finally {
       setClosingId(null);
@@ -71,7 +62,7 @@ export default function AttendanceSessionsTimeline({ classSessionId, sessions, o
                   <span className="text-muted-foreground text-xs">{s.durationMinutes} phút</span>
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  Mở: {formatTime(s.openedAt)} · Đóng: {formatTime(s.closedAt)}
+                  Mở: {formatDateTimeShort(s.openedAt)} · Đóng: {formatDateTimeShort(s.closedAt)}
                 </div>
               </div>
               {isActive && (

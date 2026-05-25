@@ -2,18 +2,8 @@
 
 import { Calendar, Clock, FileText, Link as LinkIcon, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatDateTime } from '@/lib/format';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 interface Props {
   classSession: ClassSessionDetail;

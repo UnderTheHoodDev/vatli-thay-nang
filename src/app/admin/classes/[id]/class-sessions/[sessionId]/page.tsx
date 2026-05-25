@@ -6,12 +6,14 @@ import { listLeaveRequests } from '@/actions/v1/leave-requests/list-leave-reques
 import ClassSessionDetailPageClient from './ClassSessionDetailPageClient';
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; sessionId: string }>;
 }
 
 export default async function ClassSessionDetailPage({ params }: Props) {
-  const { id } = await params;
-  const classSessionId = Number(id);
+  const { id, sessionId } = await params;
+  const classId = Number(id);
+  const classSessionId = Number(sessionId);
+  if (!Number.isInteger(classId) || classId <= 0) notFound();
   if (!Number.isInteger(classSessionId) || classSessionId <= 0) notFound();
 
   const [classSession, attendanceSessionsRes, summaryRes, leaveRequestsRes] = await Promise.all([
@@ -25,6 +27,7 @@ export default async function ClassSessionDetailPage({ params }: Props) {
 
   return (
     <ClassSessionDetailPageClient
+      classId={classId}
       classSession={classSession}
       attendanceSessions={attendanceSessionsRes.data}
       attendanceSessionsMeta={attendanceSessionsRes.meta}

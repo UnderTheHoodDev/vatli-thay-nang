@@ -13,7 +13,7 @@ export async function manualAttendanceAction(
 ): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/class-sessions/${classSessionId}/attendance/manual`, payload);
-    revalidatePath(`/admin/class-sessions/${classSessionId}`);
+    revalidatePath('/admin/classes/[id]/class-sessions/[sessionId]', 'page');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

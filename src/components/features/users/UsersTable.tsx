@@ -14,8 +14,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import EmptyState from '@/components/app/EmptyState';
+import TableSkeleton from '@/components/app/TableSkeleton';
 import { setUserStatusAction } from '@/actions/v1/users/set-user-status';
 import type { Gender, Role, UserRow, UserStatus } from '@/types/auth';
+
+const SKELETON_COLUMNS = [
+  'w-8',
+  'w-48',
+  'w-32',
+  'w-12',
+  'w-20',
+  'w-20',
+  'w-28',
+  'w-24',
+  'w-14',
+  'w-20',
+  'w-32',
+];
 
 function formatBirthday(value: string | null): string {
   if (!value) return '—';
@@ -47,9 +62,10 @@ function statusBadge(s: UserStatus) {
 
 interface Props {
   rows: UserRow[];
+  loading?: boolean;
 }
 
-export default function UsersTable({ rows }: Props) {
+export default function UsersTable({ rows, loading }: Props) {
   const [pending, startTransition] = useTransition();
 
   function handleToggleStatus(id: number, current: UserStatus) {
@@ -62,7 +78,7 @@ export default function UsersTable({ rows }: Props) {
     });
   }
 
-  if (rows.length === 0) {
+  if (!loading && rows.length === 0) {
     return (
       <EmptyState
         icon={UsersIcon}
@@ -90,42 +106,46 @@ export default function UsersTable({ rows }: Props) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((u) => {
-          const activated = u.status === 'ACTIVATED';
-          return (
-            <TableRow key={u.id}>
-              <TableCell className="text-muted-foreground">{u.id}</TableCell>
-              <TableCell className="text-foreground font-medium">{u.email}</TableCell>
-              <TableCell>{u.fullName ?? '—'}</TableCell>
-              <TableCell>{genderBadge(u.gender)}</TableCell>
-              <TableCell>{formatBirthday(u.birthday)}</TableCell>
-              <TableCell>{u.province ?? '—'}</TableCell>
-              <TableCell>{u.schoolName ?? '—'}</TableCell>
-              <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
-              <TableCell>{roleBadge(u.role)}</TableCell>
-              <TableCell>{statusBadge(u.status)}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  size="sm"
-                  variant={activated ? 'outline' : 'default'}
-                  className="cursor-pointer"
-                  disabled={pending}
-                  onClick={() => handleToggleStatus(u.id, u.status)}
-                >
-                  {activated ? (
-                    <>
-                      <Power /> Vô hiệu hoá
-                    </>
-                  ) : (
-                    <>
-                      <Mail /> Gửi mail kích hoạt
-                    </>
-                  )}
-                </Button>
-              </TableCell>
-            </TableRow>
-          );
-        })}
+        {loading ? (
+          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+        ) : (
+          rows.map((u) => {
+            const activated = u.status === 'ACTIVATED';
+            return (
+              <TableRow key={u.id}>
+                <TableCell className="text-muted-foreground">{u.id}</TableCell>
+                <TableCell className="text-foreground font-medium">{u.email}</TableCell>
+                <TableCell>{u.fullName ?? '—'}</TableCell>
+                <TableCell>{genderBadge(u.gender)}</TableCell>
+                <TableCell>{formatBirthday(u.birthday)}</TableCell>
+                <TableCell>{u.province ?? '—'}</TableCell>
+                <TableCell>{u.schoolName ?? '—'}</TableCell>
+                <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
+                <TableCell>{roleBadge(u.role)}</TableCell>
+                <TableCell>{statusBadge(u.status)}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    size="sm"
+                    variant={activated ? 'outline' : 'default'}
+                    className="cursor-pointer"
+                    disabled={pending}
+                    onClick={() => handleToggleStatus(u.id, u.status)}
+                  >
+                    {activated ? (
+                      <>
+                        <Power /> Vô hiệu hoá
+                      </>
+                    ) : (
+                      <>
+                        <Mail /> Gửi mail kích hoạt
+                      </>
+                    )}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })
+        )}
       </TableBody>
     </Table>
   );

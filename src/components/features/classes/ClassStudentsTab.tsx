@@ -21,6 +21,7 @@ interface Props {
   search: ClassStudentSearchValues;
   rows: ClassStudentListRow[];
   meta: ListMeta;
+  loading?: boolean;
   onSearchChange: (next: ClassStudentSearchValues) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -31,6 +32,7 @@ export default function ClassStudentsTab({
   search,
   rows,
   meta,
+  loading,
   onSearchChange,
   onPageChange,
   onPageSizeChange,
@@ -79,7 +81,7 @@ export default function ClassStudentsTab({
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <ClassStudentsTable classId={classId} rows={rows} />
+          <ClassStudentsTable classId={classId} rows={rows} loading={loading} />
         </CardContent>
         {totalPages > 1 && (
           <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">

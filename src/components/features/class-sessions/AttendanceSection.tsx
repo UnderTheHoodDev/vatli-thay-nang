@@ -65,7 +65,6 @@ export default function AttendanceSection({
             </div>
           ) : (
             <AttendanceSessionsTimeline
-              classSessionId={classSessionId}
               sessions={attendanceSessions}
               onChanged={() => router.refresh()}
             />

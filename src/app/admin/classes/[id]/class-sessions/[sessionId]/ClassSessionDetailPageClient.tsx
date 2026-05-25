@@ -10,13 +10,14 @@ import ClassSessionInfoSection from '@/components/features/class-sessions/ClassS
 import AttendanceSection from '@/components/features/class-sessions/AttendanceSection';
 import AttendanceOverview from '@/components/features/class-sessions/AttendanceOverview';
 import LeaveRequestsSection from '@/components/features/leave-requests/LeaveRequestsSection';
+import { CLASS_SESSION_STATUS_MAP } from '@/lib/class-sessions';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
 import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
 import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
-import type { ClassSessionStatus } from '@/types/class-management';
 
 interface Props {
+  classId: number;
   classSession: ClassSessionDetail;
   attendanceSessions: AttendanceSessionListRow[];
   attendanceSessionsMeta: ListMeta;
@@ -27,20 +28,8 @@ interface Props {
   leaveRequestsMeta: ListMeta;
 }
 
-const STATUS_LABEL: Record<
-  ClassSessionStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
-  }
-> = {
-  SCHEDULED: { label: 'Đã lên lịch', variant: 'outline' },
-  IN_PROGRESS: { label: 'Đang diễn ra', variant: 'success' },
-  COMPLETED: { label: 'Hoàn thành', variant: 'secondary' },
-  CANCELLED: { label: 'Đã huỷ', variant: 'destructive' },
-};
-
 export default function ClassSessionDetailPageClient({
+  classId,
   classSession,
   attendanceSessions,
   attendanceSessionsErrors,
@@ -57,7 +46,7 @@ export default function ClassSessionDetailPageClient({
     handleActionErrors(summaryErrors);
   }, [summaryErrors]);
 
-  const statusInfo = STATUS_LABEL[classSession.status];
+  const statusInfo = CLASS_SESSION_STATUS_MAP[classSession.status];
 
   return (
     <div className="space-y-6">
@@ -68,8 +57,8 @@ export default function ClassSessionDetailPageClient({
           size="sm"
           className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
         >
-          <Link href="/admin/classes">
-            <ArrowLeft /> Danh sách lớp học
+          <Link href={`/admin/classes/${classId}`}>
+            <ArrowLeft /> Quay lại lớp học
           </Link>
         </Button>
         <div className="space-y-1">
@@ -93,11 +82,7 @@ export default function ClassSessionDetailPageClient({
 
       <AttendanceOverview counts={summary?.counts ?? null} />
 
-      <LeaveRequestsSection
-        classSessionId={classSession.id}
-        data={leaveRequests}
-        meta={leaveRequestsMeta}
-      />
+      <LeaveRequestsSection data={leaveRequests} meta={leaveRequestsMeta} />
     </div>
   );
 }

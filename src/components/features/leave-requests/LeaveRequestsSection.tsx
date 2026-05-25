@@ -16,34 +16,24 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/app/EmptyState';
 import { handleActionResult } from '@/lib/actions';
+import { formatDateTime } from '@/lib/format';
 import { acknowledgeLeaveRequestAction } from '@/actions/v1/leave-requests/acknowledge-leave-request';
 import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
 import type { ListMeta } from '@/types/auth';
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 interface Props {
-  classSessionId: number;
   data: LeaveRequestListRow[];
   meta: ListMeta;
 }
 
-export default function LeaveRequestsSection({ classSessionId, data, meta }: Props) {
+export default function LeaveRequestsSection({ data, meta }: Props) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const handleAcknowledge = async (leaveRequestId: number) => {
     setLoadingId(leaveRequestId);
     try {
-      const result = await acknowledgeLeaveRequestAction(leaveRequestId, classSessionId);
+      const result = await acknowledgeLeaveRequestAction(leaveRequestId);
       handleActionResult(
         result.errors,
         () => {

@@ -9,9 +9,17 @@ export interface IListClassesParams {
   pageSize?: number;
 }
 
+export interface ClassesListStats {
+  total: number;
+  active: number;
+  closed: number;
+  totalStudents: number;
+}
+
 export interface IListClassesResult {
   data: ClassRow[];
   meta: ListMeta;
+  stats: ClassesListStats;
 }
 
 export interface ICreateClassPayload {

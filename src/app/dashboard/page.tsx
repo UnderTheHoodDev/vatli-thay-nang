@@ -1,20 +1,16 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BookOpen,
-  Calendar,
-  GraduationCap,
-  Sparkles,
-  Trophy,
-  UserRound,
-} from 'lucide-react';
+import { ArrowRight, GraduationCap, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatsCard from '@/components/app/StatsCard';
+import { listClasses } from '@/actions/v1/classes/list-classes';
 import { getCurrentSession } from '@/lib/server/session';
 
 export default async function DashboardPage() {
-  const session = await getCurrentSession();
+  const [session, activeClassesRes] = await Promise.all([
+    getCurrentSession(),
+    listClasses({ status: 'ACTIVE', page: 1, pageSize: 1 }),
+  ]);
   const displayName = session?.fullName?.trim() || session?.email?.split('@')[0] || 'bạn';
 
   return (
@@ -45,69 +41,31 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <StatsCard
           label="Lớp đang học"
-          value="—"
+          value={activeClassesRes.meta.total}
           icon={GraduationCap}
           tone="primary"
-          hint="Sẽ cập nhật khi có dữ liệu"
+          hint="Số lớp bạn đang tham gia"
         />
-        <StatsCard
-          label="Bài học tuần này"
-          value="—"
-          icon={BookOpen}
-          tone="success"
-          hint="Sẽ cập nhật khi có dữ liệu"
-        />
-        <StatsCard
-          label="Lịch học sắp tới"
-          value="—"
-          icon={Calendar}
-          tone="warning"
-          hint="Sẽ cập nhật khi có dữ liệu"
-        />
-        <StatsCard
-          label="Thành tích"
-          value="—"
-          icon={Trophy}
-          tone="muted"
-          hint="Sẽ cập nhật khi có dữ liệu"
-        />
-      </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Bài học gần đây</CardTitle>
-          </CardHeader>
-          <CardContent className="pb-6">
-            <div className="bg-muted/40 border-divider flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-10 text-center">
-              <BookOpen className="text-muted-foreground size-8" />
-              <p className="text-foreground text-sm font-medium">Chưa có bài học</p>
-              <p className="text-muted-foreground max-w-xs text-xs">
-                Khi giáo viên giao bài, bài học sẽ xuất hiện tại đây.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
           <CardHeader>
             <CardTitle>Truy cập nhanh</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 pb-6">
             <QuickLink
+              href="/dashboard/classes"
+              icon={GraduationCap}
+              title="Lớp học của tôi"
+              description="Xem danh sách lớp và các buổi học"
+            />
+            <QuickLink
               href="/dashboard/profile"
               icon={UserRound}
               title="Thông tin cá nhân"
               description="Cập nhật hồ sơ học sinh"
-            />
-            <QuickLink
-              href="/"
-              icon={GraduationCap}
-              title="Về Vật Lí Thầy Năng"
-              description="Khám phá khoá học và đội ngũ"
             />
           </CardContent>
         </Card>

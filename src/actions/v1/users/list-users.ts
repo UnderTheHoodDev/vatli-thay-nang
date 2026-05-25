@@ -11,6 +11,10 @@ export async function listUsers(params: IListUsersParams): Promise<IListUsersRes
     const res = await api.get('/api/v1/users', { params: cleaned });
     return res.data as IListUsersResult;
   } catch {
-    return { data: [], meta: { total: 0, page: 1, pageSize: 20 } };
+    return {
+      data: [],
+      meta: { total: 0, page: 1, pageSize: 20 },
+      stats: { total: 0, activated: 0, unactivated: 0, admins: 0, students: 0 },
+    };
   }
 }

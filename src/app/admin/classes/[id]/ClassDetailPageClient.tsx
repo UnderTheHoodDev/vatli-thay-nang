@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Info, Users as UsersIcon } from 'lucide-react';
@@ -65,6 +65,7 @@ export default function ClassDetailPageClient({
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     studentsErrors.forEach((e) => toast.error(e));
@@ -79,7 +80,9 @@ export default function ClassDetailPageClient({
       const merged = { ...urlState, ...next };
       const params = buildUrlParams(merged);
       const query = params.toString();
-      router.push(query ? `${pathname}?${query}` : pathname);
+      startTransition(() => {
+        router.push(query ? `${pathname}?${query}` : pathname);
+      });
     },
     [router, pathname, urlState],
   );
@@ -145,6 +148,7 @@ export default function ClassDetailPageClient({
             search={studentsSearch}
             rows={students}
             meta={studentsMeta}
+            loading={isPending}
             onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
             onPageChange={(p) => updateUrl({ page: p })}
             onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
@@ -155,6 +159,7 @@ export default function ClassDetailPageClient({
             classId={classDetail.id}
             rows={sessions}
             meta={sessionsMeta}
+            loading={isPending}
             onPageChange={(p) => updateUrl({ page: p })}
             onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
           />
