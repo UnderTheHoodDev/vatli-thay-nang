@@ -3,7 +3,15 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LucideIcon, Users, LayoutDashboard, UserRound, School, GraduationCap } from 'lucide-react';
+import {
+  LucideIcon,
+  Users,
+  LayoutDashboard,
+  UserRound,
+  School,
+  GraduationCap,
+  CalendarDays,
+} from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +40,7 @@ export const ADMIN_NAV: NavItem[] = [
 
 export const DASHBOARD_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, section: 'Học tập' },
+  { label: 'Buổi học', href: '/dashboard/class-sessions', icon: CalendarDays, section: 'Học tập' },
   { label: 'Thông tin cá nhân', href: '/dashboard/profile', icon: UserRound, section: 'Tài khoản' },
 ];
 

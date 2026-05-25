@@ -9,9 +9,11 @@ import { handleActionErrors } from '@/lib/actions';
 import ClassSessionInfoSection from '@/components/features/class-sessions/ClassSessionInfoSection';
 import AttendanceSection from '@/components/features/class-sessions/AttendanceSection';
 import AttendanceOverview from '@/components/features/class-sessions/AttendanceOverview';
+import LeaveRequestsSection from '@/components/features/leave-requests/LeaveRequestsSection';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
 import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
+import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
 import type { ClassSessionStatus } from '@/types/class-management';
 
 interface Props {
@@ -21,6 +23,8 @@ interface Props {
   attendanceSessionsErrors: string[];
   summary: AttendanceSummary | null;
   summaryErrors: string[];
+  leaveRequests: LeaveRequestListRow[];
+  leaveRequestsMeta: ListMeta;
 }
 
 const STATUS_LABEL: Record<
@@ -42,6 +46,8 @@ export default function ClassSessionDetailPageClient({
   attendanceSessionsErrors,
   summary,
   summaryErrors,
+  leaveRequests,
+  leaveRequestsMeta,
 }: Props) {
   useEffect(() => {
     handleActionErrors(attendanceSessionsErrors);
@@ -86,6 +92,12 @@ export default function ClassSessionDetailPageClient({
       />
 
       <AttendanceOverview counts={summary?.counts ?? null} />
+
+      <LeaveRequestsSection
+        classSessionId={classSession.id}
+        data={leaveRequests}
+        meta={leaveRequestsMeta}
+      />
     </div>
   );
 }
