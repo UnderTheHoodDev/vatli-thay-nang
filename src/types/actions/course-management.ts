@@ -144,6 +144,8 @@ export interface ICreateLessonItemPayload {
   type: LessonItemType;
   videoUrl?: string;
   videoStorageKey?: string;
+  bunnyVideoId?: string;
+  bunnyLibraryId?: number;
   durationSeconds?: number;
   fileUrl?: string;
   fileStorageKey?: string;
@@ -156,12 +158,60 @@ export interface IUpdateLessonItemPayload {
   title?: string;
   videoUrl?: string;
   videoStorageKey?: string;
+  bunnyVideoId?: string;
+  bunnyLibraryId?: number;
   durationSeconds?: number;
   fileUrl?: string;
   fileStorageKey?: string;
   fileName?: string;
   fileSize?: number;
   mimeType?: string;
+}
+
+export interface IGetBunnyUploadUrlPayload {
+  title: string;
+}
+
+export interface IGetBunnyUploadUrlResult {
+  videoId: string;
+  libraryId: number;
+  uploadUrl: string;
+  accessKey: string;
+  embedUrl: string;
+}
+
+export interface IGetBunnyTusUploadPayload {
+  title: string;
+  /** GUID video đã tồn tại — ký lại để resume (không tạo mới). */
+  videoId?: string;
+}
+
+export interface IGetBunnyTusUploadResult {
+  videoId: string;
+  libraryId: number;
+  signature: string;
+  expire: number;
+  tusEndpoint: string;
+}
+
+export interface IBunnyVideoStatus {
+  videoId: string;
+  status: 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
+  durationSeconds: number | null;
+  thumbnailUrl: string | null;
+}
+
+export interface ICourseVideoStatusItem {
+  lessonItemId: number;
+  bunnyStatus: 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
+  durationSeconds: number | null;
+  thumbnailUrl: string | null;
+}
+
+export interface ICourseVideoStatusResult {
+  items: ICourseVideoStatusItem[];
+  pending: number;
+  allSettled: boolean;
 }
 
 export interface IGetUploadUrlPayload {

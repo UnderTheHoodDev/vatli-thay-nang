@@ -125,7 +125,7 @@ export default function StudentCoursesClient({ urlState, rows, meta, errors }: P
                       {formatVnd(row.price)}
                     </span>
                     <span className="text-primary group-hover:text-primary/80 inline-flex items-center gap-1.5 text-sm font-medium">
-                      Xem chi tiết
+                      {row.isEnrolled ? 'Tiếp tục học' : 'Vào học'}
                       <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
                     </span>
                   </div>

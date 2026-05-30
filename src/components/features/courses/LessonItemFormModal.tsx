@@ -21,10 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ActionButton } from '@/components/ui/custom';
-import { handleActionResult } from '@/lib/actions';
+import { handleActionResult, handleActionErrors } from '@/lib/actions';
 import { createLessonItemAction } from '@/actions/v1/lesson-items/create-lesson-item';
 import { updateLessonItemAction } from '@/actions/v1/lesson-items/update-lesson-item';
+import { getBunnyTusUploadAction } from '@/actions/v1/bunny/get-tus-upload';
 import DocumentUploader, { type DocumentValue } from './DocumentUploader';
+import VideoUploader from './VideoUploader';
+import { useUploadManager } from './UploadManagerProvider';
 import type { LessonItemTree, LessonItemType } from '@/types/course-management';
 
 interface Props {
@@ -45,22 +48,20 @@ export default function LessonItemFormModal({
   initialData,
 }: Props) {
   const router = useRouter();
+  const { enqueue } = useUploadManager();
   const [title, setTitle] = useState('');
   const [type, setType] = useState<LessonItemType>('VIDEO');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [durationSeconds, setDurationSeconds] = useState('');
   const [document, setDocument] = useState<DocumentValue | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const hasExistingVideo = mode === 'edit' && !!initialData?.bunnyVideoId;
 
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
     setType(initialData?.type ?? 'VIDEO');
-    setVideoUrl(initialData?.videoUrl ?? '');
-    setDurationSeconds(
-      initialData?.durationSeconds != null ? String(initialData.durationSeconds) : '',
-    );
     setDocument(
       initialData?.fileUrl
         ? {
@@ -72,6 +73,7 @@ export default function LessonItemFormModal({
           }
         : null,
     );
+    setVideoFile(null);
     setSubmitted(false);
   }, [open, initialData]);
 
@@ -80,50 +82,106 @@ export default function LessonItemFormModal({
     submitted && type === 'DOCUMENT' && !document?.url
       ? 'Vui lòng tải lên tài liệu'
       : '';
+  // Video bắt buộc khi tạo mới; khi edit nếu đã có video thì không bắt buộc chọn lại.
+  const videoError =
+    submitted && type === 'VIDEO' && !videoFile && !hasExistingVideo
+      ? 'Vui lòng chọn video bài giảng'
+      : '';
+
+  const close = () => {
+    onOpenChange(false);
+    router.refresh();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     if (!title.trim()) return;
     if (type === 'DOCUMENT' && !document?.url) return;
-
-    const basePayload = {
-      title: title.trim(),
-      videoUrl: type === 'VIDEO' && videoUrl.trim() ? videoUrl.trim() : undefined,
-      durationSeconds: durationSeconds ? Number(durationSeconds) : undefined,
-      fileUrl: type === 'DOCUMENT' ? document?.url : undefined,
-      fileStorageKey: type === 'DOCUMENT' ? document?.storageKey : undefined,
-      fileName: type === 'DOCUMENT' ? document?.fileName : undefined,
-      fileSize: type === 'DOCUMENT' ? document?.fileSize : undefined,
-      mimeType: type === 'DOCUMENT' ? document?.mimeType : undefined,
-    };
+    if (type === 'VIDEO' && !videoFile && !hasExistingVideo) return;
 
     setLoading(true);
     try {
+      if (type === 'DOCUMENT') {
+        const payload = {
+          title: title.trim(),
+          type: 'DOCUMENT' as const,
+          fileUrl: document?.url,
+          fileStorageKey: document?.storageKey,
+          fileName: document?.fileName,
+          fileSize: document?.fileSize,
+          mimeType: document?.mimeType,
+        };
+        const res =
+          mode === 'create'
+            ? await createLessonItemAction(lessonId, courseId, payload)
+            : await updateLessonItemAction(initialData!.id, courseId, payload);
+        handleActionResult(
+          res.errors,
+          close,
+          mode === 'create' ? 'Tạo mục bài học thành công' : 'Cập nhật thành công',
+        );
+        return;
+      }
+
+      // ===== VIDEO =====
+      // Trường hợp edit chỉ đổi tiêu đề (không chọn video mới)
+      if (!videoFile) {
+        const res = await updateLessonItemAction(initialData!.id, courseId, {
+          title: title.trim(),
+        });
+        handleActionResult(res.errors, close, 'Cập nhật thành công');
+        return;
+      }
+
+      // Chọn video mới → tạo phiên TUS, lưu item (status UPLOADING), enqueue upload nền
+      const tus = await getBunnyTusUploadAction({ title: title.trim() });
+      if (tus.errors.length || !tus.data) {
+        handleActionErrors(
+          tus.errors.length ? tus.errors : ['Không tạo được phiên upload'],
+        );
+        return;
+      }
+      const { videoId, libraryId, signature, expire, tusEndpoint } = tus.data;
+
+      let lessonItemId: number;
       if (mode === 'create') {
         const res = await createLessonItemAction(lessonId, courseId, {
-          ...basePayload,
-          type,
+          title: title.trim(),
+          type: 'VIDEO',
+          bunnyVideoId: videoId,
+          bunnyLibraryId: libraryId,
         });
-        handleActionResult(
-          res.errors,
-          () => {
-            onOpenChange(false);
-            router.refresh();
-          },
-          'Tạo mục bài học thành công',
-        );
-      } else if (initialData) {
-        const res = await updateLessonItemAction(initialData.id, courseId, basePayload);
-        handleActionResult(
-          res.errors,
-          () => {
-            onOpenChange(false);
-            router.refresh();
-          },
-          'Cập nhật mục bài học thành công',
-        );
+        if (res.errors.length || !res.data) {
+          handleActionErrors(
+            res.errors.length ? res.errors : ['Tạo mục bài học thất bại'],
+          );
+          return;
+        }
+        lessonItemId = res.data.id;
+      } else {
+        const res = await updateLessonItemAction(initialData!.id, courseId, {
+          title: title.trim(),
+          bunnyVideoId: videoId,
+          bunnyLibraryId: libraryId,
+        });
+        if (res.errors.length) {
+          handleActionErrors(res.errors);
+          return;
+        }
+        lessonItemId = initialData!.id;
       }
+
+      enqueue(videoFile, {
+        lessonItemId,
+        courseId,
+        videoId,
+        libraryId,
+        signature,
+        expire,
+        tusEndpoint,
+      });
+      close();
     } finally {
       setLoading(false);
     }
@@ -137,7 +195,9 @@ export default function LessonItemFormModal({
             {mode === 'create' ? 'Tạo mục bài học' : 'Chỉnh sửa mục bài học'}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'create' ? 'Thêm nội dung mới vào bài học.' : 'Cập nhật nội dung mục bài học.'}
+            {mode === 'create'
+              ? 'Thêm nội dung mới vào bài học.'
+              : 'Cập nhật nội dung mục bài học.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -175,33 +235,35 @@ export default function LessonItemFormModal({
           </div>
 
           {type === 'VIDEO' ? (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="item-video-url">URL video</Label>
-                <Input
-                  id="item-video-url"
-                  placeholder="https://..."
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="item-duration">Thời lượng (giây)</Label>
-                <Input
-                  id="item-duration"
-                  type="number"
-                  min={0}
-                  value={durationSeconds}
-                  onChange={(e) => setDurationSeconds(e.target.value)}
-                />
-              </div>
-            </>
+            <div className="space-y-1.5">
+              <Label>
+                Video bài giảng{' '}
+                {!hasExistingVideo && <span className="text-destructive">*</span>}
+              </Label>
+              <VideoUploader
+                file={videoFile}
+                onFileChange={setVideoFile}
+                disabled={loading}
+                existingStatus={hasExistingVideo ? initialData!.bunnyStatus : null}
+              />
+              {videoError && (
+                <p className="text-destructive text-xs">{videoError}</p>
+              )}
+              <p className="text-muted-foreground text-xs">
+                Sau khi lưu, video tải lên nền (xem ở khay góc phải). Thời lượng tự
+                cập nhật khi xử lý xong.
+              </p>
+            </div>
           ) : (
             <div className="space-y-1.5">
               <Label>
                 Tài liệu <span className="text-destructive">*</span>
               </Label>
-              <DocumentUploader value={document} onChange={setDocument} disabled={loading} />
+              <DocumentUploader
+                value={document}
+                onChange={setDocument}
+                disabled={loading}
+              />
               {docError && <p className="text-destructive text-xs">{docError}</p>}
             </div>
           )}

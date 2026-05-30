@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, Info, LayoutList, Users as UsersIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart3,
+  Info,
+  LayoutList,
+  Users as UsersIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseInfoTab from '@/components/features/courses/CourseInfoTab';
 import CourseStructureTab from '@/components/features/courses/CourseStructureTab';
 import CourseEnrollmentsTab from '@/components/features/courses/CourseEnrollmentsTab';
+import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
 import type { ListMeta } from '@/types/auth';
 import type {
   CourseCategoryRow,
@@ -19,7 +26,11 @@ import type {
   CourseStatus,
 } from '@/types/course-management';
 
-export type CourseDetailTab = 'info' | 'structure' | 'enrollments';
+export type CourseDetailTab =
+  | 'info'
+  | 'structure'
+  | 'enrollments'
+  | 'stats';
 
 export interface CourseDetailUrlState {
   tab: CourseDetailTab;
@@ -123,15 +134,18 @@ export default function CourseDetailPageClient({
         onValueChange={(v) => updateUrl({ tab: v as CourseDetailTab, page: 1 })}
         className="gap-4"
       >
-        <TabsList>
-          <TabsTrigger value="info" className="cursor-pointer">
+        <TabsList className="max-w-full justify-start overflow-x-auto">
+          <TabsTrigger value="info" className="shrink-0 cursor-pointer">
             <Info className="size-4" /> Thông tin
           </TabsTrigger>
-          <TabsTrigger value="structure" className="cursor-pointer">
+          <TabsTrigger value="structure" className="shrink-0 cursor-pointer">
             <LayoutList className="size-4" /> Nội dung
           </TabsTrigger>
-          <TabsTrigger value="enrollments" className="cursor-pointer">
+          <TabsTrigger value="enrollments" className="shrink-0 cursor-pointer">
             <UsersIcon className="size-4" /> Học sinh
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="shrink-0 cursor-pointer">
+            <BarChart3 className="size-4" /> Thống kê
           </TabsTrigger>
         </TabsList>
 
@@ -154,6 +168,10 @@ export default function CourseDetailPageClient({
             onPageChange={(p) => updateUrl({ page: p })}
             onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
           />
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <CourseStatsTab courseId={course.id} />
         </TabsContent>
       </Tabs>
     </div>

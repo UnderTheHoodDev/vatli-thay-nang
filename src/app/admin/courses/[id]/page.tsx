@@ -18,7 +18,9 @@ function readUrlState(sp: Record<string, string | undefined>): CourseDetailUrlSt
       ? 'structure'
       : sp.tab === 'enrollments'
         ? 'enrollments'
-        : 'info';
+        : sp.tab === 'stats'
+          ? 'stats'
+          : 'info';
   return {
     tab,
     email: sp.email ?? '',

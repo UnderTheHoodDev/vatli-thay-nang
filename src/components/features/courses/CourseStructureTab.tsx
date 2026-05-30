@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronDown,
@@ -9,10 +9,13 @@ import {
   GripVertical,
   Layers,
   ListChecks,
+  Loader2,
+  MoreVertical,
   Pencil,
   Plus,
   PlusCircle,
   Trash2,
+  Upload,
   Video,
 } from 'lucide-react';
 import {
@@ -34,6 +37,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -45,22 +54,75 @@ import {
 } from '@/components/ui/alert-dialog';
 import EmptyState from '@/components/app/EmptyState';
 import { cn } from '@/lib/utils';
-import { handleActionResult } from '@/lib/actions';
+import { handleActionResult, handleActionErrors } from '@/lib/actions';
+import { useUploadManager } from './UploadManagerProvider';
+import { getBunnyTusUploadAction } from '@/actions/v1/bunny/get-tus-upload';
 import { reorderChaptersAction } from '@/actions/v1/chapters/reorder-chapters';
 import { reorderLessonsAction } from '@/actions/v1/lessons/reorder-lessons';
 import { reorderLessonItemsAction } from '@/actions/v1/lesson-items/reorder-lesson-items';
 import { deleteChapterAction } from '@/actions/v1/chapters/delete-chapter';
 import { deleteLessonAction } from '@/actions/v1/lessons/delete-lesson';
 import { deleteLessonItemAction } from '@/actions/v1/lesson-items/delete-lesson-item';
+import { getCourseVideoStatusAction } from '@/actions/v1/courses/get-video-status';
 import ChapterFormModal from './ChapterFormModal';
 import LessonFormModal from './LessonFormModal';
 import LessonItemFormModal from './LessonItemFormModal';
-import type {
-  ChapterTree,
-  CourseDetail,
-  LessonItemTree,
-  LessonTree,
+import {
+  BUNNY_STATUS_META,
+  type BunnyVideoStatus,
+  type ChapterTree,
+  type CourseDetail,
+  type LessonItemTree,
+  type LessonTree,
 } from '@/types/course-management';
+
+interface VideoStatusInfo {
+  bunnyStatus: BunnyVideoStatus;
+  durationSeconds: number | null;
+  thumbnailUrl: string | null;
+}
+
+const POLL_INTERVAL_MS = 9000;
+
+const PENDING_STATUSES: BunnyVideoStatus[] = [
+  'UPLOADING',
+  'QUEUED',
+  'PROCESSING',
+];
+
+function isPendingVideo(i: LessonItemTree): boolean {
+  return i.type === 'VIDEO' && PENDING_STATUSES.includes(i.bunnyStatus);
+}
+
+function hasPendingVideo(chapters: ChapterTree[]): boolean {
+  return chapters.some((c) =>
+    c.lessons.some((l) => l.items.some(isPendingVideo)),
+  );
+}
+
+function mergeStatus(
+  chapters: ChapterTree[],
+  statusMap: Record<number, VideoStatusInfo>,
+): ChapterTree[] {
+  if (Object.keys(statusMap).length === 0) return chapters;
+  return chapters.map((c) => ({
+    ...c,
+    lessons: c.lessons.map((l) => ({
+      ...l,
+      items: l.items.map((i) => {
+        const s = statusMap[i.id];
+        return s
+          ? {
+              ...i,
+              bunnyStatus: s.bunnyStatus,
+              durationSeconds: s.durationSeconds ?? i.durationSeconds,
+              thumbnailUrl: s.thumbnailUrl ?? i.thumbnailUrl,
+            }
+          : i;
+      }),
+    })),
+  }));
+}
 
 interface Props {
   course: CourseDetail;
@@ -77,6 +139,77 @@ export default function CourseStructureTab({ course }: Props) {
   const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set());
   const [, startTransition] = useTransition();
+
+  // Sync local state when parent re-renders after revalidatePath + router.refresh().
+  // Without this, optimistic drag-drop state would shadow updates coming from the server.
+  useEffect(() => {
+    setChapters(course.chapters);
+    setStatusMap({});
+  }, [course.chapters]);
+
+  // Trạng thái xử lý video poll được (override bunnyStatus của cây).
+  const [statusMap, setStatusMap] = useState<Record<number, VideoStatusInfo>>(
+    {},
+  );
+  const displayChapters = useMemo(
+    () => mergeStatus(chapters, statusMap),
+    [chapters, statusMap],
+  );
+  const pendingCount = useMemo(
+    () =>
+      displayChapters.reduce(
+        (sum, c) =>
+          sum +
+          c.lessons.reduce(
+            (s, l) => s + l.items.filter(isPendingVideo).length,
+            0,
+          ),
+        0,
+      ),
+    [displayChapters],
+  );
+
+  // Auto-poll batch trạng thái video CHỈ khi còn item chưa xử lý xong.
+  // Dep là boolean `shouldPoll` (primitive) — KHÔNG phụ thuộc object displayChapters
+  // để tránh re-subscribe vô hạn mỗi lần setStatusMap tạo object mới.
+  const shouldPoll = useMemo(
+    () => hasPendingVideo(displayChapters),
+    [displayChapters],
+  );
+  const refreshedOnSettle = useRef(false);
+  useEffect(() => {
+    if (!shouldPoll) return;
+    let cancelled = false;
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const res = await getCourseVideoStatusAction(course.id);
+      if (cancelled || !res.data) return;
+      setStatusMap((prev) => {
+        const next = { ...prev };
+        for (const it of res.data!.items) {
+          next[it.lessonItemId] = {
+            bunnyStatus: it.bunnyStatus,
+            durationSeconds: it.durationSeconds,
+            thumbnailUrl: it.thumbnailUrl,
+          };
+        }
+        return next;
+      });
+      // Khi tất cả đã settled → refresh 1 lần để server-render khớp dữ liệu.
+      if (res.data.allSettled && !refreshedOnSettle.current) {
+        refreshedOnSettle.current = true;
+        router.refresh();
+      }
+    };
+    void tick();
+    const interval = setInterval(tick, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      // Reset để chu kỳ poll sau (video mới upload) lại có thể refresh khi allSettled.
+      refreshedOnSettle.current = false;
+    };
+  }, [shouldPoll, course.id, router]);
 
   const [chapterModal, setChapterModal] = useState<
     { mode: 'create' | 'edit'; data?: ChapterTree } | null
@@ -221,8 +354,15 @@ export default function CourseStructureTab({ course }: Props) {
             <Plus /> Thêm chương
           </Button>
         </CardHeader>
+        {pendingCount > 0 && (
+          <div className="border-divider bg-yellow-50 text-yellow-800 mx-6 mb-2 flex items-center gap-2 rounded-md border border-yellow-200 px-3 py-2 text-sm">
+            <Loader2 className="size-4 animate-spin" />
+            {pendingCount} video đang tải lên / xử lý — trạng thái sẽ tự cập nhật
+            khi hoàn tất.
+          </div>
+        )}
         <CardContent className="pb-6">
-          {chapters.length === 0 ? (
+          {displayChapters.length === 0 ? (
             <EmptyState
               icon={Layers}
               title="Chưa có chương nào"
@@ -240,14 +380,15 @@ export default function CourseStructureTab({ course }: Props) {
               onDragEnd={handleChapterDragEnd}
             >
               <SortableContext
-                items={chapters.map((c) => c.id)}
+                items={displayChapters.map((c) => c.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="space-y-2">
-                  {chapters.map((chapter) => (
+                  {displayChapters.map((chapter) => (
                     <ChapterRow
                       key={chapter.id}
                       chapter={chapter}
+                      courseId={course.id}
                       expanded={expandedChapters.has(chapter.id)}
                       onToggle={() => toggleChapter(chapter.id)}
                       onEdit={() => setChapterModal({ mode: 'edit', data: chapter })}
@@ -369,8 +510,46 @@ export default function CourseStructureTab({ course }: Props) {
   );
 }
 
+// Kebab menu gom Sửa/Xoá — gọn hàng ngang để tiêu đề luôn hiển thị (đặc biệt mobile).
+function RowActions({
+  onEdit,
+  onDelete,
+  size = 'sm',
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+  size?: 'sm' | 'xs';
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size={size === 'xs' ? 'icon-xs' : 'icon-sm'}
+          title="Thao tác"
+          className="cursor-pointer"
+        >
+          <MoreVertical />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="cursor-pointer" onClick={onEdit}>
+          <Pencil className="size-4" /> Sửa
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive cursor-pointer"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4" /> Xoá
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 interface ChapterRowProps {
   chapter: ChapterTree;
+  courseId: number;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -389,6 +568,7 @@ interface ChapterRowProps {
 
 function ChapterRow({
   chapter,
+  courseId,
   expanded,
   onToggle,
   onEdit,
@@ -450,7 +630,9 @@ function ChapterRow({
             <p className="text-muted-foreground truncate text-xs">{chapter.description}</p>
           )}
         </div>
-        <Badge variant="secondary">{chapter.lessons.length} bài</Badge>
+        <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">
+          {chapter.lessons.length} bài
+        </Badge>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -460,24 +642,7 @@ function ChapterRow({
         >
           <PlusCircle />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Sửa"
-          className="cursor-pointer"
-          onClick={onEdit}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Xoá"
-          className="text-destructive hover:text-destructive cursor-pointer"
-          onClick={onDelete}
-        >
-          <Trash2 />
-        </Button>
+        <RowActions onEdit={onEdit} onDelete={onDelete} />
       </div>
 
       {expanded && (
@@ -510,6 +675,7 @@ function ChapterRow({
                       key={lesson.id}
                       lesson={lesson}
                       chapterId={chapter.id}
+                      courseId={courseId}
                       expanded={expandedLessons.has(lesson.id)}
                       onToggle={() => onToggleLesson(lesson.id)}
                       onEdit={() => onEditLesson(lesson)}
@@ -533,6 +699,7 @@ function ChapterRow({
 interface LessonRowProps {
   lesson: LessonTree;
   chapterId: number;
+  courseId: number;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -546,6 +713,7 @@ interface LessonRowProps {
 function LessonRow({
   lesson,
   chapterId,
+  courseId,
   expanded,
   onToggle,
   onEdit,
@@ -606,7 +774,9 @@ function LessonRow({
             <p className="text-muted-foreground truncate text-xs">{lesson.description}</p>
           )}
         </div>
-        <Badge variant="secondary">{lesson.items.length} mục</Badge>
+        <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">
+          {lesson.items.length} mục
+        </Badge>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -616,24 +786,7 @@ function LessonRow({
         >
           <PlusCircle />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Sửa"
-          className="cursor-pointer"
-          onClick={onEdit}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Xoá"
-          className="text-destructive hover:text-destructive cursor-pointer"
-          onClick={onDelete}
-        >
-          <Trash2 />
-        </Button>
+        <RowActions onEdit={onEdit} onDelete={onDelete} />
       </div>
 
       {expanded && (
@@ -660,6 +813,7 @@ function LessonRow({
                     <ItemRow
                       key={item.id}
                       item={item}
+                      courseId={courseId}
                       onEdit={() => onEditItem(item)}
                       onDelete={() => onDeleteItem(item)}
                     />
@@ -676,11 +830,12 @@ function LessonRow({
 
 interface ItemRowProps {
   item: LessonItemTree;
+  courseId: number;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function ItemRow({ item, onEdit, onDelete }: ItemRowProps) {
+function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
   });
@@ -688,6 +843,45 @@ function ItemRow({ item, onEdit, onDelete }: ItemRowProps) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const { enqueue, hasActive } = useUploadManager();
+  const reuploadRef = useRef<HTMLInputElement | null>(null);
+  const [reuploading, setReuploading] = useState(false);
+  // Video UPLOADING mà KHÔNG có task đang chạy (vd sau reload) → cho "Tải lại".
+  const canResume =
+    item.type === 'VIDEO' &&
+    item.bunnyStatus === 'UPLOADING' &&
+    !hasActive(item.id);
+
+  async function handleReuploadFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (reuploadRef.current) reuploadRef.current.value = '';
+    if (!file || !item.bunnyVideoId) return;
+    setReuploading(true);
+    try {
+      const tus = await getBunnyTusUploadAction({
+        title: item.title,
+        videoId: item.bunnyVideoId,
+      });
+      if (tus.errors.length || !tus.data) {
+        handleActionErrors(
+          tus.errors.length ? tus.errors : ['Không tạo được phiên upload'],
+        );
+        return;
+      }
+      enqueue(file, {
+        lessonItemId: item.id,
+        courseId,
+        videoId: tus.data.videoId,
+        libraryId: tus.data.libraryId,
+        signature: tus.data.signature,
+        expire: tus.data.expire,
+        tusEndpoint: tus.data.tusEndpoint,
+      });
+    } finally {
+      setReuploading(false);
+    }
+  }
 
   return (
     <li
@@ -714,33 +908,52 @@ function ItemRow({ item, onEdit, onDelete }: ItemRowProps) {
         <span className="text-muted-foreground mr-1.5 text-xs">{item.order}.</span>
         {item.title}
       </span>
-      <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
-        {item.type === 'VIDEO' ? (
-          <span className="flex items-center gap-1">
-            <ListChecks className="size-3" /> Video
-          </span>
-        ) : (
-          'Tài liệu'
-        )}
-      </Badge>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        title="Sửa"
-        className="cursor-pointer"
-        onClick={onEdit}
-      >
-        <Pencil />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        title="Xoá"
-        className="text-destructive hover:text-destructive cursor-pointer"
-        onClick={onDelete}
-      >
-        <Trash2 />
-      </Button>
+      {item.type === 'VIDEO' ? (
+        (() => {
+          const meta =
+            BUNNY_STATUS_META[item.bunnyStatus] ?? BUNNY_STATUS_META.ERROR;
+          return (
+            <Badge
+              variant={meta.variant}
+              className="flex items-center gap-1 px-1.5 py-0 text-[10px]"
+            >
+              {meta.pending ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <ListChecks className="size-3" />
+              )}
+              {meta.label}
+            </Badge>
+          );
+        })()
+      ) : (
+        <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
+          Tài liệu
+        </Badge>
+      )}
+      {canResume && (
+        <>
+          <input
+            ref={reuploadRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={handleReuploadFile}
+          />
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            className="shrink-0 cursor-pointer"
+            title="Chọn lại file để tiếp tục tải lên"
+            disabled={reuploading}
+            onClick={() => reuploadRef.current?.click()}
+          >
+            <Upload className="size-3" /> Tải lại
+          </Button>
+        </>
+      )}
+      <RowActions onEdit={onEdit} onDelete={onDelete} size="xs" />
     </li>
   );
 }

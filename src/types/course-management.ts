@@ -5,6 +5,12 @@ export type StorageFolder =
   | 'course-thumbnails'
   | 'lesson-documents'
   | 'lesson-videos';
+export type BunnyVideoStatus =
+  | 'UPLOADING'
+  | 'QUEUED'
+  | 'PROCESSING'
+  | 'FINISHED'
+  | 'ERROR';
 
 export interface CourseCategoryRow {
   id: number;
@@ -59,8 +65,52 @@ export interface LessonItemTree {
   mimeType: string | null;
   videoUrl: string | null;
   videoStorageKey: string | null;
+  bunnyVideoId: string | null;
+  bunnyLibraryId: number | null;
+  bunnyStatus: BunnyVideoStatus;
+  thumbnailUrl: string | null;
   fileUrl: string | null;
   fileStorageKey: string | null;
+}
+
+export interface CourseStatsRow {
+  studentId: number;
+  email: string;
+  fullName: string | null;
+  enrolledAt: string;
+  totalViewCount: number;
+  totalWatchedSec: number;
+  lastViewedAt: string | null;
+}
+
+export interface CourseStudentStatsLesson {
+  lessonItemId: number;
+  lessonItemTitle: string;
+  chapterTitle: string;
+  chapterOrder: number;
+  lessonTitle: string;
+  lessonOrder: number;
+  durationSeconds: number | null;
+  viewCount: number;
+  totalWatchedSec: number;
+  lastPositionSec: number;
+  lastViewedAt: string | null;
+}
+
+export interface CourseStudentStatsDetail {
+  student: {
+    id: number;
+    email: string;
+    fullName: string | null;
+  };
+  lessons: CourseStudentStatsLesson[];
+}
+
+export interface VideoProgressInfo {
+  totalWatchedSec: number;
+  lastPositionSec: number;
+  viewCount: number;
+  lastViewedAt: string | null;
 }
 
 export interface LessonTree {
@@ -137,3 +187,23 @@ export const COURSE_STATUS_OPTIONS = [
   { value: 'PUBLISHED', label: COURSE_STATUS_LABEL.PUBLISHED },
   { value: 'ARCHIVED', label: COURSE_STATUS_LABEL.ARCHIVED },
 ] as const;
+
+type BadgeVariant = 'secondary' | 'success' | 'warning' | 'destructive' | 'outline';
+
+/** Nguồn duy nhất cho label + màu badge của trạng thái xử lý video bunny. */
+export const BUNNY_STATUS_META: Record<
+  BunnyVideoStatus,
+  { label: string; variant: BadgeVariant; pending: boolean }
+> = {
+  UPLOADING: { label: 'Đang tải lên', variant: 'secondary', pending: true },
+  QUEUED: { label: 'Đang chờ xử lý', variant: 'secondary', pending: true },
+  PROCESSING: { label: 'Đang xử lý', variant: 'warning', pending: true },
+  FINISHED: { label: 'Sẵn sàng', variant: 'success', pending: false },
+  ERROR: { label: 'Lỗi xử lý', variant: 'destructive', pending: false },
+};
+
+/** Bài học để resume khi học sinh vào khóa (trả từ GET /courses/:id/resume). */
+export interface CourseResume {
+  lessonItemId: number | null;
+  lessonId: number | null;
+}
