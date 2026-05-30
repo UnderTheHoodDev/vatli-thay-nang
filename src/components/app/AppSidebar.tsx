@@ -3,7 +3,16 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LucideIcon, Users, LayoutDashboard, UserRound, School, GraduationCap } from 'lucide-react';
+import {
+  LucideIcon,
+  Users,
+  LayoutDashboard,
+  UserRound,
+  School,
+  GraduationCap,
+  BookOpen,
+  FolderTree,
+} from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,12 +36,15 @@ export interface NavItem {
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', href: '/admin/users', icon: Users, section: 'Quản lý' },
   { label: 'Lớp học', href: '/admin/classes', icon: School, section: 'Quản lý' },
+  { label: 'Khóa học', href: '/admin/courses', icon: BookOpen, section: 'Quản lý' },
+  { label: 'Danh mục', href: '/admin/course-categories', icon: FolderTree, section: 'Quản lý' },
   { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound, section: 'Tài khoản' },
 ];
 
 export const DASHBOARD_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, section: 'Học tập' },
   { label: 'Lớp học', href: '/dashboard/classes', icon: School, section: 'Học tập' },
+  { label: 'Khóa học', href: '/dashboard/courses', icon: BookOpen, section: 'Học tập' },
   { label: 'Thông tin cá nhân', href: '/dashboard/profile', icon: UserRound, section: 'Tài khoản' },
 ];
 
