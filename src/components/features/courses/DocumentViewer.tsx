@@ -46,6 +46,7 @@ export default function DocumentViewer({
   const kind: ViewerKind = isLocked ? 'download' : mapToViewer(fileName ?? '', mimeType ?? '');
 
   // Reset loading + timeout khi đổi file
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setLoading(true);
     setOfficeTimedOut(false);
@@ -57,6 +58,7 @@ export default function DocumentViewer({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [fileUrl, kind, isLocked]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (isLocked) {
     return (

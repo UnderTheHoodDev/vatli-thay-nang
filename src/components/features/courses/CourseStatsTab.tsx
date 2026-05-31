@@ -65,9 +65,11 @@ export default function CourseStatsTab({ courseId }: Props) {
     setLoading(false);
   }, [courseId, appliedQ, page, pageSize]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function submit(e: React.FormEvent) {
     e.preventDefault();

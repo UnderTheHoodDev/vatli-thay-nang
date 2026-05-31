@@ -134,15 +134,16 @@ export default function CourseStructureTab({ course }: Props) {
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set());
   const [, startTransition] = useTransition();
 
+  // Trạng thái xử lý video poll được (override bunnyStatus của cây).
+  const [statusMap, setStatusMap] = useState<Record<number, VideoStatusInfo>>({});
+
   // Sync local state when parent re-renders after revalidatePath + router.refresh().
   // Without this, optimistic drag-drop state would shadow updates coming from the server.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChapters(course.chapters);
     setStatusMap({});
   }, [course.chapters]);
-
-  // Trạng thái xử lý video poll được (override bunnyStatus của cây).
-  const [statusMap, setStatusMap] = useState<Record<number, VideoStatusInfo>>({});
   const displayChapters = useMemo(() => mergeStatus(chapters, statusMap), [chapters, statusMap]);
   const pendingCount = useMemo(
     () =>

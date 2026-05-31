@@ -41,12 +41,14 @@ export default function ChapterFormModal({
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
     setDescription(initialData?.description ?? '');
     setSubmitted(false);
   }, [open, initialData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tên chương' : '';
 

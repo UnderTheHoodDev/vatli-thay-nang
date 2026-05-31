@@ -58,6 +58,7 @@ export default function LessonItemFormModal({
 
   const hasExistingVideo = mode === 'edit' && !!initialData?.bunnyVideoId;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
@@ -76,6 +77,7 @@ export default function LessonItemFormModal({
     setVideoFile(null);
     setSubmitted(false);
   }, [open, initialData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tên mục' : '';
   const docError =

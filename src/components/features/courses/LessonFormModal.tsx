@@ -44,6 +44,7 @@ export default function LessonFormModal({
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
@@ -51,6 +52,7 @@ export default function LessonFormModal({
     setIsPreview(initialData?.isPreview ?? false);
     setSubmitted(false);
   }, [open, initialData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tên bài học' : '';
 

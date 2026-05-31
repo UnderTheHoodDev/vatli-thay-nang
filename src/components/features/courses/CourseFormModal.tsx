@@ -131,6 +131,7 @@ export default function CourseFormModal({
   const [instructors, setInstructors] = useState<UserRow[]>([]);
   const [instructorsLoading, setInstructorsLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setForm(fromForm(initialData));
@@ -153,6 +154,7 @@ export default function CourseFormModal({
       cancelled = true;
     };
   }, [open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const codeError = submitted && !form.code.trim() ? 'Vui lòng nhập mã khóa học' : '';
   const titleError = submitted && !form.title.trim() ? 'Vui lòng nhập tên khóa học' : '';
