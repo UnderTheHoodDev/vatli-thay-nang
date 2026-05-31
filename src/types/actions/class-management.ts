@@ -1,5 +1,5 @@
 import type { ListMeta } from '@/types/auth';
-import type { ClassRow, ClassSessionStatus, ClassStatus } from '@/types/class-management';
+import type { ClassRow, ClassStatus } from '@/types/class-management';
 
 export interface IListClassesParams {
   name?: string;
@@ -61,7 +61,6 @@ export interface ClassSessionListRow {
   startTime: string;
   endTime: string;
   meetingUrl: string | null;
-  status: ClassSessionStatus;
 }
 
 export interface IListClassSessionsParams {
@@ -81,7 +80,6 @@ export interface ClassSessionDetail {
   startTime: string;
   endTime: string;
   meetingUrl: string | null;
-  status: ClassSessionStatus;
   activeAttendanceSession: { id: number; closedAt: string } | null;
 }
 
@@ -99,5 +97,4 @@ export interface IUpdateClassSessionPayload {
   startTime?: string;
   endTime?: string;
   meetingUrl?: string;
-  status?: ClassSessionStatus;
 }

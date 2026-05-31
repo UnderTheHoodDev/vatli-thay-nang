@@ -1,5 +1,5 @@
 export type ClassStatus = 'ACTIVE' | 'CLOSED';
-export type ClassSessionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type ClassSessionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
 export type LeaveRequestStatus = 'SUBMITTED' | 'ACKNOWLEDGED';
 export type LeaveType = 'FULL_SESSION' | 'EARLY_LEAVE';
 export type AttendanceSessionStatus = 'ACTIVE' | 'CLOSED';
@@ -38,7 +38,6 @@ export interface ClassSessionRow {
   startTime: string;
   endTime: string;
   meetingUrl: string | null;
-  status: ClassSessionStatus;
   createdById: number;
   createdAt: string;
   updatedAt: string;

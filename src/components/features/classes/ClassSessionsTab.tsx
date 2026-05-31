@@ -121,7 +121,8 @@ export default function ClassSessionsTab({
                 </TableRow>
               ) : (
                 rows.map((row) => {
-                  const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.status, row.startTime, row.endTime)];
+                  const effectiveStatus = getEffectiveStatus(row.startTime, row.endTime);
+                  const statusInfo = CLASS_SESSION_STATUS_MAP[effectiveStatus];
                   return (
                     <TableRow
                       key={row.id}
@@ -166,7 +167,7 @@ export default function ClassSessionsTab({
                           >
                             <Pencil />
                           </Button>
-                          {row.status !== 'IN_PROGRESS' && (
+                          {effectiveStatus !== 'IN_PROGRESS' && (
                             <Button
                               variant="ghost"
                               size="icon-sm"

@@ -161,7 +161,7 @@ export default function StudentClassDetailClient({
                     <TableSkeleton columnWidths={SKELETON_COLUMNS} />
                   ) : (
                     sessions.map((s) => {
-                      const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(s.status, s.startTime, s.endTime)];
+                      const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(s.startTime, s.endTime)];
                       return (
                         <TableRow
                           key={s.id}

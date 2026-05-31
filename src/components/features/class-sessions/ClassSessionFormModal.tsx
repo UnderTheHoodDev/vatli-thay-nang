@@ -12,25 +12,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { handleActionResult } from '@/lib/actions';
 import { createClassSessionAction } from '@/actions/v1/class-sessions/create-class-session';
 import { updateClassSessionAction } from '@/actions/v1/class-sessions/update-class-session';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
-import type { ClassSessionStatus } from '@/types/class-management';
-
-const STATUS_OPTIONS: Array<{ value: ClassSessionStatus; label: string }> = [
-  { value: 'SCHEDULED', label: 'Đã lên lịch' },
-  { value: 'IN_PROGRESS', label: 'Đang diễn ra' },
-  { value: 'COMPLETED', label: 'Hoàn thành' },
-  { value: 'CANCELLED', label: 'Đã huỷ' },
-];
 
 function toLocalDatetimeValue(iso: string): string {
   const d = new Date(iso);
@@ -66,7 +51,6 @@ export default function ClassSessionFormModal({
     initialData?.endTime ? toLocalDatetimeValue(initialData.endTime) : '',
   );
   const [meetingUrl, setMeetingUrl] = useState(initialData?.meetingUrl ?? '');
-  const [status, setStatus] = useState<ClassSessionStatus>(initialData?.status ?? 'SCHEDULED');
 
   const nowValue = toLocalDatetimeValue(new Date().toISOString());
 
@@ -119,7 +103,6 @@ export default function ClassSessionFormModal({
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
           meetingUrl: meetingUrl.trim() || undefined,
-          status,
         });
         handleActionResult(
           result.errors,
@@ -208,23 +191,6 @@ export default function ClassSessionFormModal({
             />
           </div>
 
-          {mode === 'edit' && (
-            <div>
-              <Label>Trạng thái</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as ClassSessionStatus)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
