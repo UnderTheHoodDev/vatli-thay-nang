@@ -114,13 +114,17 @@ export default function StudentAttendancePanel({
 
         {myLeaveRequest && (
           <div className="text-muted-foreground flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {myLeaveRequest.leaveType === 'EARLY_LEAVE' ? 'Xin rời sớm' : 'Xin nghỉ cả buổi'}
             </span>
             {myLeaveRequest.status === 'ACKNOWLEDGED' ? (
-              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Đã duyệt</span>
+              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                Đã duyệt
+              </span>
             ) : (
-              <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">Chờ duyệt</span>
+              <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
+                Chờ duyệt
+              </span>
             )}
           </div>
         )}

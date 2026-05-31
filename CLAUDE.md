@@ -24,20 +24,21 @@ Path alias `@/*` → `src/*`.
 
 ## Auth & route protection
 
-Sessions are **opaque cookie → Redis lookup**, not JWT. The flow:
+Sessions are **opaque cookie → BE `/api/v1/me` lookup**, not JWT. The frontend does not talk to Redis directly; the backend owns session storage.
 
 - Cookie: `session_id` (httpOnly, sameSite=lax, 30d). Set/cleared via helpers in `src/lib/server/cookies.ts`.
-- Stored at Redis key `session:<id>` as `SessionInfo = { userId, email, role, fullName?, hasPassword }` (see `src/types/auth.ts`).
-- `readSessionFromRedis` in `src/lib/redis/index.ts` is the single read path; `getCurrentSession()` in `src/lib/server/session.ts` is the server-component helper.
+- `SessionInfo = { userId, email, role, fullName?, hasPassword }` (see `src/types/auth.ts`) is fetched from `GET /api/v1/me`. The axios `api` interceptor injects the cookie as `X-Session-Id`; BE validates and returns the payload (or 401 if invalid).
+- `getCurrentSession()` in `src/lib/server/session.ts` is the single server-component helper. It's wrapped in `React.cache()` so layout + page + sub-components in the same request share one BE call.
+- The `/api/v1/me` endpoint uses `@AllowUnchanged()` on the BE so it works even when `hasPassword === false` — required for the `/auth/change-password` flow.
 
 Route protection happens in **two layers** — keep them in sync:
 
-- `src/proxy.ts` is the edge gate (Next.js 16 renamed `middleware.ts` → `proxy.ts`; `matcher` is exported alongside `proxy`). It redirects unauth users to `/auth/login`, redirects already-authed users away from `/auth/login`, and enforces `/admin/*` is ADMIN-only.
-- Each protected layout (`src/app/admin/layout.tsx`, `src/app/dashboard/layout.tsx`) re-checks the session server-side and additionally redirects to `/auth/change-password` when `session.hasPassword === false`. This `hasPassword` gate runs in layouts, **not** in the proxy.
+- `src/proxy.ts` is the edge gate (Next.js 16 renamed `middleware.ts` → `proxy.ts`; `matcher` is exported alongside `proxy`). It only checks for cookie presence — no BE call from edge. Missing cookie on a gated path → redirect to `/auth/login`.
+- Each protected layout (`src/app/admin/layout.tsx`, `src/app/dashboard/layout.tsx`) calls `getCurrentSession()` server-side and enforces: null session → `/auth/login`; `hasPassword === false` → `/auth/change-password`; wrong role → other role's home. The `/auth/login` page itself also redirects already-authed users to their home (server-side check).
 
-Role homes: ADMIN → `/admin/users`, STUDENT → `/dashboard`. When changing redirects, update both layers.
+Role homes: ADMIN → `/admin/accounts`, STUDENT → `/dashboard`. When changing redirects, update both layers.
 
-Redis also stores: `activation:<token>` (one-time activation payloads, read by `readActivationFromRedis`) and `ratelimit:login:<ip>:<email>` (5 attempts / 15 min, fail-open on Redis errors — see `checkLoginRateLimit`).
+Login rate-limiting lives on the BE (`@Throttle(10/60s)` on `/api/v1/login`); the FE just surfaces the error message.
 
 ## Server actions
 
@@ -63,7 +64,7 @@ Base URL: `NEXT_PUBLIC_API_URL` (falls back to `NEXT_PUBLIC_API_ENDPOINT`, then 
 
 ## Data layer (no DB)
 
-This app has no direct DB. Data flows: **server action → axios `api` → external backend**. The only stateful store this codebase owns is Redis (sessions / activation tokens / rate limits).
+This app has no direct DB and no direct Redis access. Data flows: **server action / server component → axios `api` → external backend**. All session, activation, and rate-limit state is owned by the BE.
 
 For static landing-page content (courses, achievements, menu items, teacher bio, asset paths), all of it lives in `src/constants/*.ts` as typed const arrays — components iterate via `.map()`. Don't hardcode repeated landing-page content in JSX.
 
@@ -101,7 +102,6 @@ shadcn/ui (`components.json`, style **new-york**, base color **slate**, lucide i
 See `.env.example`:
 
 - `NEXT_PUBLIC_API_URL` — backend base URL
-- `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_TLS_CERTIFICATE` — Redis (TLS required outside development; dev uses db 0, prod uses db 1)
 - `BUNNY_STORAGE_API_KEY` / `BUNNY_STORAGE_ZONE_NAME` / `BUNNY_STORAGE_ZONE_REGION`
 
 ## Deploy

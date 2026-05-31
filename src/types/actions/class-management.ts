@@ -63,6 +63,25 @@ export interface ClassSessionListRow {
   meetingUrl: string | null;
 }
 
+export interface ClassSessionListRowWithClass extends ClassSessionListRow {
+  classId: number;
+  classCode: string;
+  className: string;
+}
+
+export interface IListAllClassSessionsParams {
+  classCode?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface IListAllClassSessionsResult {
+  data: ClassSessionListRowWithClass[];
+  meta: ListMeta;
+}
+
 export interface IListClassSessionsParams {
   page?: number;
   pageSize?: number;

@@ -32,7 +32,8 @@ export default function StudentClassSessionDetailClient({
     handleActionErrors(errors);
   }, [errors]);
 
-  const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
+  const statusInfo =
+    CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
     <div className="space-y-6">

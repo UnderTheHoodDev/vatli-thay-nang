@@ -190,7 +190,6 @@ export default function ClassSessionFormModal({
               onChange={(e) => setMeetingUrl(e.target.value)}
             />
           </div>
-
         </div>
 
         <DialogFooter>

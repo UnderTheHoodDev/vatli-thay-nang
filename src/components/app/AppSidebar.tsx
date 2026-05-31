@@ -50,7 +50,7 @@ export const ADMIN_NAV: NavItem[] = [
     section: 'Quản lý',
     children: [
       { label: 'Người dùng', href: '/admin/accounts' },
-      { label: 'Học sinh', href: '/admin/accounts/students' },
+      // { label: 'Học sinh', href: '/admin/accounts/students' },
     ],
   },
   {
@@ -96,6 +96,22 @@ function groupBySection(items: NavItem[]): Array<{ section: string; items: NavIt
   return Array.from(groups, ([section, items]) => ({ section, items }));
 }
 
+function matchesHref(pathname: string, href: string): boolean {
+  if (pathname === href) return true;
+  if (pathname.startsWith(href + '/')) return true;
+
+  const hrefSegs = href.split('/').filter(Boolean);
+  const pathSegs = pathname.split('/').filter(Boolean);
+  if (hrefSegs.length > pathSegs.length) return false;
+
+  let hi = 0;
+  for (const seg of pathSegs) {
+    if (seg === hrefSegs[hi]) hi++;
+    if (hi === hrefSegs.length) return true;
+  }
+  return false;
+}
+
 function getActiveState(
   pathname: string,
   items: NavItem[],
@@ -106,7 +122,7 @@ function getActiveState(
   for (const item of items) {
     if (item.children) {
       for (const child of item.children) {
-        if (pathname === child.href || pathname.startsWith(child.href + '/')) {
+        if (matchesHref(pathname, child.href)) {
           if (!activeHref || child.href.length > activeHref.length) {
             activeHref = child.href;
           }
@@ -114,7 +130,7 @@ function getActiveState(
         }
       }
     } else if (item.href) {
-      if (pathname === item.href || pathname.startsWith(item.href + '/')) {
+      if (matchesHref(pathname, item.href)) {
         if (!activeHref || item.href.length > activeHref.length) {
           activeHref = item.href;
         }

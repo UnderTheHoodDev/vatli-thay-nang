@@ -515,11 +515,11 @@ function RowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem className="cursor-pointer" onClick={onEdit}>
+        <DropdownMenuItem className="cursor-pointer gap-2" onClick={onEdit}>
           <Pencil className="size-4" /> Sửa
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive cursor-pointer"
+          className="text-destructive focus:text-destructive cursor-pointer gap-2"
           onClick={onDelete}
         >
           <Trash2 className="size-4" /> Xoá

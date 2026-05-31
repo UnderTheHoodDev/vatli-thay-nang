@@ -52,7 +52,11 @@ interface FormProps {
 }
 
 /** State được khởi tạo từ props khi remount — không dùng useEffect để tránh cascading render */
-function LeaveRequestFormContent({ onOpenChange, classSessionId, existingLeaveRequest }: FormProps) {
+function LeaveRequestFormContent({
+  onOpenChange,
+  classSessionId,
+  existingLeaveRequest,
+}: FormProps) {
   const router = useRouter();
   const isEditMode = !!existingLeaveRequest;
 
@@ -92,9 +96,7 @@ function LeaveRequestFormContent({ onOpenChange, classSessionId, existingLeaveRe
   return (
     <>
       <DialogHeader>
-        <DialogTitle>
-          {isEditMode ? 'Chỉnh sửa đơn xin nghỉ' : 'Xin nghỉ buổi học'}
-        </DialogTitle>
+        <DialogTitle>{isEditMode ? 'Chỉnh sửa đơn xin nghỉ' : 'Xin nghỉ buổi học'}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4 py-2">
         <div className="space-y-2">
@@ -108,7 +110,7 @@ function LeaveRequestFormContent({ onOpenChange, classSessionId, existingLeaveRe
             {LEAVE_TYPE_OPTIONS.map((opt) => (
               <div
                 key={opt.value}
-                className="flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5"
+                className="has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5 flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors"
               >
                 <RadioGroupItem value={opt.value} id={opt.value} className="mt-0.5" />
                 <Label htmlFor={opt.value} className="cursor-pointer space-y-0.5">
@@ -158,10 +160,7 @@ export default function SubmitLeaveRequestDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-md"
-        key={existingLeaveRequest?.id ?? 'new'}
-      >
+      <DialogContent className="sm:max-w-md" key={existingLeaveRequest?.id ?? 'new'}>
         <LeaveRequestFormContent
           onOpenChange={onOpenChange}
           classSessionId={classSessionId}

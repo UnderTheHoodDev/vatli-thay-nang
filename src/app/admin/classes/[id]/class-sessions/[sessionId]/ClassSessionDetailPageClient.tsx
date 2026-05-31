@@ -19,6 +19,8 @@ import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
 interface Props {
   classId: number;
   classSession: ClassSessionDetail;
+  backHref: string;
+  backLabel: string;
   attendanceSessions: AttendanceSessionListRow[];
   attendanceSessionsMeta: ListMeta;
   attendanceSessionsErrors: string[];
@@ -29,8 +31,9 @@ interface Props {
 }
 
 export default function ClassSessionDetailPageClient({
-  classId,
   classSession,
+  backHref,
+  backLabel,
   attendanceSessions,
   attendanceSessionsErrors,
   summary,
@@ -46,7 +49,8 @@ export default function ClassSessionDetailPageClient({
     handleActionErrors(summaryErrors);
   }, [summaryErrors]);
 
-  const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
+  const statusInfo =
+    CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
     <div className="space-y-6">
@@ -57,8 +61,8 @@ export default function ClassSessionDetailPageClient({
           size="sm"
           className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
         >
-          <Link href={`/admin/classes/${classId}?tab=sessions`}>
-            <ArrowLeft /> Quay lại lớp học
+          <Link href={backHref}>
+            <ArrowLeft /> {backLabel}
           </Link>
         </Button>
         <div className="space-y-1">
