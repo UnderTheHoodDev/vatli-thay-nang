@@ -18,13 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VideoPlayer from '@/components/features/courses/VideoPlayer';
 import DocumentViewer from '@/components/features/courses/DocumentViewer';
@@ -51,15 +45,10 @@ function formatVnd(v: number | null | undefined): string {
 export default function LearnClient({ course, initialItemId }: Props) {
   const router = useRouter();
   const isEnrolled = course.isEnrolled === true;
-  const flat = useMemo(
-    () => flattenItems(course, isEnrolled),
-    [course, isEnrolled],
-  );
+  const flat = useMemo(() => flattenItems(course, isEnrolled), [course, isEnrolled]);
 
   const initialActive = resolveActive(flat, initialItemId);
-  const [activeItemId, setActiveItemId] = useState<number | null>(
-    initialActive?.item.id ?? null,
-  );
+  const [activeItemId, setActiveItemId] = useState<number | null>(initialActive?.item.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const active = resolveActive(flat, activeItemId);
@@ -175,9 +164,7 @@ function ContentArea({ active }: { active: FlatItem | null }) {
       <Card>
         <CardContent className="flex min-h-[40vh] flex-col items-center justify-center gap-2 py-12 text-center">
           <LayoutList className="text-muted-foreground size-10" />
-          <p className="text-foreground text-sm font-medium">
-            Khóa học chưa có nội dung
-          </p>
+          <p className="text-foreground text-sm font-medium">Khóa học chưa có nội dung</p>
           <p className="text-muted-foreground text-sm">
             Vui lòng quay lại sau khi giáo viên thêm bài học.
           </p>
@@ -194,12 +181,8 @@ function ContentArea({ active }: { active: FlatItem | null }) {
       <div className="bg-muted flex min-h-[45vh] flex-col items-center justify-center gap-3 rounded-lg text-center">
         <Lock className="text-muted-foreground size-10" />
         <div>
-          <p className="text-foreground text-sm font-medium">
-            Nội dung bị khóa
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Bạn cần ghi danh khóa học để xem bài này.
-          </p>
+          <p className="text-foreground text-sm font-medium">Nội dung bị khóa</p>
+          <p className="text-muted-foreground text-sm">Bạn cần ghi danh khóa học để xem bài này.</p>
         </div>
       </div>
     );
@@ -217,9 +200,7 @@ function ContentArea({ active }: { active: FlatItem | null }) {
               {isError ? 'Video xử lý lỗi' : 'Video đang được xử lý'}
             </p>
             <p className="text-muted-foreground text-sm">
-              {isError
-                ? 'Vui lòng liên hệ giáo viên.'
-                : 'Quay lại sau ít phút hoặc bấm làm mới.'}
+              {isError ? 'Vui lòng liên hệ giáo viên.' : 'Quay lại sau ít phút hoặc bấm làm mới.'}
             </p>
           </div>
           {!isError && (
@@ -285,9 +266,7 @@ function CourseOverview({ course }: { course: CourseDetail }) {
               <div className="flex items-center gap-2">
                 <CircleDollarSign className="text-muted-foreground size-4" />
                 <span className="text-muted-foreground">Học phí:</span>
-                <span className="text-primary font-semibold">
-                  {formatVnd(course.price)}
-                </span>
+                <span className="text-primary font-semibold">{formatVnd(course.price)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <LayoutList className="text-muted-foreground size-4" />
@@ -320,9 +299,7 @@ function CourseOverview({ course }: { course: CourseDetail }) {
                     <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                       {label}
                     </dt>
-                    <dd className="text-foreground text-sm whitespace-pre-wrap">
-                      {value}
-                    </dd>
+                    <dd className="text-foreground text-sm whitespace-pre-wrap">{value}</dd>
                   </div>
                 </div>
               ) : null,

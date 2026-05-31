@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { handleActionResult } from '@/lib/actions';
 import { openAttendanceAction } from '@/actions/v1/attendance/open-attendance';
 
-const PRESETS = [3, 5, 10];
+const PRESETS = [5, 10, 15, 20];
 
 interface Props {
   open: boolean;

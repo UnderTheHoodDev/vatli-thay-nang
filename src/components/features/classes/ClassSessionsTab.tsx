@@ -27,7 +27,7 @@ import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { handleActionResult } from '@/lib/actions';
 import { deleteClassSessionAction } from '@/actions/v1/class-sessions/delete-class-session';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
-import { CLASS_SESSION_STATUS_MAP } from '@/lib/class-sessions';
+import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import { formatDateTime } from '@/lib/format';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
@@ -121,7 +121,7 @@ export default function ClassSessionsTab({
                 </TableRow>
               ) : (
                 rows.map((row) => {
-                  const statusInfo = CLASS_SESSION_STATUS_MAP[row.status];
+                  const statusInfo = CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.status, row.startTime, row.endTime)];
                   return (
                     <TableRow
                       key={row.id}

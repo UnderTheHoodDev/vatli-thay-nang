@@ -1,6 +1,7 @@
 export type ClassStatus = 'ACTIVE' | 'CLOSED';
 export type ClassSessionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type LeaveRequestStatus = 'SUBMITTED' | 'ACKNOWLEDGED';
+export type LeaveType = 'FULL_SESSION' | 'EARLY_LEAVE';
 export type AttendanceSessionStatus = 'ACTIVE' | 'CLOSED';
 export type AttendanceSource = 'STUDENT' | 'MANUAL';
 export type ManualEditAction =

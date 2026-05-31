@@ -34,9 +34,7 @@ export default function UploadTray() {
 
   if (tasks.length === 0) return null;
 
-  const activeCount = tasks.filter(
-    (t) => t.phase === 'uploading' || t.phase === 'queued',
-  ).length;
+  const activeCount = tasks.filter((t) => t.phase === 'uploading' || t.phase === 'queued').length;
 
   return (
     <div className="fixed right-4 bottom-4 z-50 w-80 max-w-[calc(100vw-2rem)]">
@@ -44,9 +42,7 @@ export default function UploadTray() {
         <div className="bg-muted/40 flex items-center gap-2 px-3 py-2">
           <Upload className="text-muted-foreground size-4" />
           <span className="text-foreground flex-1 text-sm font-medium">
-            {activeCount > 0
-              ? `Đang tải lên ${activeCount} video`
-              : 'Tải lên hoàn tất'}
+            {activeCount > 0 ? `Đang tải lên ${activeCount} video` : 'Tải lên hoàn tất'}
           </span>
           <Button
             size="icon-xs"
@@ -96,9 +92,7 @@ export default function UploadTray() {
                         <CheckCircle2 className="size-3" /> Hoàn tất
                       </span>
                     )}
-                    {t.phase === 'error' && (
-                      <span className="text-destructive">Lỗi tải lên</span>
-                    )}
+                    {t.phase === 'error' && <span className="text-destructive">Lỗi tải lên</span>}
                   </span>
 
                   <div className="flex items-center gap-0.5">

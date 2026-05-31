@@ -72,7 +72,8 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
                   <TableHead className="min-w-[160px]">Họ tên</TableHead>
                   <TableHead className="min-w-[180px]">Email</TableHead>
                   <TableHead className="min-w-[200px]">Lý do</TableHead>
-                  <TableHead className="min-w-[150px]">Thời gian gửi</TableHead>
+                  <TableHead className="min-w-32.5">Loại nghỉ</TableHead>
+                  <TableHead className="min-w-37.5">Thời gian gửi</TableHead>
                   <TableHead className="w-28 text-center">Trạng thái</TableHead>
                   <TableHead className="w-28 text-center">Hành động</TableHead>
                 </TableRow>
@@ -87,6 +88,13 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
                       {row.student.email}
                     </TableCell>
                     <TableCell className="text-foreground text-sm">{row.reason}</TableCell>
+                    <TableCell>
+                      {row.leaveType === 'EARLY_LEAVE' ? (
+                        <Badge variant="outline">Rời sớm</Badge>
+                      ) : (
+                        <Badge variant="secondary">Cả buổi</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatDateTime(row.submittedAt)}
                     </TableCell>

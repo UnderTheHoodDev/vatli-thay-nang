@@ -4,7 +4,7 @@ import { readSessionFromRedis } from '@/lib/redis';
 const SESSION_COOKIE = 'session_id';
 const CHANGE_PASSWORD_PATH = '/auth/change-password';
 const LOGIN_PATH = '/auth/login';
-const ADMIN_HOME = '/admin/users';
+const ADMIN_HOME = '/admin/accounts';
 const STUDENT_HOME = '/dashboard';
 
 const PROTECTED_PREFIXES = ['/admin', '/dashboard'];

@@ -6,10 +6,7 @@ import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
 
-export async function deleteLessonItemAction(
-  id: number,
-  courseId: number,
-): Promise<IActionState> {
+export async function deleteLessonItemAction(id: number, courseId: number): Promise<IActionState> {
   try {
     await api.delete(`/api/v1/lesson-items/${id}`);
     revalidatePath(`/admin/courses/${courseId}`);

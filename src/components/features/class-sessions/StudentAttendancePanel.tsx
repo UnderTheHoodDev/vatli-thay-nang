@@ -11,11 +11,13 @@ import { checkAttendanceAction } from '@/actions/v1/attendance/check-attendance'
 import { handleActionResult } from '@/lib/actions';
 import { formatDateTimeShort } from '@/lib/format';
 import type { MyAttendanceLog } from '@/types/actions/attendance';
+import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
 
 interface Props {
   classSessionId: number;
   activeAttendanceSession: { id: number; closedAt: string } | null;
   myAttendance: MyAttendanceLog[];
+  myLeaveRequest: MyLeaveRequest | null;
 }
 
 function formatRemaining(ms: number): string {
@@ -29,6 +31,7 @@ export default function StudentAttendancePanel({
   classSessionId,
   activeAttendanceSession,
   myAttendance,
+  myLeaveRequest,
 }: Props) {
   const router = useRouter();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
@@ -109,14 +112,30 @@ export default function StudentAttendancePanel({
           </div>
         )}
 
+        {myLeaveRequest && (
+          <div className="text-muted-foreground flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
+            <span className="font-medium text-foreground">
+              {myLeaveRequest.leaveType === 'EARLY_LEAVE' ? 'Xin rời sớm' : 'Xin nghỉ cả buổi'}
+            </span>
+            {myLeaveRequest.status === 'ACKNOWLEDGED' ? (
+              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Đã duyệt</span>
+            ) : (
+              <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">Chờ duyệt</span>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            onClick={() => setLeaveDialogOpen(true)}
-          >
-            <LogOut className="size-4" /> Xin nghỉ
-          </Button>
+          {(!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => setLeaveDialogOpen(true)}
+            >
+              <LogOut className="size-4" />
+              {myLeaveRequest ? 'Sửa đơn nghỉ' : 'Xin nghỉ'}
+            </Button>
+          )}
 
           {showCheckButton && (
             <ActionButton
@@ -156,6 +175,9 @@ export default function StudentAttendancePanel({
         open={leaveDialogOpen}
         onOpenChange={setLeaveDialogOpen}
         classSessionId={classSessionId}
+        existingLeaveRequest={
+          myLeaveRequest && myLeaveRequest.status === 'SUBMITTED' ? myLeaveRequest : null
+        }
       />
     </Card>
   );

@@ -13,7 +13,7 @@ export async function updateCourseCategoryAction(
 ): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/course-categories/${id}`, payload);
-    revalidatePath('/admin/course-categories');
+    revalidatePath('/admin/courses/categories');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

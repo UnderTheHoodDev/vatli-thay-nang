@@ -1,8 +1,7 @@
 // Loader cho bunny.net Player.js — điều khiển iframe Stream player (seek, events).
 // Tài liệu: https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js
 
-const PLAYER_JS_SRC =
-  'https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js';
+const PLAYER_JS_SRC = 'https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js';
 
 interface PlayerJsStatic {
   Player: new (el: HTMLIFrameElement | string) => BunnyPlayer;
@@ -37,9 +36,7 @@ export function loadPlayerJs(): Promise<PlayerJsStatic> {
   if (loadPromise) return loadPromise;
 
   loadPromise = new Promise<PlayerJsStatic>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${PLAYER_JS_SRC}"]`,
-    );
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${PLAYER_JS_SRC}"]`);
     const onReady = () => {
       if (window.playerjs) resolve(window.playerjs);
       else reject(new Error('playerjs không khả dụng sau khi load'));
@@ -56,10 +53,14 @@ export function loadPlayerJs(): Promise<PlayerJsStatic> {
     script.src = PLAYER_JS_SRC;
     script.async = true;
     script.addEventListener('load', onReady, { once: true });
-    script.addEventListener('error', () => {
-      loadPromise = null; // cho phép thử lại lần sau
-      reject(new Error('Lỗi tải Player.js'));
-    }, { once: true });
+    script.addEventListener(
+      'error',
+      () => {
+        loadPromise = null; // cho phép thử lại lần sau
+        reject(new Error('Lỗi tải Player.js'));
+      },
+      { once: true },
+    );
     document.head.appendChild(script);
   });
   return loadPromise;

@@ -1,16 +1,8 @@
 export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type LessonItemType = 'VIDEO' | 'DOCUMENT';
 export type CourseEnrollmentStatus = 'ACTIVE' | 'REVOKED';
-export type StorageFolder =
-  | 'course-thumbnails'
-  | 'lesson-documents'
-  | 'lesson-videos';
-export type BunnyVideoStatus =
-  | 'UPLOADING'
-  | 'QUEUED'
-  | 'PROCESSING'
-  | 'FINISHED'
-  | 'ERROR';
+export type StorageFolder = 'course-thumbnails' | 'lesson-documents' | 'lesson-videos';
+export type BunnyVideoStatus = 'UPLOADING' | 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
 
 export interface CourseCategoryRow {
   id: number;

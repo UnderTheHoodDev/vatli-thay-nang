@@ -28,8 +28,7 @@ export default async function CoursesPage({ searchParams }: Props) {
     code: urlState.code || undefined,
     categoryId:
       urlState.categoryId !== ALL_VALUE ? Number(urlState.categoryId) || undefined : undefined,
-    status:
-      urlState.status !== ALL_VALUE ? (urlState.status as CourseStatus) : undefined,
+    status: urlState.status !== ALL_VALUE ? (urlState.status as CourseStatus) : undefined,
     page: urlState.page,
     pageSize: urlState.pageSize,
   };

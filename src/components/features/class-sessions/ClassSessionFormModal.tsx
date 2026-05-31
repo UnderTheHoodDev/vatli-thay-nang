@@ -68,18 +68,30 @@ export default function ClassSessionFormModal({
   const [meetingUrl, setMeetingUrl] = useState(initialData?.meetingUrl ?? '');
   const [status, setStatus] = useState<ClassSessionStatus>(initialData?.status ?? 'SCHEDULED');
 
+  const nowValue = toLocalDatetimeValue(new Date().toISOString());
+
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tiêu đề' : '';
-  const startTimeError = submitted && !startTime ? 'Vui lòng chọn thời gian bắt đầu' : '';
+  const startTimeError =
+    submitted && !startTime
+      ? 'Vui lòng chọn thời gian bắt đầu'
+      : submitted && startTime && new Date(startTime) < new Date()
+        ? 'Thời gian bắt đầu phải từ thời điểm hiện tại trở đi'
+        : '';
   const endTimeError =
     submitted && !endTime
       ? 'Vui lòng chọn thời gian kết thúc'
-      : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
-        ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
-        : '';
+      : submitted && endTime && new Date(endTime) < new Date()
+        ? 'Thời gian kết thúc phải từ thời điểm hiện tại trở đi'
+        : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
+          ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
+          : '';
 
   const handleSubmit = async () => {
     setSubmitted(true);
     if (!title.trim() || !startTime || !endTime) return;
+    const now = new Date();
+    if (new Date(startTime) < now) return;
+    if (new Date(endTime) < now) return;
     if (new Date(endTime) <= new Date(startTime)) return;
 
     setLoading(true);
@@ -165,6 +177,7 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-start"
                 type="datetime-local"
+                min={nowValue}
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
               />
@@ -177,6 +190,7 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-end"
                 type="datetime-local"
+                min={nowValue}
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               />

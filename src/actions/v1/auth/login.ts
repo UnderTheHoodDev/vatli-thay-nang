@@ -38,7 +38,7 @@ export async function loginAction(email: string, password: string): Promise<IAut
     return {
       success: true,
       errors: [],
-      redirectTo: data.role === 'ADMIN' ? '/admin/users' : '/dashboard',
+      redirectTo: data.role === 'ADMIN' ? '/admin/accounts' : '/dashboard',
     };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

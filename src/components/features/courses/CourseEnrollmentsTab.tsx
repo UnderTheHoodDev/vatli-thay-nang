@@ -152,10 +152,7 @@ export default function CourseEnrollmentsTab({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => onPageSizeChange(Number(v))}
-            >
+            <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
               <SelectTrigger className="w-24 cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
@@ -234,10 +231,7 @@ export default function CourseEnrollmentsTab({
         )}
       </Card>
 
-      <AlertDialog
-        open={target !== null}
-        onOpenChange={(open) => !open && setTarget(null)}
-      >
+      <AlertDialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận thu hồi</AlertDialogTitle>

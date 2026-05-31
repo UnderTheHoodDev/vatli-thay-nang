@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as tus from 'tus-js-client';
 import { markUploadedAction } from '@/actions/v1/lesson-items/mark-uploaded';
@@ -15,12 +8,7 @@ import { markUploadedAction } from '@/actions/v1/lesson-items/mark-uploaded';
 const MAX_CONCURRENT = 3;
 const CHUNK_SIZE = 64 * 1024 * 1024; // 64MB (bội số 256KB theo yêu cầu bunny)
 
-export type UploadPhase =
-  | 'queued'
-  | 'uploading'
-  | 'paused'
-  | 'error'
-  | 'done';
+export type UploadPhase = 'queued' | 'uploading' | 'paused' | 'error' | 'done';
 
 export interface UploadTask {
   id: string;
@@ -77,11 +65,7 @@ async function markUploadedWithRetry(
   }
 }
 
-export default function UploadManagerProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function UploadManagerProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [tasks, setTasks] = useState<UploadTask[]>([]);
   // Refs không-render: tus instance, File, và metadata để pump hàng đợi.
@@ -89,14 +73,9 @@ export default function UploadManagerProvider({
   const filesRef = useRef<Map<string, File>>(new Map());
   const argsRef = useRef<Map<string, EnqueueArgs>>(new Map());
 
-  const patchTask = useCallback(
-    (id: string, patch: Partial<UploadTask>) => {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-      );
-    },
-    [],
-  );
+  const patchTask = useCallback((id: string, patch: Partial<UploadTask>) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  }, []);
 
   const refreshIfOn = useCallback(
     (courseId: number) => {
@@ -197,35 +176,34 @@ export default function UploadManagerProvider({
   const pumpRef = useRef(pump);
   const removeTaskRef = useRef(removeTask);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free tus callbacks
     pumpRef.current = pump;
+    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free tus callbacks
     removeTaskRef.current = removeTask;
   }, [pump, removeTask]);
 
-  const enqueue = useCallback(
-    (file: File, args: EnqueueArgs) => {
-      const id =
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-      filesRef.current.set(id, file);
-      argsRef.current.set(id, args);
-      setTasks((prev) => [
-        ...prev,
-        {
-          id,
-          lessonItemId: args.lessonItemId,
-          courseId: args.courseId,
-          videoId: args.videoId,
-          fileName: file.name,
-          fileSize: file.size,
-          progress: 0,
-          phase: 'queued',
-        },
-      ]);
-      queueMicrotask(() => pumpRef.current());
-    },
-    [],
-  );
+  const enqueue = useCallback((file: File, args: EnqueueArgs) => {
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    filesRef.current.set(id, file);
+    argsRef.current.set(id, args);
+    setTasks((prev) => [
+      ...prev,
+      {
+        id,
+        lessonItemId: args.lessonItemId,
+        courseId: args.courseId,
+        videoId: args.videoId,
+        fileName: file.name,
+        fileSize: file.size,
+        progress: 0,
+        phase: 'queued',
+      },
+    ]);
+    queueMicrotask(() => pumpRef.current());
+  }, []);
 
   const pause = useCallback(
     (id: string) => {
@@ -277,18 +255,14 @@ export default function UploadManagerProvider({
       tasks.some(
         (t) =>
           t.lessonItemId === lessonItemId &&
-          (t.phase === 'uploading' ||
-            t.phase === 'queued' ||
-            t.phase === 'paused'),
+          (t.phase === 'uploading' || t.phase === 'queued' || t.phase === 'paused'),
       ),
     [tasks],
   );
 
   // Cảnh báo khi rời trang lúc còn upload.
   useEffect(() => {
-    const hasUploading = tasks.some(
-      (t) => t.phase === 'uploading' || t.phase === 'queued',
-    );
+    const hasUploading = tasks.some((t) => t.phase === 'uploading' || t.phase === 'queued');
     if (!hasUploading) return;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();

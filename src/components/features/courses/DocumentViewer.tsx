@@ -5,11 +5,7 @@ import { Download, ExternalLink, FileText, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import {
-  buildOfficeEmbedUrl,
-  mapToViewer,
-  type ViewerKind,
-} from '@/lib/document-viewer';
+import { buildOfficeEmbedUrl, mapToViewer, type ViewerKind } from '@/lib/document-viewer';
 
 interface Props {
   fileUrl: string | null;
@@ -47,9 +43,7 @@ export default function DocumentViewer({
   const [officeTimedOut, setOfficeTimedOut] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const kind: ViewerKind = isLocked
-    ? 'download'
-    : mapToViewer(fileName ?? '', mimeType ?? '');
+  const kind: ViewerKind = isLocked ? 'download' : mapToViewer(fileName ?? '', mimeType ?? '');
 
   // Reset loading + timeout khi đổi file
   useEffect(() => {
@@ -57,10 +51,7 @@ export default function DocumentViewer({
     setOfficeTimedOut(false);
     if (timerRef.current) clearTimeout(timerRef.current);
     if (!isLocked && kind === 'office') {
-      timerRef.current = setTimeout(
-        () => setOfficeTimedOut(true),
-        OFFICE_TIMEOUT_MS,
-      );
+      timerRef.current = setTimeout(() => setOfficeTimedOut(true), OFFICE_TIMEOUT_MS);
     }
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -72,9 +63,7 @@ export default function DocumentViewer({
       <div className="bg-muted flex min-h-[40vh] items-center justify-center rounded-lg">
         <div className="text-muted-foreground space-y-2 text-center">
           <Lock className="mx-auto size-10" />
-          <p className="text-sm font-medium">
-            Bạn cần ghi danh khóa học để xem tài liệu này
-          </p>
+          <p className="text-sm font-medium">Bạn cần ghi danh khóa học để xem tài liệu này</p>
         </div>
       </div>
     );
@@ -175,9 +164,7 @@ export default function DocumentViewer({
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-muted-foreground space-y-2 text-center">
               <FileText className="mx-auto size-10" />
-              <p className="text-sm">
-                Định dạng này không xem trước trực tiếp được.
-              </p>
+              <p className="text-sm">Định dạng này không xem trước trực tiếp được.</p>
               <Button asChild size="sm" variant="outline" className={cn('cursor-pointer')}>
                 <a href={url} target="_blank" rel="noreferrer noopener" download>
                   <Download /> Tải về để xem

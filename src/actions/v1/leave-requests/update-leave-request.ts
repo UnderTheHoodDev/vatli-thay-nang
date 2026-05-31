@@ -5,21 +5,20 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
-import type { IReorderPayload } from '@/types/actions/course-management';
+import type { IUpdateLeaveRequestPayload } from '@/types/actions/leave-requests';
 
-export async function reorderLessonItemsAction(
-  lessonId: number,
-  courseId: number,
-  payload: IReorderPayload,
+export async function updateLeaveRequestAction(
+  leaveRequestId: number,
+  payload: IUpdateLeaveRequestPayload,
 ): Promise<IActionState> {
   try {
-    await api.patch(`/api/v1/lessons/${lessonId}/lesson-items/reorder`, payload);
-    revalidatePath(`/admin/courses/${courseId}`);
+    await api.patch(`/api/v1/leave-requests/${leaveRequestId}`, payload);
+    revalidatePath('/dashboard/classes/[id]/class-sessions/[sessionId]', 'page');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Sắp xếp mục bài học thất bại'] };
+    return { errors: ['Cập nhật đơn xin nghỉ thất bại'] };
   }
 }

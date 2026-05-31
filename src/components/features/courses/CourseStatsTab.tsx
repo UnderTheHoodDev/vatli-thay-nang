@@ -6,12 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -36,10 +31,7 @@ import { formatDate } from '@/lib/utils';
 import { listCourseStatsAction } from '@/actions/v1/courses/list-course-stats';
 import { getStudentStatsAction } from '@/actions/v1/courses/get-student-stats';
 import { exportCourseStatsAction } from '@/actions/v1/courses/export-course-stats';
-import type {
-  CourseStatsRow,
-  CourseStudentStatsDetail,
-} from '@/types/course-management';
+import type { CourseStatsRow, CourseStudentStatsDetail } from '@/types/course-management';
 
 const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-36', 'w-32', 'w-24', 'w-24', 'w-24'];
 
@@ -56,9 +48,7 @@ export default function CourseStatsTab({ courseId }: Props) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [drilldown, setDrilldown] = useState<CourseStudentStatsDetail | null>(
-    null,
-  );
+  const [drilldown, setDrilldown] = useState<CourseStudentStatsDetail | null>(null);
   const [drillLoading, setDrillLoading] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -227,13 +217,9 @@ export default function CourseStatsTab({ courseId }: Props) {
                         {r.fullName ?? '—'}
                       </TableCell>
                       <TableCell>{r.email}</TableCell>
-                      <TableCell>
-                        {r.lastViewedAt ? formatDate(r.lastViewedAt) : '—'}
-                      </TableCell>
+                      <TableCell>{r.lastViewedAt ? formatDate(r.lastViewedAt) : '—'}</TableCell>
                       <TableCell className="text-right">{r.totalViewCount}</TableCell>
-                      <TableCell className="text-right">
-                        {formatHours(r.totalWatchedSec)}
-                      </TableCell>
+                      <TableCell className="text-right">{formatHours(r.totalWatchedSec)}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           size="sm"
@@ -310,15 +296,11 @@ export default function CourseStatsTab({ courseId }: Props) {
                       <TableCell>{l.lessonTitle}</TableCell>
                       <TableCell>{l.lessonItemTitle}</TableCell>
                       <TableCell className="text-right">{l.viewCount}</TableCell>
-                      <TableCell className="text-right">
-                        {formatHours(l.totalWatchedSec)}
-                      </TableCell>
+                      <TableCell className="text-right">{formatHours(l.totalWatchedSec)}</TableCell>
                       <TableCell className="text-right">
                         {formatPosition(l.lastPositionSec, l.durationSeconds)}
                       </TableCell>
-                      <TableCell>
-                        {l.lastViewedAt ? formatDate(l.lastViewedAt) : '—'}
-                      </TableCell>
+                      <TableCell>{l.lastViewedAt ? formatDate(l.lastViewedAt) : '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

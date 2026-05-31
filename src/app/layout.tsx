@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   title: 'Lớp học Vật Lí Thầy Năng',
   description:
     'Chắp cánh ước mơ chinh phục các kì thi Vật lí cho học sinh trên mọi miền cả nước cùng thầy giáo trẻ Nguyễn Năng Linh',
+  icons: { icon: '/icon.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

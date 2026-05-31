@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  Lock,
-  PlayCircle,
-} from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Lock, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { BUNNY_STATUS_META } from '@/types/course-management';
@@ -53,81 +47,75 @@ export default function CourseContentSidebar({
       <div className="border-divider bg-muted/40 shrink-0 border-b px-4 py-3">
         <p className="text-foreground text-sm font-semibold">Nội dung khóa học</p>
         <p className="text-muted-foreground text-xs">
-          {course.totalChapters ?? course.chapters.length} chương ·{' '}
-          {course.totalLessons ?? 0} bài
+          {course.totalChapters ?? course.chapters.length} chương · {course.totalLessons ?? 0} bài
         </p>
       </div>
 
       {/* Chỉ phần list cuộn */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-      {course.chapters.length === 0 ? (
-        <p className="text-muted-foreground px-4 py-6 text-center text-sm italic">
-          Khóa học chưa có nội dung.
-        </p>
-      ) : (
-        <ul className="divide-divider divide-y">
-          {course.chapters.map((chapter) => {
-            const open = expanded.has(chapter.id);
-            return (
-              <li key={chapter.id}>
-                <button
-                  type="button"
-                  onClick={() => toggle(chapter.id)}
-                  className="bg-muted/20 hover:bg-muted/40 flex w-full items-center gap-2 px-4 py-2.5 text-left transition"
-                >
-                  {open ? (
-                    <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-                  ) : (
-                    <ChevronRight className="text-muted-foreground size-4 shrink-0" />
-                  )}
-                  <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
-                    <span className="text-muted-foreground mr-1 text-xs">
-                      C{chapter.order}.
+        {course.chapters.length === 0 ? (
+          <p className="text-muted-foreground px-4 py-6 text-center text-sm italic">
+            Khóa học chưa có nội dung.
+          </p>
+        ) : (
+          <ul className="divide-divider divide-y">
+            {course.chapters.map((chapter) => {
+              const open = expanded.has(chapter.id);
+              return (
+                <li key={chapter.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(chapter.id)}
+                    className="bg-muted/20 hover:bg-muted/40 flex w-full items-center gap-2 px-4 py-2.5 text-left transition"
+                  >
+                    {open ? (
+                      <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+                    ) : (
+                      <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                    )}
+                    <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
+                      <span className="text-muted-foreground mr-1 text-xs">C{chapter.order}.</span>
+                      {chapter.title}
                     </span>
-                    {chapter.title}
-                  </span>
-                </button>
+                  </button>
 
-                {open && (
-                  <ul>
-                    {chapter.lessons.map((lesson) => {
-                      const accessible = isEnrolled || lesson.isPreview;
-                      return (
-                        <li key={lesson.id}>
-                          <div className="text-muted-foreground bg-muted/5 flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium">
-                            <span className="truncate">
-                              {lesson.order}. {lesson.title}
-                            </span>
-                            {lesson.isPreview && (
-                              <Badge
-                                variant="success"
-                                className="px-1 py-0 text-[9px]"
-                              >
-                                Miễn phí
-                              </Badge>
-                            )}
-                          </div>
-                          <ul>
-                            {lesson.items.map((item) => (
-                              <ItemEntry
-                                key={item.id}
-                                item={item}
-                                accessible={accessible}
-                                active={item.id === activeItemId}
-                                onSelect={() => onSelect(item.id)}
-                              />
-                            ))}
-                          </ul>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  {open && (
+                    <ul>
+                      {chapter.lessons.map((lesson) => {
+                        const accessible = isEnrolled || lesson.isPreview;
+                        return (
+                          <li key={lesson.id}>
+                            <div className="text-muted-foreground bg-muted/5 flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium">
+                              <span className="truncate">
+                                {lesson.order}. {lesson.title}
+                              </span>
+                              {lesson.isPreview && (
+                                <Badge variant="success" className="px-1 py-0 text-[9px]">
+                                  Miễn phí
+                                </Badge>
+                              )}
+                            </div>
+                            <ul>
+                              {lesson.items.map((item) => (
+                                <ItemEntry
+                                  key={item.id}
+                                  item={item}
+                                  accessible={accessible}
+                                  active={item.id === activeItemId}
+                                  onSelect={() => onSelect(item.id)}
+                                />
+                              ))}
+                            </ul>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
@@ -158,9 +146,7 @@ function ItemEntry({
         onClick={onSelect}
         className={cn(
           'flex w-full items-center gap-2 py-2 pr-3 pl-9 text-left text-sm transition',
-          active
-            ? 'bg-purple/10 text-purple font-medium'
-            : 'hover:bg-muted text-foreground',
+          active ? 'bg-purple/10 text-purple font-medium' : 'hover:bg-muted text-foreground',
         )}
       >
         {!accessible ? (

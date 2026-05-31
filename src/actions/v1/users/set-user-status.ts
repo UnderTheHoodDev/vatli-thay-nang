@@ -10,7 +10,7 @@ import type { IActionState } from '@/types/actions/users';
 export async function setUserStatusAction(id: number, status: UserStatus): Promise<IActionState> {
   try {
     await api.patch(`/api/v1/users/${id}/status`, { status });
-    revalidatePath('/admin/users');
+    revalidatePath('/admin/accounts');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

@@ -3,10 +3,7 @@
 import { AxiosError } from 'axios';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
-import type {
-  IGetUploadUrlPayload,
-  IGetUploadUrlResult,
-} from '@/types/actions/course-management';
+import type { IGetUploadUrlPayload, IGetUploadUrlResult } from '@/types/actions/course-management';
 
 export interface GetUploadUrlResponse {
   data: IGetUploadUrlResult | null;

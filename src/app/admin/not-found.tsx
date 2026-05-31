@@ -19,8 +19,8 @@ export default function AdminNotFound() {
             </p>
           </div>
           <Button asChild variant="outline" className="cursor-pointer">
-            <Link href="/admin/users">
-              <ArrowLeft /> Quay lại danh sách user
+            <Link href="/admin/accounts">
+              <ArrowLeft /> Quay lại danh sách người dùng
             </Link>
           </Button>
         </CardContent>

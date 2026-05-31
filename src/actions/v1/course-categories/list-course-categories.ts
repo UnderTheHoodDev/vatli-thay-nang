@@ -18,9 +18,7 @@ export async function listCourseCategories(
   params: IListCourseCategoriesParams = {},
 ): Promise<ListCourseCategoriesResponse> {
   const cleaned = Object.fromEntries(
-    Object.entries(params).filter(
-      ([, v]) => v !== '' && v !== undefined && v !== null,
-    ),
+    Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null),
   );
   try {
     const res = await api.get('/api/v1/course-categories', { params: cleaned });

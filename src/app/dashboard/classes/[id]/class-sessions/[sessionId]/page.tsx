@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getClassSession } from '@/actions/v1/class-sessions/get-class-session';
 import { getMyAttendance } from '@/actions/v1/attendance/get-my-attendance';
+import { getMyLeaveRequestAction } from '@/actions/v1/leave-requests/get-my-leave-request';
 import StudentClassSessionDetailClient from './StudentClassSessionDetailClient';
 
 interface Props {
@@ -14,9 +15,10 @@ export default async function StudentClassSessionDetailPage({ params }: Props) {
   if (!Number.isInteger(classId) || classId <= 0) notFound();
   if (!Number.isInteger(classSessionId) || classSessionId <= 0) notFound();
 
-  const [classSession, myAttendanceRes] = await Promise.all([
+  const [classSession, myAttendanceRes, myLeaveRequestRes] = await Promise.all([
     getClassSession(classSessionId),
     getMyAttendance(classSessionId),
+    getMyLeaveRequestAction(classSessionId),
   ]);
 
   if (!classSession) notFound();
@@ -26,6 +28,7 @@ export default async function StudentClassSessionDetailPage({ params }: Props) {
       classId={classId}
       classSession={classSession}
       myAttendance={myAttendanceRes.data}
+      myLeaveRequest={myLeaveRequestRes.data}
       errors={myAttendanceRes.errors}
     />
   );

@@ -5,7 +5,7 @@ import AppSidebar, { DASHBOARD_NAV } from '@/components/app/AppSidebar';
 import AppTopbar from '@/components/app/AppTopbar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-const ADMIN_HOME = '/admin/users';
+const ADMIN_HOME = '/admin/accounts';
 const STUDENT_HOME = '/dashboard';
 
 function homeForRole(role: string): string {

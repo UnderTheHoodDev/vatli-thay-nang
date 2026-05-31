@@ -21,11 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import CourseFormModal from './CourseFormModal';
-import type {
-  CourseCategoryRow,
-  CourseDetail,
-  CourseStatus,
-} from '@/types/course-management';
+import type { CourseCategoryRow, CourseDetail, CourseStatus } from '@/types/course-management';
 
 function statusBadge(s: CourseStatus) {
   if (s === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;

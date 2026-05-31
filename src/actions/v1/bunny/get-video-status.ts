@@ -14,9 +14,7 @@ export async function getBunnyVideoStatusAction(
   videoId: string,
 ): Promise<GetBunnyVideoStatusResponse> {
   try {
-    const res = await api.get(
-      `/api/v1/bunny/videos/${encodeURIComponent(videoId)}/status`,
-    );
+    const res = await api.get(`/api/v1/bunny/videos/${encodeURIComponent(videoId)}/status`);
     const data = (res.data as { data: IBunnyVideoStatus }).data;
     return { data, errors: [] };
   } catch (error) {
