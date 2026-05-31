@@ -11,10 +11,13 @@ import { checkAttendanceAction } from '@/actions/v1/attendance/check-attendance'
 import { handleActionResult } from '@/lib/actions';
 import { formatDateTimeShort } from '@/lib/format';
 import type { MyAttendanceLog } from '@/types/actions/attendance';
+import { getEffectiveStatus } from '@/lib/class-sessions';
 import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
 
 interface Props {
   classSessionId: number;
+  startTime: string;
+  endTime: string;
   activeAttendanceSession: { id: number; closedAt: string } | null;
   myAttendance: MyAttendanceLog[];
   myLeaveRequest: MyLeaveRequest | null;
@@ -29,10 +32,13 @@ function formatRemaining(ms: number): string {
 
 export default function StudentAttendancePanel({
   classSessionId,
+  startTime,
+  endTime,
   activeAttendanceSession,
   myAttendance,
   myLeaveRequest,
 }: Props) {
+  const isCompleted = getEffectiveStatus(startTime, endTime) === 'COMPLETED';
   const router = useRouter();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -130,7 +136,7 @@ export default function StudentAttendancePanel({
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          {(!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
+          {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
             <Button
               variant="outline"
               className="cursor-pointer"

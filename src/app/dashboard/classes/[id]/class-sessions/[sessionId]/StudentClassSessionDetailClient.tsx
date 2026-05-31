@@ -60,6 +60,8 @@ export default function StudentClassSessionDetailClient({
 
       <StudentAttendancePanel
         classSessionId={classSession.id}
+        startTime={classSession.startTime}
+        endTime={classSession.endTime}
         activeAttendanceSession={classSession.activeAttendanceSession}
         myAttendance={myAttendance}
         myLeaveRequest={myLeaveRequest}
