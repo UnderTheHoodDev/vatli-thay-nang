@@ -228,9 +228,7 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                 ) : (
                   rows.map((row) => {
                     const statusInfo =
-                      CLASS_SESSION_STATUS_MAP[
-                        getEffectiveStatus(row.startTime, row.endTime)
-                      ];
+                      CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.startTime, row.endTime)];
                     return (
                       <TableRow
                         key={row.id}
