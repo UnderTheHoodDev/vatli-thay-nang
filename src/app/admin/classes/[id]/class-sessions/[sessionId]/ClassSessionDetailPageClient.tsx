@@ -77,14 +77,14 @@ export default function ClassSessionDetailPageClient({
 
       <ClassSessionInfoSection classSession={classSession} />
 
+      <AttendanceOverview classSessionId={classSession.id} counts={summary?.counts ?? null} />
+
       <AttendanceSection
         classSessionId={classSession.id}
         activeAttendanceSession={classSession.activeAttendanceSession}
         attendanceSessions={attendanceSessions}
         summary={summary}
       />
-
-      <AttendanceOverview classSessionId={classSession.id} counts={summary?.counts ?? null} />
 
       <LeaveRequestsSection data={leaveRequests} meta={leaveRequestsMeta} />
     </div>

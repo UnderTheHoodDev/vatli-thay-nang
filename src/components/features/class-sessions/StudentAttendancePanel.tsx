@@ -42,11 +42,14 @@ export default function StudentAttendancePanel({
   const router = useRouter();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
+  // null on first render (server + hydration) so SSR and client match.
+  // Set to Date.now() in the effect below, just before the interval starts.
+  const [now, setNow] = useState<number | null>(null);
 
-  const remainingMs = activeAttendanceSession
-    ? new Date(activeAttendanceSession.closedAt).getTime() - now
-    : 0;
+  const remainingMs =
+    activeAttendanceSession && now !== null
+      ? new Date(activeAttendanceSession.closedAt).getTime() - now
+      : 0;
 
   const checkedAttendanceSessionIds = useMemo(
     () => new Set(myAttendance.map((a) => a.attendanceSessionId)),
@@ -55,12 +58,14 @@ export default function StudentAttendancePanel({
 
   const hasCheckedActive =
     !!activeAttendanceSession && checkedAttendanceSessionIds.has(activeAttendanceSession.id);
-  const expired = !!activeAttendanceSession && remainingMs <= 0;
+  const expired = now !== null && !!activeAttendanceSession && remainingMs <= 0;
   const showCheckButton = !!activeAttendanceSession && !hasCheckedActive && !expired;
 
   useEffect(() => {
     if (!activeAttendanceSession) return;
     const closedAtMs = new Date(activeAttendanceSession.closedAt).getTime();
+    // Defer past the synchronous effect body so the rule is satisfied.
+    const seed = setTimeout(() => setNow(Date.now()), 0);
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
@@ -69,7 +74,10 @@ export default function StudentAttendancePanel({
         router.refresh();
       }
     }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(seed);
+      clearInterval(timer);
+    };
   }, [activeAttendanceSession, router]);
 
   const handleCheck = async () => {
