@@ -1,12 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  endView,
-  getProgress,
-  heartbeat,
-  startView,
-} from '@/lib/video-tracking-client';
+import { endView, getProgress, heartbeat, startView } from '@/lib/video-tracking-client';
 import { loadPlayerJs, type BunnyPlayer } from '@/lib/bunny-player';
 import type { BunnyVideoStatus } from '@/types/course-management';
 
@@ -32,7 +27,7 @@ export default function VideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const viewIdRef = useRef<number | null>(null);
-  const lastTickRef = useRef<number>(Date.now());
+  const lastTickRef = useRef<number>(0);
   const accumulatedRef = useRef<number>(0);
 
   // Trạng thái từ Player.js (vị trí + đang phát) — nguồn vị trí THẬT.
@@ -143,11 +138,7 @@ export default function VideoPlayer({
 
           if (viewIdRef.current == null) return;
           try {
-            const hb = await heartbeat(
-              viewIdRef.current,
-              watchedDelta,
-              currentPos(),
-            );
+            const hb = await heartbeat(viewIdRef.current, watchedDelta, currentPos());
             if (hb.data.newViewId) viewIdRef.current = hb.data.newViewId;
           } catch (err) {
             console.warn('[video-tracking] heartbeat failed', err);
@@ -193,9 +184,7 @@ export default function VideoPlayer({
   if (initialPosition == null) {
     return (
       <div className="bg-muted flex aspect-video items-center justify-center rounded-lg">
-        <div className="text-muted-foreground text-center text-sm">
-          Đang chuẩn bị player...
-        </div>
+        <div className="text-muted-foreground text-center text-sm">Đang chuẩn bị player...</div>
       </div>
     );
   }
@@ -203,7 +192,7 @@ export default function VideoPlayer({
   // Giữ &t= làm hint cho fallback (Player.js setCurrentTime là cơ chế chính).
   const src = `${videoUrl}?autoplay=false&t=${initialPosition}`;
   return (
-    <div className="bg-black overflow-hidden rounded-lg">
+    <div className="overflow-hidden rounded-lg bg-black">
       <div className="relative aspect-video w-full">
         <iframe
           ref={iframeRef}

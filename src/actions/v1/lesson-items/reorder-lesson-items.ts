@@ -13,10 +13,7 @@ export async function reorderLessonItemsAction(
   payload: IReorderPayload,
 ): Promise<IActionState> {
   try {
-    await api.patch(
-      `/api/v1/lessons/${lessonId}/lesson-items/reorder`,
-      payload,
-    );
+    await api.patch(`/api/v1/lessons/${lessonId}/lesson-items/reorder`, payload);
     revalidatePath(`/admin/courses/${courseId}`);
     return { errors: [] };
   } catch (error) {

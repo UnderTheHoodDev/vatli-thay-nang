@@ -11,11 +11,16 @@ import { checkAttendanceAction } from '@/actions/v1/attendance/check-attendance'
 import { handleActionResult } from '@/lib/actions';
 import { formatDateTimeShort } from '@/lib/format';
 import type { MyAttendanceLog } from '@/types/actions/attendance';
+import { getEffectiveStatus } from '@/lib/class-sessions';
+import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
 
 interface Props {
   classSessionId: number;
+  startTime: string;
+  endTime: string;
   activeAttendanceSession: { id: number; closedAt: string } | null;
   myAttendance: MyAttendanceLog[];
+  myLeaveRequest: MyLeaveRequest | null;
 }
 
 function formatRemaining(ms: number): string {
@@ -27,17 +32,24 @@ function formatRemaining(ms: number): string {
 
 export default function StudentAttendancePanel({
   classSessionId,
+  startTime,
+  endTime,
   activeAttendanceSession,
   myAttendance,
+  myLeaveRequest,
 }: Props) {
+  const isCompleted = getEffectiveStatus(startTime, endTime) === 'COMPLETED';
   const router = useRouter();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
+  // null on first render (server + hydration) so SSR and client match.
+  // Set to Date.now() in the effect below, just before the interval starts.
+  const [now, setNow] = useState<number | null>(null);
 
-  const remainingMs = activeAttendanceSession
-    ? new Date(activeAttendanceSession.closedAt).getTime() - now
-    : 0;
+  const remainingMs =
+    activeAttendanceSession && now !== null
+      ? new Date(activeAttendanceSession.closedAt).getTime() - now
+      : 0;
 
   const checkedAttendanceSessionIds = useMemo(
     () => new Set(myAttendance.map((a) => a.attendanceSessionId)),
@@ -46,12 +58,14 @@ export default function StudentAttendancePanel({
 
   const hasCheckedActive =
     !!activeAttendanceSession && checkedAttendanceSessionIds.has(activeAttendanceSession.id);
-  const expired = !!activeAttendanceSession && remainingMs <= 0;
+  const expired = now !== null && !!activeAttendanceSession && remainingMs <= 0;
   const showCheckButton = !!activeAttendanceSession && !hasCheckedActive && !expired;
 
   useEffect(() => {
     if (!activeAttendanceSession) return;
     const closedAtMs = new Date(activeAttendanceSession.closedAt).getTime();
+    // Defer past the synchronous effect body so the rule is satisfied.
+    const seed = setTimeout(() => setNow(Date.now()), 0);
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
@@ -60,7 +74,10 @@ export default function StudentAttendancePanel({
         router.refresh();
       }
     }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(seed);
+      clearInterval(timer);
+    };
   }, [activeAttendanceSession, router]);
 
   const handleCheck = async () => {
@@ -109,14 +126,34 @@ export default function StudentAttendancePanel({
           </div>
         )}
 
+        {myLeaveRequest && (
+          <div className="text-muted-foreground flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
+            <span className="text-foreground font-medium">
+              {myLeaveRequest.leaveType === 'EARLY_LEAVE' ? 'Xin rời sớm' : 'Xin nghỉ cả buổi'}
+            </span>
+            {myLeaveRequest.status === 'ACKNOWLEDGED' ? (
+              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                Đã duyệt
+              </span>
+            ) : (
+              <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
+                Chờ duyệt
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            onClick={() => setLeaveDialogOpen(true)}
-          >
-            <LogOut className="size-4" /> Xin nghỉ
-          </Button>
+          {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => setLeaveDialogOpen(true)}
+            >
+              <LogOut className="size-4" />
+              {myLeaveRequest ? 'Sửa đơn nghỉ' : 'Xin nghỉ'}
+            </Button>
+          )}
 
           {showCheckButton && (
             <ActionButton
@@ -156,6 +193,9 @@ export default function StudentAttendancePanel({
         open={leaveDialogOpen}
         onOpenChange={setLeaveDialogOpen}
         classSessionId={classSessionId}
+        existingLeaveRequest={
+          myLeaveRequest && myLeaveRequest.status === 'SUBMITTED' ? myLeaveRequest : null
+        }
       />
     </Card>
   );

@@ -30,12 +30,7 @@ function formatBytes(n: number): string {
   return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
-export default function VideoUploader({
-  file,
-  onFileChange,
-  disabled,
-  existingStatus,
-}: Props) {
+export default function VideoUploader({ file, onFileChange, disabled, existingStatus }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -69,9 +64,7 @@ export default function VideoUploader({
             <Video className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium">
-              {file.name}
-            </p>
+            <p className="text-foreground truncate text-sm font-medium">{file.name}</p>
             <p className="text-muted-foreground text-xs">
               {formatBytes(file.size)} · sẽ tải lên nền sau khi lưu
             </p>
@@ -94,9 +87,7 @@ export default function VideoUploader({
             <Video className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium">
-              Video hiện tại
-            </p>
+            <p className="text-foreground truncate text-sm font-medium">Video hiện tại</p>
             <p className="text-muted-foreground inline-flex items-center gap-1 text-xs">
               {existingStatus === 'FINISHED' ? (
                 <>

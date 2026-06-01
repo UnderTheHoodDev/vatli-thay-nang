@@ -23,13 +23,9 @@ const EMPTY_STATS: CoursesListStats = {
   archived: 0,
 };
 
-export async function listCourses(
-  params: IListCoursesParams,
-): Promise<ListCoursesResponse> {
+export async function listCourses(params: IListCoursesParams): Promise<ListCoursesResponse> {
   const cleaned = Object.fromEntries(
-    Object.entries(params).filter(
-      ([, v]) => v !== '' && v !== undefined && v !== null,
-    ),
+    Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null),
   );
   try {
     const res = await api.get('/api/v1/courses', { params: cleaned });

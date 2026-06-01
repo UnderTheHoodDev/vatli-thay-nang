@@ -36,11 +36,7 @@ export function mapToViewer(fileName: string, mimeType: string): ViewerKind {
   // Fallback theo mimeType
   const m = (mimeType || '').toLowerCase();
   if (m === 'application/pdf') return 'pdf';
-  if (
-    /wordprocessingml|presentationml|spreadsheetml|msword|ms-excel|ms-powerpoint/.test(
-      m,
-    )
-  ) {
+  if (/wordprocessingml|presentationml|spreadsheetml|msword|ms-excel|ms-powerpoint/.test(m)) {
     return 'office';
   }
   if (m.startsWith('image/') && !m.includes('svg')) return 'image';

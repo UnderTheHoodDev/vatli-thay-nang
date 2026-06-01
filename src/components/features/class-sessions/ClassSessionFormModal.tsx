@@ -12,25 +12,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { handleActionResult } from '@/lib/actions';
 import { createClassSessionAction } from '@/actions/v1/class-sessions/create-class-session';
 import { updateClassSessionAction } from '@/actions/v1/class-sessions/update-class-session';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
-import type { ClassSessionStatus } from '@/types/class-management';
-
-const STATUS_OPTIONS: Array<{ value: ClassSessionStatus; label: string }> = [
-  { value: 'SCHEDULED', label: 'Đã lên lịch' },
-  { value: 'IN_PROGRESS', label: 'Đang diễn ra' },
-  { value: 'COMPLETED', label: 'Hoàn thành' },
-  { value: 'CANCELLED', label: 'Đã huỷ' },
-];
 
 function toLocalDatetimeValue(iso: string): string {
   const d = new Date(iso);
@@ -66,20 +51,31 @@ export default function ClassSessionFormModal({
     initialData?.endTime ? toLocalDatetimeValue(initialData.endTime) : '',
   );
   const [meetingUrl, setMeetingUrl] = useState(initialData?.meetingUrl ?? '');
-  const [status, setStatus] = useState<ClassSessionStatus>(initialData?.status ?? 'SCHEDULED');
+
+  const nowValue = toLocalDatetimeValue(new Date().toISOString());
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tiêu đề' : '';
-  const startTimeError = submitted && !startTime ? 'Vui lòng chọn thời gian bắt đầu' : '';
+  const startTimeError =
+    submitted && !startTime
+      ? 'Vui lòng chọn thời gian bắt đầu'
+      : submitted && startTime && new Date(startTime) < new Date()
+        ? 'Thời gian bắt đầu phải từ thời điểm hiện tại trở đi'
+        : '';
   const endTimeError =
     submitted && !endTime
       ? 'Vui lòng chọn thời gian kết thúc'
-      : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
-        ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
-        : '';
+      : submitted && endTime && new Date(endTime) < new Date()
+        ? 'Thời gian kết thúc phải từ thời điểm hiện tại trở đi'
+        : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
+          ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
+          : '';
 
   const handleSubmit = async () => {
     setSubmitted(true);
     if (!title.trim() || !startTime || !endTime) return;
+    const now = new Date();
+    if (new Date(startTime) < now) return;
+    if (new Date(endTime) < now) return;
     if (new Date(endTime) <= new Date(startTime)) return;
 
     setLoading(true);
@@ -107,7 +103,6 @@ export default function ClassSessionFormModal({
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
           meetingUrl: meetingUrl.trim() || undefined,
-          status,
         });
         handleActionResult(
           result.errors,
@@ -165,6 +160,7 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-start"
                 type="datetime-local"
+                min={nowValue}
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
               />
@@ -177,6 +173,7 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-end"
                 type="datetime-local"
+                min={nowValue}
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               />
@@ -193,24 +190,6 @@ export default function ClassSessionFormModal({
               onChange={(e) => setMeetingUrl(e.target.value)}
             />
           </div>
-
-          {mode === 'edit' && (
-            <div>
-              <Label>Trạng thái</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as ClassSessionStatus)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
 
         <DialogFooter>

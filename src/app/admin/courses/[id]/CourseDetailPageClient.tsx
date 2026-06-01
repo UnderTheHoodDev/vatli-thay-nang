@@ -3,13 +3,7 @@
 import { useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  BarChart3,
-  Info,
-  LayoutList,
-  Users as UsersIcon,
-} from 'lucide-react';
+import { ArrowLeft, BarChart3, Info, LayoutList, Users as UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,11 +20,7 @@ import type {
   CourseStatus,
 } from '@/types/course-management';
 
-export type CourseDetailTab =
-  | 'info'
-  | 'structure'
-  | 'enrollments'
-  | 'stats';
+export type CourseDetailTab = 'info' | 'structure' | 'enrollments' | 'stats';
 
 export interface CourseDetailUrlState {
   tab: CourseDetailTab;
@@ -111,9 +101,7 @@ export default function CourseDetailPageClient({
         </Button>
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-paytone text-foreground text-2xl tracking-tight">
-              {course.title}
-            </h1>
+            <h1 className="font-paytone text-foreground text-2xl tracking-tight">{course.title}</h1>
             {statusBadge(course.status)}
           </div>
           <p className="text-muted-foreground text-sm">

@@ -10,7 +10,7 @@ import ClassSessionInfoSection from '@/components/features/class-sessions/ClassS
 import AttendanceSection from '@/components/features/class-sessions/AttendanceSection';
 import AttendanceOverview from '@/components/features/class-sessions/AttendanceOverview';
 import LeaveRequestsSection from '@/components/features/leave-requests/LeaveRequestsSection';
-import { CLASS_SESSION_STATUS_MAP } from '@/lib/class-sessions';
+import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
 import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
@@ -19,6 +19,8 @@ import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
 interface Props {
   classId: number;
   classSession: ClassSessionDetail;
+  backHref: string;
+  backLabel: string;
   attendanceSessions: AttendanceSessionListRow[];
   attendanceSessionsMeta: ListMeta;
   attendanceSessionsErrors: string[];
@@ -29,8 +31,9 @@ interface Props {
 }
 
 export default function ClassSessionDetailPageClient({
-  classId,
   classSession,
+  backHref,
+  backLabel,
   attendanceSessions,
   attendanceSessionsErrors,
   summary,
@@ -46,7 +49,8 @@ export default function ClassSessionDetailPageClient({
     handleActionErrors(summaryErrors);
   }, [summaryErrors]);
 
-  const statusInfo = CLASS_SESSION_STATUS_MAP[classSession.status];
+  const statusInfo =
+    CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
     <div className="space-y-6">
@@ -57,8 +61,8 @@ export default function ClassSessionDetailPageClient({
           size="sm"
           className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
         >
-          <Link href={`/admin/classes/${classId}`}>
-            <ArrowLeft /> Quay lại lớp học
+          <Link href={backHref}>
+            <ArrowLeft /> {backLabel}
           </Link>
         </Button>
         <div className="space-y-1">
@@ -73,14 +77,14 @@ export default function ClassSessionDetailPageClient({
 
       <ClassSessionInfoSection classSession={classSession} />
 
+      <AttendanceOverview classSessionId={classSession.id} counts={summary?.counts ?? null} />
+
       <AttendanceSection
         classSessionId={classSession.id}
         activeAttendanceSession={classSession.activeAttendanceSession}
         attendanceSessions={attendanceSessions}
         summary={summary}
       />
-
-      <AttendanceOverview counts={summary?.counts ?? null} />
 
       <LeaveRequestsSection data={leaveRequests} meta={leaveRequestsMeta} />
     </div>

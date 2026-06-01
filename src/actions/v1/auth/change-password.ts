@@ -29,7 +29,7 @@ export async function changePasswordAction(args: Args): Promise<IChangePasswordR
       return {
         success: true,
         errors: [],
-        redirectTo: args.role === 'ADMIN' ? '/admin/users' : '/dashboard',
+        redirectTo: args.role === 'ADMIN' ? '/admin/accounts' : '/dashboard',
       };
     }
 

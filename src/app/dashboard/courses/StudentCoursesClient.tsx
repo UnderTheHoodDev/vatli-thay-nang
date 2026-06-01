@@ -57,10 +57,7 @@ export default function StudentCoursesClient({ urlState, rows, meta, errors }: P
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Khóa học"
-        description="Khám phá các khóa học vật lí dành cho bạn."
-      />
+      <PageHeader title="Khóa học" description="Khám phá các khóa học vật lí dành cho bạn." />
 
       {rows.length === 0 ? (
         <Card>
@@ -97,13 +94,13 @@ export default function StudentCoursesClient({ urlState, rows, meta, errors }: P
                   {row.isEnrolled && (
                     <Badge
                       variant="success"
-                      className="absolute right-2 top-2 flex items-center gap-1"
+                      className="absolute top-2 right-2 flex items-center gap-1"
                     >
                       <CheckCircle2 className="size-3" /> Đã ghi danh
                     </Badge>
                   )}
                 </div>
-                <CardHeader className="pb-2 pt-4">
+                <CardHeader className="pt-4 pb-2">
                   <CardTitle className="line-clamp-2 text-base">{row.title}</CardTitle>
                   <div className="mt-1 flex items-center gap-2">
                     <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs">

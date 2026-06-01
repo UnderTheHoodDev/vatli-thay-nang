@@ -58,6 +58,7 @@ export default function LessonItemFormModal({
 
   const hasExistingVideo = mode === 'edit' && !!initialData?.bunnyVideoId;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
@@ -76,12 +77,11 @@ export default function LessonItemFormModal({
     setVideoFile(null);
     setSubmitted(false);
   }, [open, initialData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tên mục' : '';
   const docError =
-    submitted && type === 'DOCUMENT' && !document?.url
-      ? 'Vui lòng tải lên tài liệu'
-      : '';
+    submitted && type === 'DOCUMENT' && !document?.url ? 'Vui lòng tải lên tài liệu' : '';
   // Video bắt buộc khi tạo mới; khi edit nếu đã có video thì không bắt buộc chọn lại.
   const videoError =
     submitted && type === 'VIDEO' && !videoFile && !hasExistingVideo
@@ -137,9 +137,7 @@ export default function LessonItemFormModal({
       // Chọn video mới → tạo phiên TUS, lưu item (status UPLOADING), enqueue upload nền
       const tus = await getBunnyTusUploadAction({ title: title.trim() });
       if (tus.errors.length || !tus.data) {
-        handleActionErrors(
-          tus.errors.length ? tus.errors : ['Không tạo được phiên upload'],
-        );
+        handleActionErrors(tus.errors.length ? tus.errors : ['Không tạo được phiên upload']);
         return;
       }
       const { videoId, libraryId, signature, expire, tusEndpoint } = tus.data;
@@ -153,9 +151,7 @@ export default function LessonItemFormModal({
           bunnyLibraryId: libraryId,
         });
         if (res.errors.length || !res.data) {
-          handleActionErrors(
-            res.errors.length ? res.errors : ['Tạo mục bài học thất bại'],
-          );
+          handleActionErrors(res.errors.length ? res.errors : ['Tạo mục bài học thất bại']);
           return;
         }
         lessonItemId = res.data.id;
@@ -237,8 +233,7 @@ export default function LessonItemFormModal({
           {type === 'VIDEO' ? (
             <div className="space-y-1.5">
               <Label>
-                Video bài giảng{' '}
-                {!hasExistingVideo && <span className="text-destructive">*</span>}
+                Video bài giảng {!hasExistingVideo && <span className="text-destructive">*</span>}
               </Label>
               <VideoUploader
                 file={videoFile}
@@ -246,12 +241,10 @@ export default function LessonItemFormModal({
                 disabled={loading}
                 existingStatus={hasExistingVideo ? initialData!.bunnyStatus : null}
               />
-              {videoError && (
-                <p className="text-destructive text-xs">{videoError}</p>
-              )}
+              {videoError && <p className="text-destructive text-xs">{videoError}</p>}
               <p className="text-muted-foreground text-xs">
-                Sau khi lưu, video tải lên nền (xem ở khay góc phải). Thời lượng tự
-                cập nhật khi xử lý xong.
+                Sau khi lưu, video tải lên nền (xem ở khay góc phải). Thời lượng tự cập nhật khi xử
+                lý xong.
               </p>
             </div>
           ) : (
@@ -259,11 +252,7 @@ export default function LessonItemFormModal({
               <Label>
                 Tài liệu <span className="text-destructive">*</span>
               </Label>
-              <DocumentUploader
-                value={document}
-                onChange={setDocument}
-                disabled={loading}
-              />
+              <DocumentUploader value={document} onChange={setDocument} disabled={loading} />
               {docError && <p className="text-destructive text-xs">{docError}</p>}
             </div>
           )}

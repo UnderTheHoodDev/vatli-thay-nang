@@ -3,13 +3,15 @@
 import { CalendarOff, CheckCircle2, UserMinus, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatsCard from '@/components/app/StatsCard';
+import ExportAttendanceButton from '@/components/features/class-sessions/ExportAttendanceButton';
 import type { AttendanceSummary } from '@/types/actions/attendance';
 
 interface Props {
+  classSessionId: number;
   counts: AttendanceSummary['counts'] | null;
 }
 
-export default function AttendanceOverview({ counts }: Props) {
+export default function AttendanceOverview({ classSessionId, counts }: Props) {
   const total = counts?.total ?? 0;
   const attended = counts?.attended ?? 0;
   const notAttended = counts?.notAttended ?? 0;
@@ -18,7 +20,10 @@ export default function AttendanceOverview({ counts }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Báo cáo tổng quan</CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle>Báo cáo tổng quan</CardTitle>
+          <ExportAttendanceButton classSessionId={classSessionId} />
+        </div>
       </CardHeader>
       <CardContent className="pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

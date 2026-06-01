@@ -11,7 +11,7 @@ import {
   School,
   GraduationCap,
   BookOpen,
-  FolderTree,
+  ChevronRight,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -23,21 +23,54 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+export interface NavSubItem {
+  label: string;
+  href: string;
+}
 
 export interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   icon: LucideIcon;
   section?: string;
+  children?: NavSubItem[];
 }
 
 export const ADMIN_NAV: NavItem[] = [
-  { label: 'Người dùng', href: '/admin/users', icon: Users, section: 'Quản lý' },
-  { label: 'Lớp học', href: '/admin/classes', icon: School, section: 'Quản lý' },
-  { label: 'Khóa học', href: '/admin/courses', icon: BookOpen, section: 'Quản lý' },
-  { label: 'Danh mục', href: '/admin/course-categories', icon: FolderTree, section: 'Quản lý' },
+  {
+    label: 'Tài khoản',
+    icon: Users,
+    section: 'Quản lý',
+    children: [
+      { label: 'Người dùng', href: '/admin/accounts' },
+      // { label: 'Học sinh', href: '/admin/accounts/students' },
+    ],
+  },
+  {
+    label: 'Giảng dạy',
+    icon: School,
+    section: 'Quản lý',
+    children: [
+      { label: 'Lớp học', href: '/admin/classes' },
+      { label: 'Buổi học', href: '/admin/classes/class-sessions' },
+    ],
+  },
+  {
+    label: 'Chương trình học',
+    icon: BookOpen,
+    section: 'Quản lý',
+    children: [
+      { label: 'Khóa học', href: '/admin/courses' },
+      { label: 'Danh mục', href: '/admin/courses/categories' },
+    ],
+  },
   { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound, section: 'Tài khoản' },
 ];
 
@@ -63,20 +96,55 @@ function groupBySection(items: NavItem[]): Array<{ section: string; items: NavIt
   return Array.from(groups, ([section, items]) => ({ section, items }));
 }
 
-function findActiveHref(pathname: string, items: NavItem[]): string | null {
-  let best: NavItem | null = null;
+function matchesHref(pathname: string, href: string): boolean {
+  if (pathname === href) return true;
+  if (pathname.startsWith(href + '/')) return true;
+
+  const hrefSegs = href.split('/').filter(Boolean);
+  const pathSegs = pathname.split('/').filter(Boolean);
+  if (hrefSegs.length > pathSegs.length) return false;
+
+  let hi = 0;
+  for (const seg of pathSegs) {
+    if (seg === hrefSegs[hi]) hi++;
+    if (hi === hrefSegs.length) return true;
+  }
+  return false;
+}
+
+function getActiveState(
+  pathname: string,
+  items: NavItem[],
+): { activeHref: string | null; openGroups: Set<string> } {
+  let activeHref: string | null = null;
+  const openGroups = new Set<string>();
+
   for (const item of items) {
-    if (pathname === item.href || pathname.startsWith(item.href + '/')) {
-      if (!best || item.href.length > best.href.length) best = item;
+    if (item.children) {
+      for (const child of item.children) {
+        if (matchesHref(pathname, child.href)) {
+          if (!activeHref || child.href.length > activeHref.length) {
+            activeHref = child.href;
+          }
+          openGroups.add(item.label);
+        }
+      }
+    } else if (item.href) {
+      if (matchesHref(pathname, item.href)) {
+        if (!activeHref || item.href.length > activeHref.length) {
+          activeHref = item.href;
+        }
+      }
     }
   }
-  return best?.href ?? null;
+
+  return { activeHref, openGroups };
 }
 
 export default function AppSidebar({ title, items }: Props) {
   const pathname = usePathname();
   const groups = groupBySection(items);
-  const activeHref = findActiveHref(pathname, items);
+  const { activeHref, openGroups } = getActiveState(pathname, items);
 
   return (
     <Sidebar collapsible="icon">
@@ -105,14 +173,49 @@ export default function AppSidebar({ title, items }: Props) {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {items.map(({ label, href, icon: Icon }) => {
-                    const active = href === activeHref;
+                  {items.map((item) => {
+                    if (item.children) {
+                      const isOpen = openGroups.has(item.label);
+                      return (
+                        <Collapsible
+                          key={item.label}
+                          defaultOpen={isOpen}
+                          className="group/collapsible"
+                        >
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton tooltip={item.label}>
+                                <item.icon />
+                                <span>{item.label}</span>
+                                <ChevronRight className="ml-auto size-4 shrink-0 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                {item.children.map((child) => {
+                                  const active = child.href === activeHref;
+                                  return (
+                                    <SidebarMenuSubItem key={child.href}>
+                                      <SidebarMenuSubButton asChild isActive={active}>
+                                        <Link href={child.href}>{child.label}</Link>
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  );
+                                })}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      );
+                    }
+
+                    const active = item.href === activeHref;
                     return (
-                      <SidebarMenuItem key={href}>
-                        <SidebarMenuButton asChild isActive={active} tooltip={label}>
-                          <Link href={href}>
-                            <Icon />
-                            <span>{label}</span>
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                          <Link href={item.href!}>
+                            <item.icon />
+                            <span>{item.label}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

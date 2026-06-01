@@ -28,11 +28,7 @@ import { createCourseAction } from '@/actions/v1/courses/create-course';
 import { updateCourseAction } from '@/actions/v1/courses/update-course';
 import { listUsers } from '@/actions/v1/users/list-users';
 import ThumbnailUploader, { type ThumbnailValue } from './ThumbnailUploader';
-import type {
-  CourseCategoryRow,
-  CourseDetail,
-  CourseStatus,
-} from '@/types/course-management';
+import type { CourseCategoryRow, CourseDetail, CourseStatus } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import type { UserRow } from '@/types/auth';
 
@@ -135,6 +131,7 @@ export default function CourseFormModal({
   const [instructors, setInstructors] = useState<UserRow[]>([]);
   const [instructorsLoading, setInstructorsLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setForm(fromForm(initialData));
@@ -157,6 +154,7 @@ export default function CourseFormModal({
       cancelled = true;
     };
   }, [open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const codeError = submitted && !form.code.trim() ? 'Vui lòng nhập mã khóa học' : '';
   const titleError = submitted && !form.title.trim() ? 'Vui lòng nhập tên khóa học' : '';
@@ -189,9 +187,7 @@ export default function CourseFormModal({
       enrollmentDeadline: form.enrollmentDeadline || undefined,
       targetAudience: form.targetAudience.trim() || undefined,
       learningOutcomes: form.learningOutcomes.trim() || undefined,
-      previewLessonCount: form.previewLessonCount
-        ? Number(form.previewLessonCount)
-        : undefined,
+      previewLessonCount: form.previewLessonCount ? Number(form.previewLessonCount) : undefined,
     };
 
     setSubmitting(true);
@@ -240,9 +236,7 @@ export default function CourseFormModal({
     >
       <DialogContent className="sm:max-w-2xl lg:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Tạo khóa học' : 'Chỉnh sửa khóa học'}
-          </DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Tạo khóa học' : 'Chỉnh sửa khóa học'}</DialogTitle>
           <DialogDescription>
             {mode === 'create'
               ? 'Nhập thông tin để tạo khóa học mới.'

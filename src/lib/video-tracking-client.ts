@@ -64,13 +64,10 @@ export function endView(viewId: number, currentPositionSec: number): void {
   }).catch(() => undefined);
 }
 
-export async function getProgress(
-  lessonItemId: number,
-): Promise<ProgressResult> {
-  const res = await fetch(
-    `/api/video-tracking/progress?lessonItemId=${lessonItemId}`,
-    { credentials: 'same-origin' },
-  );
+export async function getProgress(lessonItemId: number): Promise<ProgressResult> {
+  const res = await fetch(`/api/video-tracking/progress?lessonItemId=${lessonItemId}`, {
+    credentials: 'same-origin',
+  });
   if (!res.ok) throw new Error(`get-progress ${res.status}`);
   return (await res.json()) as ProgressResult;
 }

@@ -71,7 +71,7 @@ export default function ThumbnailUploader({
         <div className="border-divider relative inline-block overflow-hidden rounded-lg border">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value.url} alt="thumbnail" className="h-40 w-64 object-cover" />
-          <div className="bg-background/80 absolute right-2 top-2 flex gap-1 rounded-md p-1 backdrop-blur">
+          <div className="bg-background/80 absolute top-2 right-2 flex gap-1 rounded-md p-1 backdrop-blur">
             <Button
               type="button"
               size="icon-xs"

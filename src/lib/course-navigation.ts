@@ -15,10 +15,7 @@ export interface FlatItem {
  * Duyệt cây khóa học thành danh sách phẳng theo thứ tự
  * chapter.order → lesson.order → item.order.
  */
-export function flattenItems(
-  course: CourseDetail,
-  isEnrolled: boolean,
-): FlatItem[] {
+export function flattenItems(course: CourseDetail, isEnrolled: boolean): FlatItem[] {
   const flat: FlatItem[] = [];
   for (const chapter of course.chapters) {
     for (const lesson of chapter.lessons) {
@@ -59,10 +56,7 @@ export function nextItem(flat: FlatItem[], itemId: number | null): FlatItem | nu
 }
 
 /** Item active hiện tại; fallback item đầu tiên nếu id không hợp lệ. */
-export function resolveActive(
-  flat: FlatItem[],
-  itemId: number | null,
-): FlatItem | null {
+export function resolveActive(flat: FlatItem[], itemId: number | null): FlatItem | null {
   const idx = findItemIndex(flat, itemId);
   if (idx >= 0) return flat[idx];
   return flat[0] ?? null;

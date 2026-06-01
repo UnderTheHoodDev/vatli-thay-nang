@@ -84,20 +84,14 @@ interface VideoStatusInfo {
 
 const POLL_INTERVAL_MS = 9000;
 
-const PENDING_STATUSES: BunnyVideoStatus[] = [
-  'UPLOADING',
-  'QUEUED',
-  'PROCESSING',
-];
+const PENDING_STATUSES: BunnyVideoStatus[] = ['UPLOADING', 'QUEUED', 'PROCESSING'];
 
 function isPendingVideo(i: LessonItemTree): boolean {
   return i.type === 'VIDEO' && PENDING_STATUSES.includes(i.bunnyStatus);
 }
 
 function hasPendingVideo(chapters: ChapterTree[]): boolean {
-  return chapters.some((c) =>
-    c.lessons.some((l) => l.items.some(isPendingVideo)),
-  );
+  return chapters.some((c) => c.lessons.some((l) => l.items.some(isPendingVideo)));
 }
 
 function mergeStatus(
@@ -140,30 +134,21 @@ export default function CourseStructureTab({ course }: Props) {
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set());
   const [, startTransition] = useTransition();
 
+  // Trạng thái xử lý video poll được (override bunnyStatus của cây).
+  const [statusMap, setStatusMap] = useState<Record<number, VideoStatusInfo>>({});
+
   // Sync local state when parent re-renders after revalidatePath + router.refresh().
   // Without this, optimistic drag-drop state would shadow updates coming from the server.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChapters(course.chapters);
     setStatusMap({});
   }, [course.chapters]);
-
-  // Trạng thái xử lý video poll được (override bunnyStatus của cây).
-  const [statusMap, setStatusMap] = useState<Record<number, VideoStatusInfo>>(
-    {},
-  );
-  const displayChapters = useMemo(
-    () => mergeStatus(chapters, statusMap),
-    [chapters, statusMap],
-  );
+  const displayChapters = useMemo(() => mergeStatus(chapters, statusMap), [chapters, statusMap]);
   const pendingCount = useMemo(
     () =>
       displayChapters.reduce(
-        (sum, c) =>
-          sum +
-          c.lessons.reduce(
-            (s, l) => s + l.items.filter(isPendingVideo).length,
-            0,
-          ),
+        (sum, c) => sum + c.lessons.reduce((s, l) => s + l.items.filter(isPendingVideo).length, 0),
         0,
       ),
     [displayChapters],
@@ -172,10 +157,7 @@ export default function CourseStructureTab({ course }: Props) {
   // Auto-poll batch trạng thái video CHỈ khi còn item chưa xử lý xong.
   // Dep là boolean `shouldPoll` (primitive) — KHÔNG phụ thuộc object displayChapters
   // để tránh re-subscribe vô hạn mỗi lần setStatusMap tạo object mới.
-  const shouldPoll = useMemo(
-    () => hasPendingVideo(displayChapters),
-    [displayChapters],
-  );
+  const shouldPoll = useMemo(() => hasPendingVideo(displayChapters), [displayChapters]);
   const refreshedOnSettle = useRef(false);
   useEffect(() => {
     if (!shouldPoll) return;
@@ -211,15 +193,20 @@ export default function CourseStructureTab({ course }: Props) {
     };
   }, [shouldPoll, course.id, router]);
 
-  const [chapterModal, setChapterModal] = useState<
-    { mode: 'create' | 'edit'; data?: ChapterTree } | null
-  >(null);
-  const [lessonModal, setLessonModal] = useState<
-    { mode: 'create' | 'edit'; chapterId: number; data?: LessonTree } | null
-  >(null);
-  const [itemModal, setItemModal] = useState<
-    { mode: 'create' | 'edit'; lessonId: number; data?: LessonItemTree } | null
-  >(null);
+  const [chapterModal, setChapterModal] = useState<{
+    mode: 'create' | 'edit';
+    data?: ChapterTree;
+  } | null>(null);
+  const [lessonModal, setLessonModal] = useState<{
+    mode: 'create' | 'edit';
+    chapterId: number;
+    data?: LessonTree;
+  } | null>(null);
+  const [itemModal, setItemModal] = useState<{
+    mode: 'create' | 'edit';
+    lessonId: number;
+    data?: LessonItemTree;
+  } | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -303,9 +290,7 @@ export default function CourseStructureTab({ course }: Props) {
           ? c
           : {
               ...c,
-              lessons: c.lessons.map((l) =>
-                l.id === lessonId ? { ...l, items: nextItems } : l,
-              ),
+              lessons: c.lessons.map((l) => (l.id === lessonId ? { ...l, items: nextItems } : l)),
             },
       ),
     );
@@ -355,10 +340,9 @@ export default function CourseStructureTab({ course }: Props) {
           </Button>
         </CardHeader>
         {pendingCount > 0 && (
-          <div className="border-divider bg-yellow-50 text-yellow-800 mx-6 mb-2 flex items-center gap-2 rounded-md border border-yellow-200 px-3 py-2 text-sm">
+          <div className="border-divider mx-6 mb-2 flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
             <Loader2 className="size-4 animate-spin" />
-            {pendingCount} video đang tải lên / xử lý — trạng thái sẽ tự cập nhật
-            khi hoàn tất.
+            {pendingCount} video đang tải lên / xử lý — trạng thái sẽ tự cập nhật khi hoàn tất.
           </div>
         )}
         <CardContent className="pb-6">
@@ -368,7 +352,10 @@ export default function CourseStructureTab({ course }: Props) {
               title="Chưa có chương nào"
               description="Tạo chương đầu tiên để bắt đầu xây dựng nội dung khóa học."
               action={
-                <Button onClick={() => setChapterModal({ mode: 'create' })} className="cursor-pointer">
+                <Button
+                  onClick={() => setChapterModal({ mode: 'create' })}
+                  className="cursor-pointer"
+                >
                   <Plus /> Thêm chương
                 </Button>
               }
@@ -399,9 +386,7 @@ export default function CourseStructureTab({ course }: Props) {
                           title: chapter.title,
                         })
                       }
-                      onAddLesson={() =>
-                        setLessonModal({ mode: 'create', chapterId: chapter.id })
-                      }
+                      onAddLesson={() => setLessonModal({ mode: 'create', chapterId: chapter.id })}
                       expandedLessons={expandedLessons}
                       onToggleLesson={toggleLesson}
                       onEditLesson={(lesson) =>
@@ -418,9 +403,7 @@ export default function CourseStructureTab({ course }: Props) {
                           title: lesson.title,
                         })
                       }
-                      onAddItem={(lessonId) =>
-                        setItemModal({ mode: 'create', lessonId })
-                      }
+                      onAddItem={(lessonId) => setItemModal({ mode: 'create', lessonId })}
                       onEditItem={(item, lessonId) =>
                         setItemModal({ mode: 'edit', lessonId, data: item })
                       }
@@ -533,11 +516,11 @@ function RowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem className="cursor-pointer" onClick={onEdit}>
+        <DropdownMenuItem className="cursor-pointer gap-2" onClick={onEdit}>
           <Pencil className="size-4" /> Sửa
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive cursor-pointer"
+          className="text-destructive focus:text-destructive cursor-pointer gap-2"
           onClick={onDelete}
         >
           <Trash2 className="size-4" /> Xoá
@@ -597,10 +580,7 @@ function ChapterRow({
     <li
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'border-divider rounded-lg border',
-        isDragging && 'opacity-60 shadow-lg',
-      )}
+      className={cn('border-divider rounded-lg border', isDragging && 'opacity-60 shadow-lg')}
     >
       <div className="bg-muted/30 flex items-center gap-2 px-3 py-2">
         <button
@@ -650,12 +630,7 @@ function ChapterRow({
           {chapter.lessons.length === 0 ? (
             <div className="text-muted-foreground flex items-center justify-between gap-2 rounded-md px-3 py-3 text-sm italic">
               <span>Chưa có bài học nào</span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer"
-                onClick={onAddLesson}
-              >
+              <Button variant="outline" size="sm" className="cursor-pointer" onClick={onAddLesson}>
                 <Plus /> Thêm bài học
               </Button>
             </div>
@@ -849,9 +824,7 @@ function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
   const [reuploading, setReuploading] = useState(false);
   // Video UPLOADING mà KHÔNG có task đang chạy (vd sau reload) → cho "Tải lại".
   const canResume =
-    item.type === 'VIDEO' &&
-    item.bunnyStatus === 'UPLOADING' &&
-    !hasActive(item.id);
+    item.type === 'VIDEO' && item.bunnyStatus === 'UPLOADING' && !hasActive(item.id);
 
   async function handleReuploadFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -864,9 +837,7 @@ function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
         videoId: item.bunnyVideoId,
       });
       if (tus.errors.length || !tus.data) {
-        handleActionErrors(
-          tus.errors.length ? tus.errors : ['Không tạo được phiên upload'],
-        );
+        handleActionErrors(tus.errors.length ? tus.errors : ['Không tạo được phiên upload']);
         return;
       }
       enqueue(file, {
@@ -910,8 +881,7 @@ function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
       </span>
       {item.type === 'VIDEO' ? (
         (() => {
-          const meta =
-            BUNNY_STATUS_META[item.bunnyStatus] ?? BUNNY_STATUS_META.ERROR;
+          const meta = BUNNY_STATUS_META[item.bunnyStatus] ?? BUNNY_STATUS_META.ERROR;
           return (
             <Badge
               variant={meta.variant}

@@ -17,10 +17,7 @@ export async function createLessonItemAction(
   payload: ICreateLessonItemPayload,
 ): Promise<CreateLessonItemResponse> {
   try {
-    const res = await api.post(
-      `/api/v1/lessons/${lessonId}/lesson-items`,
-      payload,
-    );
+    const res = await api.post(`/api/v1/lessons/${lessonId}/lesson-items`, payload);
     const id = (res.data as { data?: { id: number } }).data?.id ?? null;
     revalidatePath(`/admin/courses/${courseId}`);
     return { data: id != null ? { id } : null, errors: [] };

@@ -54,11 +54,7 @@ import { handleActionResult } from '@/lib/actions';
 import { deleteCourseAction } from '@/actions/v1/courses/delete-course';
 import CourseFormModal from '@/components/features/courses/CourseFormModal';
 import type { ListMeta } from '@/types/auth';
-import type {
-  CourseCategoryRow,
-  CourseRow,
-  CourseStatus,
-} from '@/types/course-management';
+import type { CourseCategoryRow, CourseRow, CourseStatus } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import type { CoursesListStats } from '@/types/actions/course-management';
 
@@ -91,7 +87,19 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-const SKELETON_COLUMNS = ['w-8', 'w-16', 'w-52', 'w-20', 'w-28', 'w-32', 'w-24', 'w-14', 'w-14', 'w-14', 'w-20'];
+const SKELETON_COLUMNS = [
+  'w-8',
+  'w-16',
+  'w-52',
+  'w-20',
+  'w-28',
+  'w-32',
+  'w-24',
+  'w-14',
+  'w-14',
+  'w-14',
+  'w-20',
+];
 
 function statusBadge(status: CourseStatus) {
   if (status === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;
@@ -445,8 +453,8 @@ export default function CoursesPageClient({
             <AlertDialogTitle>Xác nhận xoá khóa học</AlertDialogTitle>
             <AlertDialogDescription>
               Bạn có chắc muốn xoá khóa học{' '}
-              <span className="text-foreground font-medium">{deletingCourse?.title}</span>? Thao
-              tác này không thể hoàn tác.
+              <span className="text-foreground font-medium">{deletingCourse?.title}</span>? Thao tác
+              này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

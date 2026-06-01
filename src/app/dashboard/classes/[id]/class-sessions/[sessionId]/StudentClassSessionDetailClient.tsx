@@ -7,15 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ClassSessionInfoSection from '@/components/features/class-sessions/ClassSessionInfoSection';
 import StudentAttendancePanel from '@/components/features/class-sessions/StudentAttendancePanel';
-import { CLASS_SESSION_STATUS_MAP } from '@/lib/class-sessions';
+import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import { handleActionErrors } from '@/lib/actions';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
 import type { MyAttendanceLog } from '@/types/actions/attendance';
+import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
 
 interface Props {
   classId: number;
   classSession: ClassSessionDetail;
   myAttendance: MyAttendanceLog[];
+  myLeaveRequest: MyLeaveRequest | null;
   errors: string[];
 }
 
@@ -23,13 +25,15 @@ export default function StudentClassSessionDetailClient({
   classId,
   classSession,
   myAttendance,
+  myLeaveRequest,
   errors,
 }: Props) {
   useEffect(() => {
     handleActionErrors(errors);
   }, [errors]);
 
-  const statusInfo = CLASS_SESSION_STATUS_MAP[classSession.status];
+  const statusInfo =
+    CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
     <div className="space-y-6">
@@ -56,8 +60,11 @@ export default function StudentClassSessionDetailClient({
 
       <StudentAttendancePanel
         classSessionId={classSession.id}
+        startTime={classSession.startTime}
+        endTime={classSession.endTime}
         activeAttendanceSession={classSession.activeAttendanceSession}
         myAttendance={myAttendance}
+        myLeaveRequest={myLeaveRequest}
       />
     </div>
   );

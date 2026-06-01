@@ -1,5 +1,5 @@
 import type { ListMeta } from '@/types/auth';
-import type { LeaveRequestStatus } from '@/types/class-management';
+import type { LeaveRequestStatus, LeaveType } from '@/types/class-management';
 
 export interface LeaveRequestListRow {
   id: number;
@@ -9,6 +9,7 @@ export interface LeaveRequestListRow {
     email: string;
   };
   reason: string;
+  leaveType: LeaveType;
   status: LeaveRequestStatus;
   submittedAt: string;
 }
@@ -26,6 +27,12 @@ export interface IListLeaveRequestsResult {
 
 export interface ISubmitLeaveRequestPayload {
   reason: string;
+  leaveType?: LeaveType;
+}
+
+export interface IUpdateLeaveRequestPayload {
+  reason?: string;
+  leaveType?: LeaveType;
 }
 
 export interface IAcknowledgeLeaveRequestPayload {

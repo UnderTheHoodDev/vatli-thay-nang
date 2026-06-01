@@ -25,7 +25,7 @@ import {
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
-import { CLASS_SESSION_STATUS_MAP } from '@/lib/class-sessions';
+import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import { formatDateTime } from '@/lib/format';
 import { handleActionErrors } from '@/lib/actions';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -161,7 +161,8 @@ export default function StudentClassDetailClient({
                     <TableSkeleton columnWidths={SKELETON_COLUMNS} />
                   ) : (
                     sessions.map((s) => {
-                      const statusInfo = CLASS_SESSION_STATUS_MAP[s.status];
+                      const statusInfo =
+                        CLASS_SESSION_STATUS_MAP[getEffectiveStatus(s.startTime, s.endTime)];
                       return (
                         <TableRow
                           key={s.id}

@@ -23,10 +23,7 @@ function passthrough(text: string, status: number, contentType?: string | null) 
   });
 }
 
-export async function POST(
-  req: NextRequest,
-  ctx: { params: Promise<{ action: string }> },
-) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ action: string }> }) {
   const { action } = await ctx.params;
   if (!POST_ACTIONS.has(action)) {
     return NextResponse.json({ errors: ['Not found'] }, { status: 404 });
@@ -44,10 +41,7 @@ export async function POST(
   return passthrough(await res.text(), res.status, res.headers.get('content-type'));
 }
 
-export async function GET(
-  req: NextRequest,
-  ctx: { params: Promise<{ action: string }> },
-) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ action: string }> }) {
   const { action } = await ctx.params;
   if (action !== 'progress') {
     return NextResponse.json({ errors: ['Not found'] }, { status: 404 });

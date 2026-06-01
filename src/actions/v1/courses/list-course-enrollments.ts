@@ -19,9 +19,7 @@ export async function listCourseEnrollments(
   params: IListEnrollmentsParams = {},
 ): Promise<ListCourseEnrollmentsResponse> {
   const cleaned = Object.fromEntries(
-    Object.entries(params).filter(
-      ([, v]) => v !== '' && v !== undefined && v !== null,
-    ),
+    Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null),
   );
   try {
     const res = await api.get(`/api/v1/courses/${courseId}/enrollments`, {

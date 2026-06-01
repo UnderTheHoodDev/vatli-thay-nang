@@ -15,9 +15,7 @@ export async function getStudentStatsAction(
   studentId: number,
 ): Promise<GetStudentStatsResponse> {
   try {
-    const res = await api.get(
-      `/api/v1/courses/${courseId}/stats/students/${studentId}`,
-    );
+    const res = await api.get(`/api/v1/courses/${courseId}/stats/students/${studentId}`);
     const data = (res.data as { data: CourseStudentStatsDetail }).data;
     return { data, errors: [] };
   } catch (error) {

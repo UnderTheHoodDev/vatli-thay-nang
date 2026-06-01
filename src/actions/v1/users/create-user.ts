@@ -12,7 +12,7 @@ export async function createUserAction(email: string): Promise<IActionState> {
     if (!trimmed) return { errors: ['Vui lòng nhập email'] };
 
     await api.post('/api/v1/users', { email: trimmed });
-    revalidatePath('/admin/users');
+    revalidatePath('/admin/accounts');
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
