@@ -197,7 +197,7 @@ export default function LessonItemFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="item-title">
               Tên mục <span className="text-destructive">*</span>
