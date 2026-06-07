@@ -91,12 +91,12 @@ export default function DocumentUploader({
         disabled={disabled || uploading}
       />
       {value?.url ? (
-        <div className="border-divider flex items-center gap-3 rounded-lg border p-3">
+        <div className="border-divider flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-3">
           <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded">
             <FileText className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium">
+            <p className="text-foreground truncate text-sm font-medium" title={value.fileName ?? 'Tài liệu'}>
               {value.fileName ?? 'Tài liệu'}
             </p>
             <p className="text-muted-foreground text-xs">

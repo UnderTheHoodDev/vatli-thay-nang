@@ -12,3 +12,5 @@ next-env.d.ts
 .env*.local
 .vscode/
 .antigravitycli/
+
+.env*
