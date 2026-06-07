@@ -96,7 +96,10 @@ export default function DocumentUploader({
             <FileText className="size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium" title={value.fileName ?? 'Tài liệu'}>
+            <p
+              className="text-foreground truncate text-sm font-medium"
+              title={value.fileName ?? 'Tài liệu'}
+            >
               {value.fileName ?? 'Tài liệu'}
             </p>
             <p className="text-muted-foreground text-xs">
