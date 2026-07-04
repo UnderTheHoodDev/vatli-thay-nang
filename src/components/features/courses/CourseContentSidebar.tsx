@@ -59,6 +59,12 @@ export default function CourseContentSidebar({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {!isEnrolled && course.nodes.length > 0 && (
+          <div className="text-muted-foreground bg-muted/30 flex items-center gap-2 px-4 py-2 text-xs">
+            <Lock className="size-3.5 shrink-0" />
+            <span>Bạn chưa được ghi danh — nội dung đang bị khóa.</span>
+          </div>
+        )}
         {course.nodes.length === 0 ? (
           <p className="text-muted-foreground px-4 py-6 text-center text-sm italic">
             Khóa học chưa có nội dung.
@@ -161,24 +167,23 @@ function SidebarNode({
         onClick={() => onSelect(node.id)}
         style={{ paddingLeft: 12 + depth * 16 + 20 }}
         className={cn(
-          'flex w-full items-center gap-2 py-2 pr-3 text-left text-sm transition',
+          'flex w-full items-center gap-2 py-2.5 pr-3 text-left text-sm transition',
           active ? 'bg-purple/10 text-purple font-medium' : 'hover:bg-muted text-foreground',
+          !isEnrolled && 'opacity-60',
         )}
       >
-        {!isEnrolled ? (
-          <Lock className="text-muted-foreground size-3.5 shrink-0" />
-        ) : isVideo ? (
+        {isVideo ? (
           <PlayCircle
-            className={cn('size-3.5 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
+            className={cn('size-4 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
           />
         ) : (
           <FileText
-            className={cn('size-3.5 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
+            className={cn('size-4 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
           />
         )}
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
         {showProcessing && (
-          <Badge variant={statusMeta!.variant} className="px-1 py-0 text-[9px]">
+          <Badge variant={statusMeta!.variant} className="px-1 py-0 text-[10px]">
             {node.bunnyStatus === 'UPLOADING' ? 'Tải' : node.bunnyStatus === 'QUEUED' ? 'Chờ' : 'Xử lý'}
           </Badge>
         )}

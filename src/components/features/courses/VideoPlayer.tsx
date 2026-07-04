@@ -225,7 +225,9 @@ export default function VideoPlayer({
       </div>
       {durationSeconds ? (
         <div className="text-muted-foreground bg-background shrink-0 px-3 py-2 text-xs">
-          Thời lượng: {formatDuration(durationSeconds)} · Tự lưu &amp; tiếp tục vị trí xem
+          Thời lượng: {formatDuration(durationSeconds)}
+          <span className="mx-1.5">·</span>
+          Tự lưu &amp; tiếp tục vị trí xem
         </div>
       ) : null}
     </div>
