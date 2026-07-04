@@ -386,6 +386,7 @@ export default function CourseStructureTab({ course }: Props) {
             />
           ) : (
             <DndContext
+              id="course-structure-dnd"
               sensors={sensors}
               collisionDetection={pointerWithin}
               onDragOver={handleDragOver}
