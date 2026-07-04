@@ -14,6 +14,8 @@ interface Props {
   fileSize?: number | null;
   title?: string;
   locked?: boolean;
+  /** true = lấp đầy khung cha thay vì cao cố định (modal xem gần full màn hình). */
+  fill?: boolean;
 }
 
 const OFFICE_TIMEOUT_MS = 15_000;
@@ -37,6 +39,7 @@ export default function DocumentViewer({
   fileSize,
   title,
   locked,
+  fill = false,
 }: Props) {
   const isLocked = locked || !fileUrl;
   const [loading, setLoading] = useState(true);
@@ -99,9 +102,19 @@ export default function DocumentViewer({
   );
 
   return (
-    <div className="border-divider overflow-hidden rounded-lg border">
+    <div
+      className={cn(
+        'border-divider overflow-hidden rounded-lg border',
+        fill && 'flex h-full flex-col',
+      )}
+    >
       {actionBar}
-      <div className="relative h-[60vh] bg-white md:h-[75vh]">
+      <div
+        className={cn(
+          'bg-card relative',
+          fill ? 'min-h-0 flex-1' : 'h-[60vh] md:h-[75vh]',
+        )}
+      >
         {loading && kind !== 'download' && kind !== 'image' && (
           <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
         )}

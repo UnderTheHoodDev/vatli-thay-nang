@@ -471,11 +471,15 @@ export default function CourseStructureTab({ course }: Props) {
       </AlertDialog>
 
       <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle className="truncate pr-6">{preview?.title}</DialogTitle>
-          </DialogHeader>
-          {preview && <NodeContentViewer node={preview} track={false} />}
+        <DialogContent size="full">
+          <div className="flex h-full min-h-0 flex-col">
+            <DialogHeader className="border-divider shrink-0 border-b px-4 py-3">
+              <DialogTitle className="truncate pr-8">{preview?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              {preview && <NodeContentViewer node={preview} track={false} fill />}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

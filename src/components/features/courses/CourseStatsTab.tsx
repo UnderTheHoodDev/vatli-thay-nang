@@ -259,7 +259,7 @@ export default function CourseStatsTab({ courseId }: Props) {
           if (!open) setDrilldown(null);
         }}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent size="lg">
           <DialogHeader>
             <DialogTitle>
               {drilldown

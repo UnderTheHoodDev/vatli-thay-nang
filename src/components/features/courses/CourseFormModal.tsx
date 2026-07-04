@@ -230,7 +230,7 @@ export default function CourseFormModal({
         if (!submitting) onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-2xl lg:max-w-3xl">
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Tạo khóa học' : 'Chỉnh sửa khóa học'}</DialogTitle>
           <DialogDescription>

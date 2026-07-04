@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import VideoPlayer from './VideoPlayer';
 import DocumentViewer from './DocumentViewer';
 import type { CourseNodeTree } from '@/types/course-management';
@@ -11,14 +12,16 @@ interface Props {
   node: CourseNodeTree;
   /** false = admin preview (không tracking, phát từ đầu). Mặc định true. */
   track?: boolean;
+  /** true = lấp đầy khung cha (modal xem gần full màn hình). */
+  fill?: boolean;
 }
 
 /**
  * Hiển thị nội dung 1 tệp (video bunny hoặc tài liệu R2). Dùng chung giữa màn học
- * của học sinh (track=true) và modal xem trước của admin (track=false).
+ * của học sinh (track=true) và modal xem trước của admin (track=false, fill=true).
  * KHÔNG xử lý trạng thái khóa/empty — nơi gọi tự bọc ngoài.
  */
-export default function NodeContentViewer({ node, track = true }: Props) {
+export default function NodeContentViewer({ node, track = true, fill = false }: Props) {
   const router = useRouter();
 
   if (node.fileKind === 'VIDEO') {
@@ -26,7 +29,12 @@ export default function NodeContentViewer({ node, track = true }: Props) {
     if (node.bunnyStatus !== 'FINISHED' || !node.videoUrl) {
       const isError = node.bunnyStatus === 'ERROR';
       return (
-        <div className="bg-muted flex min-h-[45vh] flex-col items-center justify-center gap-3 rounded-lg text-center">
+        <div
+          className={cn(
+            'bg-muted flex flex-col items-center justify-center gap-3 rounded-lg text-center',
+            fill ? 'h-full' : 'min-h-[45vh]',
+          )}
+        >
           <Video className="text-muted-foreground size-10" />
           <div>
             <p className="text-foreground text-sm font-medium">
@@ -58,6 +66,7 @@ export default function NodeContentViewer({ node, track = true }: Props) {
         bunnyStatus={node.bunnyStatus}
         title={node.title}
         track={track}
+        fill={fill}
       />
     );
   }
@@ -71,6 +80,7 @@ export default function NodeContentViewer({ node, track = true }: Props) {
       mimeType={node.mimeType}
       fileSize={node.fileSize}
       title={node.title}
+      fill={fill}
     />
   );
 }
