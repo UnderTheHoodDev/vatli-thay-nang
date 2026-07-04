@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ChevronDown,
   ChevronRight,
+  Eye,
   FileText,
   Film,
   Folder,
@@ -49,6 +50,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/app/EmptyState';
 import { cn } from '@/lib/utils';
 import { handleActionResult, handleActionErrors } from '@/lib/actions';
@@ -59,6 +66,7 @@ import { moveCourseNodeAction } from '@/actions/v1/course-nodes/move-course-node
 import { deleteCourseNodeAction } from '@/actions/v1/course-nodes/delete-course-node';
 import { getCourseVideoStatusAction } from '@/actions/v1/courses/get-video-status';
 import NodeFormModal, { type NodeFormMode } from './NodeFormModal';
+import NodeContentViewer from './NodeContentViewer';
 import {
   BUNNY_STATUS_META,
   type BunnyVideoStatus,
@@ -218,6 +226,7 @@ export default function CourseStructureTab({ course }: Props) {
   const [modal, setModal] = useState<ModalState>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [preview, setPreview] = useState<CourseNodeTree | null>(null);
 
   // ===== DnD =====
   const [dropFolderId, setDropFolderId] = useState<number | null>(null);
@@ -409,6 +418,7 @@ export default function CourseStructureTab({ course }: Props) {
                       onDelete={(n) =>
                         setDeleteTarget({ id: n.id, title: n.title, isFolder: n.type === 'FOLDER' })
                       }
+                      onView={(n) => setPreview(n)}
                     />
                   ))}
                 </ul>
@@ -459,6 +469,15 @@ export default function CourseStructureTab({ course }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle className="truncate pr-6">{preview?.title}</DialogTitle>
+          </DialogHeader>
+          {preview && <NodeContentViewer node={preview} track={false} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -505,6 +524,7 @@ interface NodeRowProps {
   onAddFile: (parentId: number) => void;
   onEdit: (node: CourseNodeTree) => void;
   onDelete: (node: CourseNodeTree) => void;
+  onView: (node: CourseNodeTree) => void;
 }
 
 function NodeRow({
@@ -518,6 +538,7 @@ function NodeRow({
   onAddFile,
   onEdit,
   onDelete,
+  onView,
 }: NodeRowProps) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: node.id,
@@ -615,6 +636,19 @@ function NodeRow({
           </Badge>
         )}
 
+        {!isFolder && (
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
+            className="shrink-0 cursor-pointer"
+            title="Xem nội dung"
+            onClick={() => onView(node)}
+          >
+            <Eye className="size-3" /> Xem
+          </Button>
+        )}
+
         {canResume && (
           <>
             <input
@@ -685,6 +719,7 @@ function NodeRow({
                   onAddFile={onAddFile}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onView={onView}
                 />
               ))}
             </ul>

@@ -11,6 +11,8 @@ interface Props {
   durationSeconds?: number | null;
   bunnyStatus: BunnyVideoStatus;
   title?: string;
+  /** false = xem thuần (admin preview): không gọi tracking, phát từ đầu. Mặc định true. */
+  track?: boolean;
 }
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
@@ -22,6 +24,7 @@ export default function VideoPlayer({
   durationSeconds,
   bunnyStatus,
   title,
+  track = true,
 }: Props) {
   const [initialPosition, setInitialPosition] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -38,6 +41,12 @@ export default function VideoPlayer({
   // Lấy vị trí resume trước khi mount iframe.
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED') return;
+    // Admin preview (track=false): không gọi tracking, phát từ đầu.
+    if (!track) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInitialPosition(0);
+      return;
+    }
     let cancelled = false;
     getProgress(nodeId)
       .then((res) => {
@@ -50,7 +59,7 @@ export default function VideoPlayer({
     return () => {
       cancelled = true;
     };
-  }, [nodeId, bunnyStatus]);
+  }, [nodeId, bunnyStatus, track]);
 
   // Player.js: seek tới vị trí dở + lắng nghe vị trí thật. Fallback im lặng nếu
   // script không tải được (adblock) — khi đó dùng cơ chế ?t= + accumulated.
@@ -101,6 +110,7 @@ export default function VideoPlayer({
   // Tracking lifecycle (start / heartbeat / end).
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED' || initialPosition == null) return;
+    if (!track) return; // admin preview: không ghi tracking
 
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let cancelled = false;
@@ -165,7 +175,7 @@ export default function VideoPlayer({
         viewIdRef.current = null;
       }
     };
-  }, [nodeId, initialPosition, bunnyStatus]);
+  }, [nodeId, initialPosition, bunnyStatus, track]);
 
   if (bunnyStatus !== 'FINISHED') {
     return (

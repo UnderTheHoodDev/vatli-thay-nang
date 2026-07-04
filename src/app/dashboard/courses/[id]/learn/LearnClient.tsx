@@ -13,15 +13,12 @@ import {
   GraduationCap,
   LayoutList,
   Lock,
-  RefreshCw,
-  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import VideoPlayer from '@/components/features/courses/VideoPlayer';
-import DocumentViewer from '@/components/features/courses/DocumentViewer';
+import NodeContentViewer from '@/components/features/courses/NodeContentViewer';
 import CourseContentSidebar from '@/components/features/courses/CourseContentSidebar';
 import {
   flattenTree,
@@ -165,8 +162,6 @@ export default function LearnClient({ course, initialNodeId }: Props) {
 }
 
 function ContentArea({ active }: { active: FlatFile | null }) {
-  const router = useRouter();
-
   if (!active) {
     return (
       <Card>
@@ -195,56 +190,7 @@ function ContentArea({ active }: { active: FlatFile | null }) {
     );
   }
 
-  if (node.fileKind === 'VIDEO') {
-    if (node.bunnyStatus !== 'FINISHED' || !node.videoUrl) {
-      const isError = node.bunnyStatus === 'ERROR';
-      return (
-        <div className="bg-muted flex min-h-[45vh] flex-col items-center justify-center gap-3 rounded-lg text-center">
-          <Video className="text-muted-foreground size-10" />
-          <div>
-            <p className="text-foreground text-sm font-medium">
-              {isError ? 'Video xử lý lỗi' : 'Video đang được xử lý'}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {isError ? 'Vui lòng liên hệ giáo viên.' : 'Quay lại sau ít phút hoặc bấm làm mới.'}
-            </p>
-          </div>
-          {!isError && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="cursor-pointer"
-              onClick={() => router.refresh()}
-            >
-              <RefreshCw /> Làm mới
-            </Button>
-          )}
-        </div>
-      );
-    }
-    return (
-      <VideoPlayer
-        key={node.id}
-        nodeId={node.id}
-        videoUrl={node.videoUrl}
-        durationSeconds={node.durationSeconds}
-        bunnyStatus={node.bunnyStatus}
-        title={node.title}
-      />
-    );
-  }
-
-  // DOCUMENT
-  return (
-    <DocumentViewer
-      key={node.id}
-      fileUrl={node.fileUrl}
-      fileName={node.fileName}
-      mimeType={node.mimeType}
-      fileSize={node.fileSize}
-      title={node.title}
-    />
-  );
+  return <NodeContentViewer node={node} />;
 }
 
 function CourseOverview({ course }: { course: CourseDetail }) {
