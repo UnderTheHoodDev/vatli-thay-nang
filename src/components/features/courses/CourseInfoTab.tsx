@@ -16,18 +16,12 @@ import {
   Tag,
   Users as UsersIcon,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import CourseStatusBadge from './CourseStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import CourseFormModal from './CourseFormModal';
-import type { CourseCategoryRow, CourseDetail, CourseStatus } from '@/types/course-management';
-
-function statusBadge(s: CourseStatus) {
-  if (s === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;
-  if (s === 'DRAFT') return <Badge variant="warning">Bản nháp</Badge>;
-  return <Badge variant="secondary">Đã lưu trữ</Badge>;
-}
+import type { CourseCategoryRow, CourseDetail } from '@/types/course-management';
 
 function formatVnd(v: number | null | undefined): string {
   if (!v || v <= 0) return 'Miễn phí';
@@ -57,7 +51,7 @@ export default function CourseInfoTab({ course, categories }: Props) {
         </code>
       ),
     },
-    { label: 'Trạng thái', value: statusBadge(course.status), icon: Activity },
+    { label: 'Trạng thái', value: <CourseStatusBadge status={course.status} />, icon: Activity },
     { label: 'Danh mục', value: course.category?.name ?? '—', icon: BookOpen },
     {
       label: 'Giảng viên',
@@ -102,6 +96,7 @@ export default function CourseInfoTab({ course, categories }: Props) {
               <img
                 src={course.thumbnailUrl}
                 alt={course.title}
+                loading="lazy"
                 className="h-56 w-full object-cover"
               />
             </div>

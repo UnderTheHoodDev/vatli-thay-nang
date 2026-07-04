@@ -88,7 +88,7 @@ export default function UploadTray() {
                     {t.phase === 'queued' && <>Đang chờ...</>}
                     {t.phase === 'paused' && <>Tạm dừng · {t.progress}%</>}
                     {t.phase === 'done' && (
-                      <span className="inline-flex items-center gap-1 text-emerald-600">
+                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 className="size-3" /> Hoàn tất
                       </span>
                     )}

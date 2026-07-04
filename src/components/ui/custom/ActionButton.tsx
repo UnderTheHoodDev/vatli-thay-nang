@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type ButtonProps = React.ComponentProps<typeof Button>;
@@ -17,7 +18,13 @@ export function ActionButton({
 }: ActionButtonProps) {
   return (
     <Button disabled={isLoading || disabled} {...props}>
-      {isLoading ? loadingText : children}
+      {isLoading ? (
+        <>
+          <Loader2 className="animate-spin" /> {loadingText}
+        </>
+      ) : (
+        children
+      )}
     </Button>
   );
 }

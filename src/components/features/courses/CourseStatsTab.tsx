@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -247,14 +247,7 @@ export default function CourseStatsTab({ courseId }: Props) {
             </div>
           )}
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagerFooter page={page} totalPages={totalPages} onPageChange={setPage} />
       </Card>
 
       <Dialog
