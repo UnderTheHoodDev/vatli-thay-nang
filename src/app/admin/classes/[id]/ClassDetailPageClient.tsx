@@ -138,11 +138,7 @@ export default function ClassDetailPageClient({
         </div>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={handleTabChange}
-        className="gap-4"
-      >
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
         <TabsList>
           <TabsTrigger value="info" className="cursor-pointer">
             <Info className="size-4" /> Thông tin
