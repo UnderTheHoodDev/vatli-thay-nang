@@ -13,7 +13,6 @@ import {
   Hash,
   Pencil,
   Tag,
-  Target,
   Users as UsersIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +69,6 @@ export default function CourseInfoTab({ course, categories }: Props) {
       icon: UsersIcon,
       value: course.enrollmentCount ?? 0,
     },
-    { label: 'Số bài học preview', value: course.previewLessonCount ?? 0, icon: Target },
     { label: 'Ngày bắt đầu', value: formatDate(course.startDate), icon: Calendar },
     { label: 'Ngày kết thúc', value: formatDate(course.endDate), icon: CalendarRange },
     {

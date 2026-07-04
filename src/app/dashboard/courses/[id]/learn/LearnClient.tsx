@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ChevronsRight,
   CircleDollarSign,
   FileText,
   GraduationCap,
@@ -23,17 +24,17 @@ import VideoPlayer from '@/components/features/courses/VideoPlayer';
 import DocumentViewer from '@/components/features/courses/DocumentViewer';
 import CourseContentSidebar from '@/components/features/courses/CourseContentSidebar';
 import {
-  flattenItems,
-  nextItem,
-  prevItem,
-  resolveActive,
-  type FlatItem,
+  flattenTree,
+  nextFile,
+  prevFile,
+  resolveActiveFile,
+  type FlatFile,
 } from '@/lib/course-navigation';
-import type { CourseDetail } from '@/types/course-management';
+import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
 interface Props {
   course: CourseDetail;
-  initialItemId: number | null;
+  initialNodeId: number | null;
 }
 
 function formatVnd(v: number | null | undefined): string {
@@ -41,23 +42,30 @@ function formatVnd(v: number | null | undefined): string {
   return `${v.toLocaleString('vi-VN')} đ`;
 }
 
-export default function LearnClient({ course, initialItemId }: Props) {
+function countFiles(nodes: CourseNodeTree[]): number {
+  return nodes.reduce(
+    (sum, n) => sum + (n.type === 'FILE' ? 1 : 0) + (n.children ? countFiles(n.children) : 0),
+    0,
+  );
+}
+
+export default function LearnClient({ course, initialNodeId }: Props) {
   const router = useRouter();
   const isEnrolled = course.isEnrolled === true;
-  const flat = useMemo(() => flattenItems(course, isEnrolled), [course, isEnrolled]);
+  const flat = useMemo(() => flattenTree(course, isEnrolled), [course, isEnrolled]);
 
-  const initialActive = resolveActive(flat, initialItemId);
-  const [activeItemId, setActiveItemId] = useState<number | null>(initialActive?.item.id ?? null);
+  const initialActive = resolveActiveFile(flat, initialNodeId);
+  const [activeNodeId, setActiveNodeId] = useState<number | null>(initialActive?.node.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const active = resolveActive(flat, activeItemId);
-  const prev = active ? prevItem(flat, active.item.id) : null;
-  const next = active ? nextItem(flat, active.item.id) : null;
+  const active = resolveActiveFile(flat, activeNodeId);
+  const prev = active ? prevFile(flat, active.node.id) : null;
+  const next = active ? nextFile(flat, active.node.id) : null;
 
-  function selectItem(itemId: number) {
-    setActiveItemId(itemId);
+  function selectNode(nodeId: number) {
+    setActiveNodeId(nodeId);
     setSheetOpen(false);
-    router.replace(`?item=${itemId}`, { scroll: false });
+    router.replace(`?item=${nodeId}`, { scroll: false });
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   }
 
@@ -75,22 +83,21 @@ export default function LearnClient({ course, initialItemId }: Props) {
           </Link>
         </Button>
 
-        {/* Mobile: nút mở sidebar nội dung */}
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="cursor-pointer lg:hidden">
               <LayoutList /> Nội dung
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="flex w-[88vw] max-w-sm flex-col p-0">
+          <SheetContent side="right" className="flex h-full w-[88vw] max-w-sm flex-col p-0">
             <SheetHeader className="sr-only">
               <SheetTitle>Nội dung khóa học</SheetTitle>
             </SheetHeader>
             <CourseContentSidebar
               course={course}
-              activeItemId={active?.item.id ?? null}
+              activeNodeId={active?.node.id ?? null}
               isEnrolled={isEnrolled}
-              onSelect={selectItem}
+              onSelect={selectNode}
               variant="sheet"
             />
           </SheetContent>
@@ -98,23 +105,26 @@ export default function LearnClient({ course, initialItemId }: Props) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-        {/* CONTENT trái */}
         <div className="min-w-0 space-y-5">
           <div className="space-y-1">
             <h1 className="font-paytone text-foreground text-xl tracking-tight md:text-2xl">
               {course.title}
             </h1>
             {active && (
-              <p className="text-muted-foreground text-sm">
-                {active.chapterTitle} · {active.lessonTitle}
-                {active.item.title ? ` — ${active.item.title}` : ''}
+              <p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+                {active.pathTitles.map((p, i) => (
+                  <span key={i} className="inline-flex items-center gap-1">
+                    {p}
+                    <ChevronsRight className="size-3" />
+                  </span>
+                ))}
+                <span className="text-foreground font-medium">{active.node.title}</span>
               </p>
             )}
           </div>
 
           <ContentArea active={active} />
 
-          {/* Nav prev/next */}
           {active && (
             <div className="flex items-center justify-between gap-2">
               <Button
@@ -122,7 +132,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
                 size="sm"
                 className="cursor-pointer"
                 disabled={!prev}
-                onClick={() => prev && selectItem(prev.item.id)}
+                onClick={() => prev && selectNode(prev.node.id)}
               >
                 <ChevronLeft /> Bài trước
               </Button>
@@ -131,7 +141,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
                 size="sm"
                 className="cursor-pointer"
                 disabled={!next}
-                onClick={() => next && selectItem(next.item.id)}
+                onClick={() => next && selectNode(next.node.id)}
               >
                 Bài tiếp <ChevronRight />
               </Button>
@@ -141,13 +151,12 @@ export default function LearnClient({ course, initialItemId }: Props) {
           <CourseOverview course={course} />
         </div>
 
-        {/* SIDEBAR phải (desktop) — top dưới topbar (h-16=64px) + gap; height khít viewport */}
         <aside className="hidden lg:sticky lg:top-[76px] lg:block lg:h-[calc(100svh-92px)] lg:overflow-hidden">
           <CourseContentSidebar
             course={course}
-            activeItemId={active?.item.id ?? null}
+            activeNodeId={active?.node.id ?? null}
             isEnrolled={isEnrolled}
-            onSelect={selectItem}
+            onSelect={selectNode}
           />
         </aside>
       </div>
@@ -155,7 +164,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
   );
 }
 
-function ContentArea({ active }: { active: FlatItem | null }) {
+function ContentArea({ active }: { active: FlatFile | null }) {
   const router = useRouter();
 
   if (!active) {
@@ -172,9 +181,8 @@ function ContentArea({ active }: { active: FlatItem | null }) {
     );
   }
 
-  const { item, accessible } = active;
+  const { node, accessible } = active;
 
-  // Item bị khóa (chưa ghi danh & không preview)
   if (!accessible) {
     return (
       <div className="bg-muted flex min-h-[45vh] flex-col items-center justify-center gap-3 rounded-lg text-center">
@@ -187,10 +195,9 @@ function ContentArea({ active }: { active: FlatItem | null }) {
     );
   }
 
-  if (item.type === 'VIDEO') {
-    // Video chưa xử lý xong → banner + refresh thủ công (student không auto-poll)
-    if (item.bunnyStatus !== 'FINISHED' || !item.videoUrl) {
-      const isError = item.bunnyStatus === 'ERROR';
+  if (node.fileKind === 'VIDEO') {
+    if (node.bunnyStatus !== 'FINISHED' || !node.videoUrl) {
+      const isError = node.bunnyStatus === 'ERROR';
       return (
         <div className="bg-muted flex min-h-[45vh] flex-col items-center justify-center gap-3 rounded-lg text-center">
           <Video className="text-muted-foreground size-10" />
@@ -217,12 +224,12 @@ function ContentArea({ active }: { active: FlatItem | null }) {
     }
     return (
       <VideoPlayer
-        key={item.id}
-        lessonItemId={item.id}
-        videoUrl={item.videoUrl}
-        durationSeconds={item.durationSeconds}
-        bunnyStatus={item.bunnyStatus}
-        title={item.title}
+        key={node.id}
+        nodeId={node.id}
+        videoUrl={node.videoUrl}
+        durationSeconds={node.durationSeconds}
+        bunnyStatus={node.bunnyStatus}
+        title={node.title}
       />
     );
   }
@@ -230,17 +237,18 @@ function ContentArea({ active }: { active: FlatItem | null }) {
   // DOCUMENT
   return (
     <DocumentViewer
-      key={item.id}
-      fileUrl={item.fileUrl}
-      fileName={item.fileName}
-      mimeType={item.mimeType}
-      fileSize={item.fileSize}
-      title={item.title}
+      key={node.id}
+      fileUrl={node.fileUrl}
+      fileName={node.fileName}
+      mimeType={node.mimeType}
+      fileSize={node.fileSize}
+      title={node.title}
     />
   );
 }
 
 function CourseOverview({ course }: { course: CourseDetail }) {
+  const fileCount = countFiles(course.nodes);
   return (
     <Tabs defaultValue="overview" className="gap-4 pt-2">
       <TabsList>
@@ -270,9 +278,7 @@ function CourseOverview({ course }: { course: CourseDetail }) {
               <div className="flex items-center gap-2">
                 <LayoutList className="text-muted-foreground size-4" />
                 <span className="text-muted-foreground">Nội dung:</span>
-                <span className="text-foreground font-medium">
-                  {course.totalChapters ?? 0} chương · {course.totalLessons ?? 0} bài
-                </span>
+                <span className="text-foreground font-medium">{fileCount} bài học / tài liệu</span>
               </div>
             </dl>
 

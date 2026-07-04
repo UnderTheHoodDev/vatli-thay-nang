@@ -50,9 +50,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ action: str
   if (!sid) {
     return NextResponse.json({ errors: ['Chưa đăng nhập'] }, { status: 401 });
   }
-  const lessonItemId = req.nextUrl.searchParams.get('lessonItemId') ?? '';
+  const nodeId = req.nextUrl.searchParams.get('nodeId') ?? '';
   const res = await fetch(
-    `${API}/api/v1/video-tracking/progress?lessonItemId=${encodeURIComponent(lessonItemId)}`,
+    `${API}/api/v1/video-tracking/progress?nodeId=${encodeURIComponent(nodeId)}`,
     { headers: { 'X-Session-Id': sid } },
   );
   return passthrough(await res.text(), res.status, res.headers.get('content-type'));

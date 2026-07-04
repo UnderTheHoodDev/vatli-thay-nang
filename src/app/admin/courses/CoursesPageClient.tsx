@@ -87,19 +87,7 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-const SKELETON_COLUMNS = [
-  'w-8',
-  'w-16',
-  'w-52',
-  'w-20',
-  'w-28',
-  'w-32',
-  'w-24',
-  'w-14',
-  'w-14',
-  'w-14',
-  'w-20',
-];
+const SKELETON_COLUMNS = ['w-8', 'w-16', 'w-52', 'w-20', 'w-28', 'w-32', 'w-24', 'w-16', 'w-14', 'w-20'];
 
 function statusBadge(status: CourseStatus) {
   if (status === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;
@@ -336,8 +324,7 @@ export default function CoursesPageClient({
                     <TableHead>Danh mục</TableHead>
                     <TableHead>Giảng viên</TableHead>
                     <TableHead className="w-32">Trạng thái</TableHead>
-                    <TableHead className="w-20 text-center">Chương</TableHead>
-                    <TableHead className="w-20 text-center">Bài học</TableHead>
+                    <TableHead className="w-24 text-center">Nội dung</TableHead>
                     <TableHead className="w-20 text-center">Học sinh</TableHead>
                     <TableHead className="w-24 text-right">Hành động</TableHead>
                   </TableRow>
@@ -381,10 +368,7 @@ export default function CoursesPageClient({
                         </TableCell>
                         <TableCell>{statusBadge(row.status)}</TableCell>
                         <TableCell className="text-center font-medium">
-                          {row.totalChapters ?? 0}
-                        </TableCell>
-                        <TableCell className="text-center font-medium">
-                          {row.totalLessons ?? 0}
+                          {row.nodeCount ?? 0}
                         </TableCell>
                         <TableCell className="text-center font-medium">
                           {row.enrollmentCount ?? 0}

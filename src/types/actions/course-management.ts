@@ -1,12 +1,14 @@
 import type { ListMeta } from '@/types/auth';
 import type {
+  BunnyVideoStatus,
   CourseCategoryRow,
   CourseDetail,
   CourseEnrollmentRow,
   CourseEnrollmentStatus,
+  CourseFileKind,
+  CourseNodeType,
   CourseRow,
   CourseStatus,
-  LessonItemType,
   StorageFolder,
 } from '@/types/course-management';
 
@@ -73,7 +75,6 @@ export interface ICreateCoursePayload {
   enrollmentDeadline?: string;
   targetAudience?: string;
   learningOutcomes?: string;
-  previewLessonCount?: number;
   status?: CourseStatus;
 }
 
@@ -92,7 +93,6 @@ export interface IUpdateCoursePayload {
   enrollmentDeadline?: string | null;
   targetAudience?: string;
   learningOutcomes?: string;
-  previewLessonCount?: number;
   status?: CourseStatus;
 }
 
@@ -113,59 +113,49 @@ export interface IAddEnrollmentsPayload {
   studentIds: number[];
 }
 
-export interface ICreateChapterPayload {
+/** Tạo folder hoặc tệp (video/tài liệu) trong cây khóa học. */
+export interface ICreateCourseNodePayload {
+  parentId?: number;
+  type: CourseNodeType;
   title: string;
-  description?: string;
+  fileKind?: CourseFileKind;
+  // video (bunny)
+  videoUrl?: string;
+  bunnyVideoId?: string;
+  bunnyLibraryId?: number;
+  durationSeconds?: number;
+  // tài liệu (R2)
+  fileUrl?: string;
+  fileStorageKey?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
 }
 
-export interface IUpdateChapterPayload {
+/** Đổi tên / thay tệp của node (đổi cấp folder đi qua move). */
+export interface IUpdateCourseNodePayload {
   title?: string;
-  description?: string;
+  videoUrl?: string;
+  bunnyVideoId?: string;
+  bunnyLibraryId?: number;
+  durationSeconds?: number;
+  fileUrl?: string;
+  fileStorageKey?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
 }
 
-export interface IReorderPayload {
+/** Sắp xếp lại thứ tự node trong cùng folder (parentId null = nhóm gốc). */
+export interface IReorderCourseNodesPayload {
+  parentId?: number;
   items: Array<{ id: number; order: number }>;
 }
 
-export interface ICreateLessonPayload {
-  title: string;
-  description?: string;
-  isPreview?: boolean;
-}
-
-export interface IUpdateLessonPayload {
-  title?: string;
-  description?: string;
-  isPreview?: boolean;
-}
-
-export interface ICreateLessonItemPayload {
-  title: string;
-  type: LessonItemType;
-  videoUrl?: string;
-  videoStorageKey?: string;
-  bunnyVideoId?: string;
-  bunnyLibraryId?: number;
-  durationSeconds?: number;
-  fileUrl?: string;
-  fileStorageKey?: string;
-  fileName?: string;
-  fileSize?: number;
-  mimeType?: string;
-}
-
-export interface IUpdateLessonItemPayload {
-  title?: string;
-  videoUrl?: string;
-  videoStorageKey?: string;
-  bunnyVideoId?: string;
-  bunnyLibraryId?: number;
-  durationSeconds?: number;
-  fileUrl?: string;
-  fileStorageKey?: string;
-  fileName?: string;
-  fileSize?: number;
-  mimeType?: string;
+/** Kéo-thả node sang folder khác. newParentId null = ra gốc. */
+export interface IMoveCourseNodePayload {
+  newParentId?: number | null;
+  newOrder?: number;
 }
 
 export interface IGetBunnyUploadUrlPayload {
@@ -202,8 +192,8 @@ export interface IBunnyVideoStatus {
 }
 
 export interface ICourseVideoStatusItem {
-  lessonItemId: number;
-  bunnyStatus: 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
+  nodeId: number;
+  bunnyStatus: BunnyVideoStatus;
   durationSeconds: number | null;
   thumbnailUrl: string | null;
 }

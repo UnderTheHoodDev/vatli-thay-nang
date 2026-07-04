@@ -271,7 +271,7 @@ export default function CourseStatsTab({ courseId }: Props) {
             <div className="text-muted-foreground py-8 text-center text-sm">
               Đang tải dữ liệu...
             </div>
-          ) : drilldown && drilldown.lessons.length === 0 ? (
+          ) : drilldown && drilldown.files.length === 0 ? (
             <EmptyState
               icon={BarChart3}
               title="Chưa có dữ liệu xem"
@@ -282,9 +282,8 @@ export default function CourseStatsTab({ courseId }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Chương</TableHead>
-                    <TableHead>Bài học</TableHead>
-                    <TableHead>Mục video</TableHead>
+                    <TableHead>Đường dẫn</TableHead>
+                    <TableHead>Video</TableHead>
                     <TableHead className="text-right">Lượt xem</TableHead>
                     <TableHead className="text-right">Số giờ xem</TableHead>
                     <TableHead className="text-right">Vị trí cuối</TableHead>
@@ -292,17 +291,18 @@ export default function CourseStatsTab({ courseId }: Props) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {drilldown.lessons.map((l) => (
-                    <TableRow key={l.lessonItemId}>
-                      <TableCell>{l.chapterTitle}</TableCell>
-                      <TableCell>{l.lessonTitle}</TableCell>
-                      <TableCell>{l.lessonItemTitle}</TableCell>
-                      <TableCell className="text-right">{l.viewCount}</TableCell>
-                      <TableCell className="text-right">{formatHours(l.totalWatchedSec)}</TableCell>
-                      <TableCell className="text-right">
-                        {formatPosition(l.lastPositionSec, l.durationSeconds)}
+                  {drilldown.files.map((f) => (
+                    <TableRow key={f.nodeId}>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {f.pathTitles.length ? f.pathTitles.join(' / ') : '(gốc)'}
                       </TableCell>
-                      <TableCell>{l.lastViewedAt ? formatDate(l.lastViewedAt) : '—'}</TableCell>
+                      <TableCell>{f.nodeTitle}</TableCell>
+                      <TableCell className="text-right">{f.viewCount}</TableCell>
+                      <TableCell className="text-right">{formatHours(f.totalWatchedSec)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatPosition(f.lastPositionSec, f.durationSeconds)}
+                      </TableCell>
+                      <TableCell>{f.lastViewedAt ? formatDate(f.lastViewedAt) : '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -16,7 +16,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
   if (!course) notFound();
 
   const sp = await searchParams;
-  const itemId = Number(sp.item) || null;
+  const nodeId = Number(sp.item) || null;
 
-  return <LearnClient course={course} initialItemId={itemId} />;
+  return <LearnClient course={course} initialNodeId={nodeId} />;
 }

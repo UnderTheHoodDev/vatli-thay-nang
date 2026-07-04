@@ -1,5 +1,6 @@
 export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-export type LessonItemType = 'VIDEO' | 'DOCUMENT';
+export type CourseNodeType = 'FOLDER' | 'FILE';
+export type CourseFileKind = 'VIDEO' | 'DOCUMENT';
 export type CourseEnrollmentStatus = 'ACTIVE' | 'REVOKED';
 export type StorageFolder = 'course-thumbnails' | 'lesson-documents' | 'lesson-videos';
 export type BunnyVideoStatus = 'UPLOADING' | 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
@@ -34,9 +35,7 @@ export interface CourseRow {
   thumbnailUrl: string | null;
   price: number;
   status: CourseStatus;
-  totalChapters: number;
-  totalLessons: number;
-  previewLessonCount: number;
+  nodeCount: number;
   startDate: string | null;
   endDate: string | null;
   enrollmentDeadline: string | null;
@@ -46,23 +45,32 @@ export interface CourseRow {
   isEnrolled?: boolean;
 }
 
-export interface LessonItemTree {
+/**
+ * Node trong cây khóa học (Google Drive style). FOLDER chứa `children`; FILE là
+ * video (bunny) hoặc tài liệu (R2), phân biệt bằng `fileKind`.
+ */
+export interface CourseNodeTree {
   id: number;
+  parentId: number | null;
+  type: CourseNodeType;
   title: string;
-  type: LessonItemType;
   order: number;
+  fileKind: CourseFileKind | null;
+  // video (bunny)
   durationSeconds: number | null;
+  bunnyStatus: BunnyVideoStatus | null;
+  thumbnailUrl: string | null;
+  videoUrl: string | null;
+  bunnyVideoId: string | null;
+  bunnyLibraryId: number | null;
+  // tài liệu (R2)
   fileName: string | null;
   fileSize: number | null;
   mimeType: string | null;
-  videoUrl: string | null;
-  videoStorageKey: string | null;
-  bunnyVideoId: string | null;
-  bunnyLibraryId: number | null;
-  bunnyStatus: BunnyVideoStatus;
-  thumbnailUrl: string | null;
   fileUrl: string | null;
   fileStorageKey: string | null;
+  // chỉ FOLDER
+  children?: CourseNodeTree[];
 }
 
 export interface CourseStatsRow {
@@ -75,13 +83,12 @@ export interface CourseStatsRow {
   lastViewedAt: string | null;
 }
 
-export interface CourseStudentStatsLesson {
-  lessonItemId: number;
-  lessonItemTitle: string;
-  chapterTitle: string;
-  chapterOrder: number;
-  lessonTitle: string;
-  lessonOrder: number;
+/** Một tệp video trong drilldown thống kê, kèm đường dẫn folder cha. */
+export interface CourseStudentStatsFile {
+  nodeId: number;
+  nodeTitle: string;
+  /** Breadcrumb các folder cha (từ gốc → gần nhất). */
+  pathTitles: string[];
   durationSeconds: number | null;
   viewCount: number;
   totalWatchedSec: number;
@@ -95,7 +102,7 @@ export interface CourseStudentStatsDetail {
     email: string;
     fullName: string | null;
   };
-  lessons: CourseStudentStatsLesson[];
+  files: CourseStudentStatsFile[];
 }
 
 export interface VideoProgressInfo {
@@ -105,24 +112,6 @@ export interface VideoProgressInfo {
   lastViewedAt: string | null;
 }
 
-export interface LessonTree {
-  id: number;
-  title: string;
-  description: string | null;
-  order: number;
-  isPreview: boolean;
-  itemCount: number;
-  items: LessonItemTree[];
-}
-
-export interface ChapterTree {
-  id: number;
-  title: string;
-  description: string | null;
-  order: number;
-  lessons: LessonTree[];
-}
-
 export interface CourseDetail extends CourseRow {
   thumbnailStorageKey?: string | null;
   instructorBio: string | null;
@@ -130,7 +119,8 @@ export interface CourseDetail extends CourseRow {
   learningOutcomes: string | null;
   publishedAt: string | null;
   createdAt: string;
-  chapters: ChapterTree[];
+  /** Node gốc của cây khóa học (đã redact theo quyền). */
+  nodes: CourseNodeTree[];
 }
 
 export interface CourseEnrollmentRow {
@@ -143,33 +133,13 @@ export interface CourseEnrollmentRow {
   revokedAt: string | null;
 }
 
-export interface LessonDetail {
-  id: number;
-  title: string;
-  description: string | null;
-  order: number;
-  isPreview: boolean;
-  chapter: {
-    id: number;
-    title: string;
-    order: number;
-    courseId: number;
-  };
-  course: {
-    id: number;
-    title: string;
-    status: CourseStatus;
-  };
-  items: LessonItemTree[];
-}
-
 export const COURSE_STATUS_LABEL: Record<CourseStatus, string> = {
   DRAFT: 'Bản nháp',
   PUBLISHED: 'Đang phát hành',
   ARCHIVED: 'Đã lưu trữ',
 };
 
-export const LESSON_ITEM_TYPE_LABEL: Record<LessonItemType, string> = {
+export const COURSE_FILE_KIND_LABEL: Record<CourseFileKind, string> = {
   VIDEO: 'Video',
   DOCUMENT: 'Tài liệu',
 };
@@ -194,8 +164,7 @@ export const BUNNY_STATUS_META: Record<
   ERROR: { label: 'Lỗi xử lý', variant: 'destructive', pending: false },
 };
 
-/** Bài học để resume khi học sinh vào khóa (trả từ GET /courses/:id/resume). */
+/** Node để resume khi học sinh vào khóa (trả từ GET /courses/:id/resume). */
 export interface CourseResume {
-  lessonItemId: number | null;
-  lessonId: number | null;
+  nodeId: number | null;
 }

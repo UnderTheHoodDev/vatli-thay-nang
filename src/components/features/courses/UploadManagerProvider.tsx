@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as tus from 'tus-js-client';
-import { markUploadedAction } from '@/actions/v1/lesson-items/mark-uploaded';
+import { markUploadedAction } from '@/actions/v1/course-nodes/mark-uploaded';
 
 const MAX_CONCURRENT = 3;
 const CHUNK_SIZE = 64 * 1024 * 1024; // 64MB (bội số 256KB theo yêu cầu bunny)
@@ -12,7 +12,7 @@ export type UploadPhase = 'queued' | 'uploading' | 'paused' | 'error' | 'done';
 
 export interface UploadTask {
   id: string;
-  lessonItemId: number;
+  nodeId: number;
   courseId: number;
   videoId: string;
   fileName: string;
@@ -23,7 +23,7 @@ export interface UploadTask {
 }
 
 export interface EnqueueArgs {
-  lessonItemId: number;
+  nodeId: number;
   courseId: number;
   videoId: string;
   libraryId: number;
@@ -39,8 +39,8 @@ interface UploadManagerValue {
   resume: (id: string) => void;
   cancel: (id: string) => Promise<void>;
   retry: (id: string) => void;
-  /** Có upload nào cho lessonItemId này đang chạy không (để tree biết). */
-  hasActive: (lessonItemId: number) => boolean;
+  /** Có upload nào cho nodeId này đang chạy không (để tree biết). */
+  hasActive: (nodeId: number) => boolean;
 }
 
 const UploadManagerContext = createContext<UploadManagerValue | null>(null);
@@ -54,12 +54,12 @@ export function useUploadManager(): UploadManagerValue {
 }
 
 async function markUploadedWithRetry(
-  lessonItemId: number,
+  nodeId: number,
   courseId: number,
   attempts = 3,
 ): Promise<void> {
   for (let i = 0; i < attempts; i++) {
-    const res = await markUploadedAction(lessonItemId, courseId);
+    const res = await markUploadedAction(nodeId, courseId);
     if (!res.errors.length) return;
     await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
   }
@@ -125,7 +125,7 @@ export default function UploadManagerProvider({ children }: { children: React.Re
         },
         onSuccess: async () => {
           patchTask(taskId, { phase: 'done', progress: 100 });
-          await markUploadedWithRetry(args.lessonItemId, args.courseId);
+          await markUploadedWithRetry(args.nodeId, args.courseId);
           refreshIfOn(args.courseId);
           // tự dọn task done sau vài giây
           setTimeout(() => removeTaskRef.current(taskId), 4000);
@@ -193,7 +193,7 @@ export default function UploadManagerProvider({ children }: { children: React.Re
       ...prev,
       {
         id,
-        lessonItemId: args.lessonItemId,
+        nodeId: args.nodeId,
         courseId: args.courseId,
         videoId: args.videoId,
         fileName: file.name,
@@ -251,10 +251,10 @@ export default function UploadManagerProvider({ children }: { children: React.Re
   );
 
   const hasActive = useCallback(
-    (lessonItemId: number) =>
+    (nodeId: number) =>
       tasks.some(
         (t) =>
-          t.lessonItemId === lessonItemId &&
+          t.nodeId === nodeId &&
           (t.phase === 'uploading' || t.phase === 'queued' || t.phase === 'paused'),
       ),
     [tasks],

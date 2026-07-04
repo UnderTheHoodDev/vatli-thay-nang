@@ -6,7 +6,7 @@ import { loadPlayerJs, type BunnyPlayer } from '@/lib/bunny-player';
 import type { BunnyVideoStatus } from '@/types/course-management';
 
 interface Props {
-  lessonItemId: number;
+  nodeId: number;
   videoUrl: string;
   durationSeconds?: number | null;
   bunnyStatus: BunnyVideoStatus;
@@ -17,7 +17,7 @@ const HEARTBEAT_INTERVAL_MS = 10_000;
 const MAX_DELTA_SEC = 60;
 
 export default function VideoPlayer({
-  lessonItemId,
+  nodeId,
   videoUrl,
   durationSeconds,
   bunnyStatus,
@@ -39,7 +39,7 @@ export default function VideoPlayer({
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED') return;
     let cancelled = false;
-    getProgress(lessonItemId)
+    getProgress(nodeId)
       .then((res) => {
         if (cancelled) return;
         setInitialPosition(res.data.lastPositionSec ?? 0);
@@ -50,7 +50,7 @@ export default function VideoPlayer({
     return () => {
       cancelled = true;
     };
-  }, [lessonItemId, bunnyStatus]);
+  }, [nodeId, bunnyStatus]);
 
   // Player.js: seek tới vị trí dở + lắng nghe vị trí thật. Fallback im lặng nếu
   // script không tải được (adblock) — khi đó dùng cơ chế ?t= + accumulated.
@@ -96,7 +96,7 @@ export default function VideoPlayer({
       playerReadyRef.current = false;
       isPlayingRef.current = false;
     };
-  }, [initialPosition, bunnyStatus, lessonItemId]);
+  }, [initialPosition, bunnyStatus, nodeId]);
 
   // Tracking lifecycle (start / heartbeat / end).
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function VideoPlayer({
 
     const begin = async () => {
       try {
-        const res = await startView(lessonItemId, initialPosition);
+        const res = await startView(nodeId, initialPosition);
         if (cancelled) return;
         viewIdRef.current = res.data.viewId;
         lastTickRef.current = Date.now();
@@ -165,7 +165,7 @@ export default function VideoPlayer({
         viewIdRef.current = null;
       }
     };
-  }, [lessonItemId, initialPosition, bunnyStatus]);
+  }, [nodeId, initialPosition, bunnyStatus]);
 
   if (bunnyStatus !== 'FINISHED') {
     return (
