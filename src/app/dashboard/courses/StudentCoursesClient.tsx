@@ -70,7 +70,7 @@ export default function StudentCoursesClient({ urlState, rows, meta, errors }: P
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {rows.map((row) => (
             <Link
               key={row.id}

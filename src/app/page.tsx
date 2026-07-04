@@ -5,11 +5,13 @@ import Courses from '@/components/features/home/Courses';
 import Schedule from '@/components/features/home/Schedule';
 import Contact from '@/components/features/home/Contact';
 import Footer from '@/components/features/home/Footer';
+import { getCurrentSession } from '@/lib/server/session';
 
-export default function Home() {
+export default async function Home() {
+  const session = await getCurrentSession();
   return (
     <>
-      <Header />
+      <Header role={session?.role ?? null} />
       <Hero />
       <Teacher />
       <Courses />

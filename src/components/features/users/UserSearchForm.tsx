@@ -33,6 +33,7 @@ export interface UserSearchValues {
   parentPhonenumber: string;
   role: string;
   status: string;
+  classId: string;
 }
 
 export const EMPTY_SEARCH: UserSearchValues = {
@@ -44,15 +45,23 @@ export const EMPTY_SEARCH: UserSearchValues = {
   parentPhonenumber: '',
   role: ALL_VALUE,
   status: ALL_VALUE,
+  classId: ALL_VALUE,
 };
+
+export interface ClassOption {
+  id: number;
+  code: string;
+  name: string;
+}
 
 interface Props {
   provinces: Province[];
+  classes: ClassOption[];
   initial: UserSearchValues;
   onSearch: (values: UserSearchValues) => void;
 }
 
-export default function UserSearchForm({ provinces, initial, onSearch }: Props) {
+export default function UserSearchForm({ provinces, classes, initial, onSearch }: Props) {
   const [values, setValues] = useState<UserSearchValues>(initial);
   const [prevInitial, setPrevInitial] = useState(initial);
   const [provinceOpen, setProvinceOpen] = useState(false);
@@ -82,7 +91,7 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
       : (provinces.find((p) => String(p.id) === values.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
-    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -211,7 +220,23 @@ export default function UserSearchForm({ provinces, initial, onSearch }: Props) 
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-2 lg:col-span-4">
+      <div className="space-y-1.5">
+        <Label>Lớp học</Label>
+        <Select value={values.classId} onValueChange={(v) => update('classId', v)}>
+          <SelectTrigger className="cursor-pointer">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
+            {classes.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.code} — {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row lg:col-span-4">
         <Button type="button" variant="outline" onClick={reset} className="cursor-pointer">
           <X /> Xoá bộ lọc
         </Button>

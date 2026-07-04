@@ -78,7 +78,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
         {/* Mobile: nút mở sidebar nội dung */}
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="cursor-pointer lg:hidden">
+            <Button variant="outline" size="sm" className="cursor-pointer md:hidden">
               <LayoutList /> Nội dung
             </Button>
           </SheetTrigger>
@@ -97,7 +97,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
         </Sheet>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_360px]">
         {/* CONTENT trái */}
         <div className="min-w-0 space-y-5">
           <div className="space-y-1">
@@ -142,7 +142,7 @@ export default function LearnClient({ course, initialItemId }: Props) {
         </div>
 
         {/* SIDEBAR phải (desktop) — top dưới topbar (h-16=64px) + gap; height khít viewport */}
-        <aside className="hidden lg:sticky lg:top-[76px] lg:block lg:h-[calc(100svh-92px)] lg:overflow-hidden">
+        <aside className="hidden md:sticky md:top-19 md:block md:h-[calc(100svh-92px)] md:overflow-hidden">
           <CourseContentSidebar
             course={course}
             activeItemId={active?.item.id ?? null}

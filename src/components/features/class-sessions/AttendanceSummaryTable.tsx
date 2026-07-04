@@ -229,49 +229,53 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
       </div>
 
       {/* Bulk action bar */}
-      {selectedStudents.length > 0 && (
-        <div className="bg-muted/50 border-divider flex flex-wrap items-start gap-3 rounded-lg border p-3">
-          <div className="flex flex-1 flex-wrap items-center gap-2">
-            <span className="text-foreground shrink-0 text-sm font-medium">
-              Đã chọn {selectedStudents.length} học sinh:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedStudents.map((s) => (
-                <Badge
-                  key={s.studentId}
-                  variant="secondary"
-                  className="cursor-pointer gap-1 pr-1"
-                  onClick={() => toggleOne(s.studentId)}
-                >
-                  {s.fullName ?? s.email}
-                  <X className="size-3" />
-                </Badge>
-              ))}
-            </div>
+      <div className="bg-muted/50 border-divider flex flex-wrap items-start gap-3 rounded-lg border p-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <span className="text-foreground shrink-0 text-sm font-medium">
+            {selectedStudents.length > 0
+              ? `Đã chọn ${selectedStudents.length} học sinh:`
+              : 'Chưa chọn học sinh nào'}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedStudents.map((s) => (
+              <Badge
+                key={s.studentId}
+                variant="secondary"
+                className="cursor-pointer gap-1 pr-1"
+                onClick={() => toggleOne(s.studentId)}
+              >
+                {s.fullName ?? s.email}
+                <X className="size-3" />
+              </Badge>
+            ))}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => setBulkDialog({ mode: 'mark', students: selectedStudents })}
-            >
-              <CheckCircle2 className="size-4" />
-              Đánh dấu có mặt
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setBulkDialog({ mode: 'remove', students: selectedStudents })}
-            >
-              <ClipboardX className="size-4" />
-              Huỷ điểm danh
-            </Button>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            disabled={selectedStudents.length === 0}
+            onClick={() => setBulkDialog({ mode: 'mark', students: selectedStudents })}
+          >
+            <CheckCircle2 className="size-4" />
+            Đánh dấu có mặt
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={selectedStudents.length === 0}
+            onClick={() => setBulkDialog({ mode: 'remove', students: selectedStudents })}
+          >
+            <ClipboardX className="size-4" />
+            Huỷ điểm danh
+          </Button>
+          {selectedStudents.length > 0 && (
             <Button size="sm" variant="ghost" onClick={clearSelection}>
               Bỏ chọn
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="border-divider overflow-x-auto rounded-md border">
         <Table>

@@ -5,6 +5,8 @@ export interface IListClassesParams {
   name?: string;
   code?: string;
   status?: ClassStatus;
+  createdFrom?: string;
+  createdTo?: string;
   page?: number;
   pageSize?: number;
 }
@@ -61,6 +63,13 @@ export interface ClassSessionListRow {
   startTime: string;
   endTime: string;
   meetingUrl: string | null;
+  // ADMIN only (list() admin branch, listAll()).
+  attendedCount?: number;
+  totalStudents?: number;
+  activeAttendanceSession?: { id: number; closedAt: string } | null;
+  // STUDENT only (list() student branch).
+  myStatus?: 'ATTENDED' | 'ON_LEAVE' | 'NOT_ATTENDED';
+  hasActiveAttendance?: boolean;
 }
 
 export interface ClassSessionListRowWithClass extends ClassSessionListRow {

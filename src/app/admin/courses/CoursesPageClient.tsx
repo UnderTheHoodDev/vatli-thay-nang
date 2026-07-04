@@ -210,7 +210,7 @@ export default function CoursesPageClient({
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <Label htmlFor="search-title">Tên khóa học</Label>
               <Input
@@ -263,7 +263,7 @@ export default function CoursesPageClient({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-2 lg:col-span-4">
+            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row lg:col-span-4">
               <Button
                 type="button"
                 variant="outline"
@@ -331,7 +331,7 @@ export default function CoursesPageClient({
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
                     <TableHead className="w-14">ID</TableHead>
                     <TableHead className="w-20">Ảnh</TableHead>
-                    <TableHead className="min-w-[200px]">Tiêu đề</TableHead>
+                    <TableHead className="min-w-50">Tiêu đề</TableHead>
                     <TableHead className="w-24">Mã</TableHead>
                     <TableHead>Danh mục</TableHead>
                     <TableHead>Giảng viên</TableHead>

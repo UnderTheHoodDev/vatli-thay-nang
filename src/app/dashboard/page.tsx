@@ -1,17 +1,21 @@
 import Link from 'next/link';
-import { ArrowRight, GraduationCap, Sparkles, UserRound } from 'lucide-react';
+import { ArrowRight, GraduationCap, Radio, School, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmptyState from '@/components/app/EmptyState';
 import StatsCard from '@/components/app/StatsCard';
+import AttendanceStatsInline from '@/components/features/classes/AttendanceStatsInline';
 import { listClasses } from '@/actions/v1/classes/list-classes';
 import { getCurrentSession } from '@/lib/server/session';
 
 export default async function DashboardPage() {
-  const [session, activeClassesRes] = await Promise.all([
+  const [session, classesRes] = await Promise.all([
     getCurrentSession(),
-    listClasses({ status: 'ACTIVE', page: 1, pageSize: 1 }),
+    listClasses({ page: 1, pageSize: 100 }),
   ]);
   const displayName = session?.fullName?.trim() || session?.email?.split('@')[0] || 'bạn';
+  const activeCount = classesRes.stats.active;
 
   return (
     <div className="space-y-6">
@@ -41,63 +45,84 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <StatsCard
           label="Lớp đang học"
-          value={activeClassesRes.meta.total}
+          value={activeCount}
           icon={GraduationCap}
           tone="primary"
           hint="Số lớp bạn đang tham gia"
         />
+      </div>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Truy cập nhanh</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 pb-6">
-            <QuickLink
-              href="/dashboard/classes"
-              icon={GraduationCap}
-              title="Lớp học của tôi"
-              description="Xem danh sách lớp và các buổi học"
-            />
-            <QuickLink
-              href="/dashboard/profile"
-              icon={UserRound}
-              title="Thông tin cá nhân"
-              description="Cập nhật hồ sơ học sinh"
-            />
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="mb-4 text-lg font-semibold">Lớp học của tôi</h2>
+        {classesRes.data.length === 0 ? (
+          <Card>
+            <CardContent className="py-0">
+              <EmptyState
+                icon={School}
+                title="Chưa có lớp học"
+                description="Bạn chưa được gán vào lớp học nào. Vui lòng liên hệ giáo viên."
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {classesRes.data.map((row) => (
+              <Link
+                key={row.id}
+                href={`/dashboard/classes/${row.id}`}
+                className="group focus-visible:ring-ring rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <Card className="hover:border-primary/40 h-full cursor-pointer gap-0 transition hover:shadow-md">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+                          <School className="size-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <CardTitle className="truncate text-base">{row.name}</CardTitle>
+                          <code className="bg-muted text-muted-foreground mt-1 inline-block rounded px-1.5 py-0.5 font-mono text-xs">
+                            {row.code}
+                          </code>
+                        </div>
+                      </div>
+                      <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                        {row.status === 'ACTIVE' ? 'Đang học' : 'Đã đóng'}
+                      </Badge>
+                    </div>
+                    {row.hasActiveAttendance && (
+                      <Badge variant="success" className="mt-2 w-fit gap-1">
+                        <Radio className="size-3 animate-pulse" /> Đang mở điểm danh
+                      </Badge>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3 pb-5">
+                    {row.description ? (
+                      <p className="text-muted-foreground line-clamp-2 text-sm">
+                        {row.description}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground text-sm italic">Không có mô tả</p>
+                    )}
+                    <AttendanceStatsInline
+                      attended={row.attendedCount ?? 0}
+                      leave={row.leaveCount ?? 0}
+                      notAttended={row.notAttendedCount ?? 0}
+                    />
+                    <div className="text-primary group-hover:text-primary/80 inline-flex items-center gap-1.5 text-sm font-medium">
+                      Xem buổi học
+                      <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
-}
-
-function QuickLink({
-  href,
-  icon: Icon,
-  title,
-  description,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group border-divider hover:border-primary/30 hover:bg-primary/5 flex items-center gap-3 rounded-lg border p-3 transition-colors"
-    >
-      <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
-        <Icon className="size-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-foreground truncate text-sm font-medium">{title}</p>
-        <p className="text-muted-foreground truncate text-xs">{description}</p>
-      </div>
-      <ArrowRight className="text-muted-foreground group-hover:text-primary size-4 transition-colors" />
-    </Link>
   );
 }
