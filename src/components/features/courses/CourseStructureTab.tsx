@@ -25,6 +25,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -87,11 +88,46 @@ const POLL_INTERVAL_MS = 9000;
 const PENDING_STATUSES: BunnyVideoStatus[] = ['UPLOADING', 'QUEUED', 'PROCESSING'];
 
 function isPendingVideo(i: LessonItemTree): boolean {
-  return i.type === 'VIDEO' && PENDING_STATUSES.includes(i.bunnyStatus);
+  return (i.type === 'VIDEO' && PENDING_STATUSES.includes(i.bunnyStatus)) ||
+    i.children.some(isPendingVideo);
 }
 
-function hasPendingVideo(chapters: ChapterTree[]): boolean {
-  return chapters.some((c) => c.lessons.some((l) => l.items.some(isPendingVideo)));
+
+function mergeItemStatus(
+  items: LessonItemTree[],
+  statusMap: Record<number, VideoStatusInfo>,
+): LessonItemTree[] {
+  return items.map((i) => {
+    const s = statusMap[i.id];
+    const merged = s
+      ? { ...i, bunnyStatus: s.bunnyStatus, durationSeconds: s.durationSeconds ?? i.durationSeconds, thumbnailUrl: s.thumbnailUrl ?? i.thumbnailUrl }
+      : i;
+    return { ...merged, children: mergeItemStatus(merged.children, statusMap) };
+  });
+}
+
+// Tìm nhóm sibling (mảng items cùng cha) chứa id — dùng để kéo-thả mục lồng ở bất kỳ cấp nào.
+function findSiblingGroup(
+  items: LessonItemTree[],
+  id: UniqueIdentifier,
+): LessonItemTree[] | null {
+  if (items.some((i) => i.id === id)) return items;
+  for (const i of items) {
+    const found = findSiblingGroup(i.children, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function replaceSiblingGroup(
+  items: LessonItemTree[],
+  group: LessonItemTree[],
+  next: LessonItemTree[],
+): LessonItemTree[] {
+  if (items === group) return next;
+  return items.map((i) =>
+    i.children.length > 0 ? { ...i, children: replaceSiblingGroup(i.children, group, next) } : i,
+  );
 }
 
 function mergeStatus(
@@ -103,17 +139,7 @@ function mergeStatus(
     ...c,
     lessons: c.lessons.map((l) => ({
       ...l,
-      items: l.items.map((i) => {
-        const s = statusMap[i.id];
-        return s
-          ? {
-              ...i,
-              bunnyStatus: s.bunnyStatus,
-              durationSeconds: s.durationSeconds ?? i.durationSeconds,
-              thumbnailUrl: s.thumbnailUrl ?? i.thumbnailUrl,
-            }
-          : i;
-      }),
+      items: mergeItemStatus(l.items, statusMap),
     })),
   }));
 }
@@ -155,9 +181,8 @@ export default function CourseStructureTab({ course }: Props) {
   );
 
   // Auto-poll batch trạng thái video CHỈ khi còn item chưa xử lý xong.
-  // Dep là boolean `shouldPoll` (primitive) — KHÔNG phụ thuộc object displayChapters
-  // để tránh re-subscribe vô hạn mỗi lần setStatusMap tạo object mới.
-  const shouldPoll = useMemo(() => hasPendingVideo(displayChapters), [displayChapters]);
+  // Là primitive (boolean) — tránh re-subscribe vô hạn mỗi lần setStatusMap tạo object mới.
+  const shouldPoll = pendingCount > 0;
   const refreshedOnSettle = useRef(false);
   useEffect(() => {
     if (!shouldPoll) return;
@@ -205,6 +230,7 @@ export default function CourseStructureTab({ course }: Props) {
   const [itemModal, setItemModal] = useState<{
     mode: 'create' | 'edit';
     lessonId: number;
+    parentId?: number;
     data?: LessonItemTree;
   } | null>(null);
 
@@ -280,10 +306,14 @@ export default function CourseStructureTab({ course }: Props) {
     const chapter = chapters.find((c) => c.id === chapterId);
     const lesson = chapter?.lessons.find((l) => l.id === lessonId);
     if (!lesson) return;
-    const oldIndex = lesson.items.findIndex((i) => i.id === active.id);
-    const newIndex = lesson.items.findIndex((i) => i.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    const nextItems = arrayMove(lesson.items, oldIndex, newIndex);
+    // Mục có thể lồng nhau — chỉ cho kéo-thả trong cùng nhóm sibling (cùng cha).
+    const group = findSiblingGroup(lesson.items, active.id);
+    if (!group) return;
+    const oldIndex = group.findIndex((i) => i.id === active.id);
+    const newIndex = group.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return; // over.id ở nhóm khác → bỏ qua
+    const nextGroup = arrayMove(group, oldIndex, newIndex);
+    const nextItems = replaceSiblingGroup(lesson.items, group, nextGroup);
     setChapters((prev) =>
       prev.map((c) =>
         c.id !== chapterId
@@ -295,7 +325,7 @@ export default function CourseStructureTab({ course }: Props) {
       ),
     );
     const payload = {
-      items: nextItems.map((i, idx) => ({ id: i.id, order: idx + 1 })),
+      items: nextGroup.map((i, idx) => ({ id: i.id, order: idx + 1 })),
     };
     startTransition(async () => {
       const res = await reorderLessonItemsAction(lessonId, course.id, payload);
@@ -403,7 +433,7 @@ export default function CourseStructureTab({ course }: Props) {
                           title: lesson.title,
                         })
                       }
-                      onAddItem={(lessonId) => setItemModal({ mode: 'create', lessonId })}
+                      onAddItem={(lessonId, parentId) => setItemModal({ mode: 'create', lessonId, parentId })}
                       onEditItem={(item, lessonId) =>
                         setItemModal({ mode: 'edit', lessonId, data: item })
                       }
@@ -453,6 +483,7 @@ export default function CourseStructureTab({ course }: Props) {
           mode={itemModal.mode}
           courseId={course.id}
           lessonId={itemModal.lessonId}
+          parentId={itemModal.parentId}
           initialData={itemModal.data}
         />
       )}
@@ -542,7 +573,7 @@ interface ChapterRowProps {
   onToggleLesson: (id: number) => void;
   onEditLesson: (lesson: LessonTree) => void;
   onDeleteLesson: (lesson: LessonTree) => void;
-  onAddItem: (lessonId: number) => void;
+  onAddItem: (lessonId: number, parentId?: number) => void;
   onEditItem: (item: LessonItemTree, lessonId: number) => void;
   onDeleteItem: (item: LessonItemTree) => void;
   onLessonDragEnd: (chapterId: number, e: DragEndEvent) => void;
@@ -655,7 +686,7 @@ function ChapterRow({
                       onToggle={() => onToggleLesson(lesson.id)}
                       onEdit={() => onEditLesson(lesson)}
                       onDelete={() => onDeleteLesson(lesson)}
-                      onAddItem={() => onAddItem(lesson.id)}
+                      onAddItem={(lId, parentId) => onAddItem(lId, parentId)}
                       onEditItem={(item) => onEditItem(item, lesson.id)}
                       onDeleteItem={onDeleteItem}
                       onItemDragEnd={onItemDragEnd}
@@ -679,7 +710,7 @@ interface LessonRowProps {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onAddItem: () => void;
+  onAddItem: (lessonId: number, parentId?: number) => void;
   onEditItem: (item: LessonItemTree) => void;
   onDeleteItem: (item: LessonItemTree) => void;
   onItemDragEnd: (lessonId: number, chapterId: number, e: DragEndEvent) => void;
@@ -757,7 +788,7 @@ function LessonRow({
           size="icon-sm"
           title="Thêm mục"
           className="cursor-pointer"
-          onClick={onAddItem}
+          onClick={() => onAddItem(lesson.id)}
         >
           <PlusCircle />
         </Button>
@@ -769,7 +800,7 @@ function LessonRow({
           {lesson.items.length === 0 ? (
             <div className="text-muted-foreground flex items-center justify-between gap-2 px-3 py-2 text-sm italic">
               <span>Chưa có mục nào</span>
-              <Button variant="outline" size="sm" className="cursor-pointer" onClick={onAddItem}>
+              <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => onAddItem(lesson.id)}>
                 <Plus /> Thêm mục
               </Button>
             </div>
@@ -789,8 +820,11 @@ function LessonRow({
                       key={item.id}
                       item={item}
                       courseId={courseId}
-                      onEdit={() => onEditItem(item)}
-                      onDelete={() => onDeleteItem(item)}
+                      lessonId={lesson.id}
+                      depth={0}
+                      onAddChild={(parentId) => onAddItem(lesson.id, parentId)}
+                      onEditItem={onEditItem}
+                      onDeleteItem={onDeleteItem}
                     />
                   ))}
                 </ul>
@@ -806,11 +840,24 @@ function LessonRow({
 interface ItemRowProps {
   item: LessonItemTree;
   courseId: number;
-  onEdit: () => void;
-  onDelete: () => void;
+  lessonId: number;
+  depth: number;
+  onAddChild: (parentId: number) => void;
+  onEditItem: (item: LessonItemTree) => void;
+  onDeleteItem: (item: LessonItemTree) => void;
 }
 
-function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
+const MAX_ITEM_DEPTH = 4;
+
+function ItemRow({
+  item,
+  courseId,
+  lessonId,
+  depth,
+  onAddChild,
+  onEditItem,
+  onDeleteItem,
+}: ItemRowProps) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
   });
@@ -855,6 +902,7 @@ function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
   }
 
   return (
+    <>
     <li
       ref={setNodeRef}
       style={style}
@@ -923,7 +971,41 @@ function ItemRow({ item, courseId, onEdit, onDelete }: ItemRowProps) {
           </Button>
         </>
       )}
-      <RowActions onEdit={onEdit} onDelete={onDelete} size="xs" />
+      {depth < MAX_ITEM_DEPTH && (
+        <Button
+          type="button"
+          size="xs"
+          variant="ghost"
+          className="shrink-0 cursor-pointer"
+          title="Thêm mục con"
+          onClick={() => onAddChild(item.id)}
+        >
+          <PlusCircle className="size-3" />
+        </Button>
+      )}
+      <RowActions onEdit={() => onEditItem(item)} onDelete={() => onDeleteItem(item)} size="xs" />
     </li>
+    {item.children.length > 0 && (
+      <SortableContext
+        items={item.children.map((c) => c.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <ul className="ml-6 mt-1 space-y-1 border-l-2 border-slate-200 pl-2">
+          {item.children.map((child) => (
+            <ItemRow
+              key={child.id}
+              item={child}
+              courseId={courseId}
+              lessonId={lessonId}
+              depth={depth + 1}
+              onAddChild={onAddChild}
+              onEditItem={onEditItem}
+              onDeleteItem={onDeleteItem}
+            />
+          ))}
+        </ul>
+      </SortableContext>
+    )}
+    </>
   );
 }

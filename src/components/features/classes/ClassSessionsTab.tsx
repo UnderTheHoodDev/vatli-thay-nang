@@ -27,12 +27,14 @@ import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { handleActionResult } from '@/lib/actions';
 import { deleteClassSessionAction } from '@/actions/v1/class-sessions/delete-class-session';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
+import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
+import ClassAttendanceExportDialog from '@/components/features/classes/ClassAttendanceExportDialog';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import { formatDateTime } from '@/lib/format';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
 
-const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-32', 'w-32', 'w-20', 'w-24', 'w-16'];
+const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-32', 'w-32', 'w-20', 'w-24', 'w-16', 'w-40'];
 
 interface Props {
   classId: number;
@@ -92,6 +94,7 @@ export default function ClassSessionsTab({
                 ))}
               </SelectContent>
             </Select>
+            <ClassAttendanceExportDialog classId={classId} />
             <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
               Tạo buổi học
             </Button>
@@ -107,7 +110,8 @@ export default function ClassSessionsTab({
                 <TableHead>Kết thúc</TableHead>
                 <TableHead>Link meeting</TableHead>
                 <TableHead className="w-32">Trạng thái</TableHead>
-                <TableHead className="w-28 text-right">Hành động</TableHead>
+                <TableHead className="w-24 text-center">Điểm danh</TableHead>
+                <TableHead className="w-64 text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,7 +119,7 @@ export default function ClassSessionsTab({
                 <TableSkeleton columnWidths={SKELETON_COLUMNS} />
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground text-center">
+                  <TableCell colSpan={8} className="text-muted-foreground text-center">
                     Không có buổi học nào
                   </TableCell>
                 </TableRow>
@@ -156,28 +160,38 @@ export default function ClassSessionsTab({
                       <TableCell>
                         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                       </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                      </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Sửa"
-                            className="cursor-pointer"
-                            onClick={() => setEditingSession(row)}
-                          >
-                            <Pencil />
-                          </Button>
-                          {effectiveStatus !== 'IN_PROGRESS' && (
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <AttendanceToggle
+                            classSessionId={row.id}
+                            activeAttendanceSession={row.activeAttendanceSession ?? null}
+                            onChanged={() => router.refresh()}
+                          />
+                          <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              title="Xoá"
-                              className="text-destructive hover:text-destructive cursor-pointer"
-                              onClick={() => handleDelete(row.id)}
+                              title="Sửa"
+                              className="cursor-pointer"
+                              onClick={() => setEditingSession(row)}
                             >
-                              <Trash2 />
+                              <Pencil />
                             </Button>
-                          )}
+                            {effectiveStatus !== 'IN_PROGRESS' && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title="Xoá"
+                                className="text-destructive hover:text-destructive cursor-pointer"
+                                onClick={() => handleDelete(row.id)}
+                              >
+                                <Trash2 />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>

@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowLeft, CalendarDays, FileX2 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, FileX2, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AttendanceStatsInline from '@/components/features/classes/AttendanceStatsInline';
 import {
   Select,
   SelectContent,
@@ -33,7 +34,7 @@ import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
 import type { ClassDetail } from '@/types/class-management';
 
-const SKELETON_COLUMNS = ['w-48', 'w-32', 'w-32', 'w-20'];
+const SKELETON_COLUMNS = ['w-48', 'w-32', 'w-32', 'w-20', 'w-28'];
 
 interface Props {
   classRow: ClassDetail;
@@ -89,7 +90,7 @@ export default function StudentClassDetailClient({
           size="sm"
           className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
         >
-          <Link href="/dashboard/classes">
+          <Link href="/dashboard">
             <ArrowLeft /> Lớp học của tôi
           </Link>
         </Button>
@@ -101,10 +102,21 @@ export default function StudentClassDetailClient({
           <Badge variant={classRow.status === 'ACTIVE' ? 'success' : 'secondary'}>
             {classRow.status === 'ACTIVE' ? 'Đang học' : 'Đã đóng'}
           </Badge>
+          {classRow.hasActiveAttendance && (
+            <Badge variant="success" className="gap-1">
+              <Radio className="size-3 animate-pulse" /> Đang mở điểm danh
+            </Badge>
+          )}
         </div>
         {classRow.description && (
           <p className="text-muted-foreground text-sm">{classRow.description}</p>
         )}
+        <AttendanceStatsInline
+          attended={classRow.attendedCount ?? 0}
+          leave={classRow.leaveCount ?? 0}
+          notAttended={classRow.notAttendedCount ?? 0}
+          size="md"
+        />
       </div>
 
       <Card className="gap-0">
@@ -146,48 +158,63 @@ export default function StudentClassDetailClient({
               description="Lớp này chưa có buổi học nào được lên lịch."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="min-w-[200px]">Tiêu đề</TableHead>
-                    <TableHead className="min-w-[150px]">Bắt đầu</TableHead>
-                    <TableHead className="min-w-[150px]">Kết thúc</TableHead>
-                    <TableHead className="w-32">Trạng thái</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isPending ? (
-                    <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                  ) : (
-                    sessions.map((s) => {
-                      const statusInfo =
-                        CLASS_SESSION_STATUS_MAP[getEffectiveStatus(s.startTime, s.endTime)];
-                      return (
-                        <TableRow
-                          key={s.id}
-                          onClick={() =>
-                            router.push(`/dashboard/classes/${classRow.id}/class-sessions/${s.id}`)
-                          }
-                          className="hover:bg-muted cursor-pointer transition-colors"
-                        >
-                          <TableCell className="text-foreground font-medium">{s.title}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                            {formatDateTime(s.startTime)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                            {formatDateTime(s.endTime)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="min-w-50">Tiêu đề</TableHead>
+                  <TableHead className="min-w-37.5">Bắt đầu</TableHead>
+                  <TableHead className="min-w-37.5">Kết thúc</TableHead>
+                  <TableHead className="w-32">Trạng thái</TableHead>
+                  <TableHead className="w-36">Điểm danh</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isPending ? (
+                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+                ) : (
+                  sessions.map((s) => {
+                    const statusInfo =
+                      CLASS_SESSION_STATUS_MAP[getEffectiveStatus(s.startTime, s.endTime)];
+                    return (
+                      <TableRow
+                        key={s.id}
+                        onClick={() =>
+                          router.push(`/dashboard/classes/${classRow.id}/class-sessions/${s.id}`)
+                        }
+                        className="hover:bg-muted cursor-pointer transition-colors"
+                      >
+                        <TableCell className="text-foreground font-medium">{s.title}</TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                          {formatDateTime(s.startTime)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                          {formatDateTime(s.endTime)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            {s.hasActiveAttendance && (
+                              <Radio className="text-primary size-3.5 shrink-0 animate-pulse" />
+                            )}
+                            {s.myStatus === 'ATTENDED' ? (
+                              <Badge variant="success">Đã điểm danh</Badge>
+                            ) : s.myStatus === 'ON_LEAVE' ? (
+                              <Badge variant="warning">Xin nghỉ</Badge>
+                            ) : s.myStatus === 'NOT_ATTENDED' ? (
+                              <Badge variant="destructive">Chưa điểm danh</Badge>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
         {totalPages > 1 && (

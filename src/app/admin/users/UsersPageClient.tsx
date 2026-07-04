@@ -2,7 +2,7 @@
 
 import { useCallback, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Users, UserCheck, UserX, ShieldCheck } from 'lucide-react';
+import { Users, UserCheck, UserX, ShieldCheck, ShieldOff } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
 import DataPagination from '@/components/app/DataPagination';
-import UserSearchForm, { type UserSearchValues } from '@/components/features/users/UserSearchForm';
+import UserSearchForm, { type UserSearchValues, type ClassOption } from '@/components/features/users/UserSearchForm';
 import UsersTable from '@/components/features/users/UsersTable';
 import CreateUserDialog from '@/components/features/users/CreateUserDialog';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -32,6 +32,7 @@ interface Props {
   meta: ListMeta;
   stats: UsersListStats;
   provinces: Province[];
+  classes: ClassOption[];
 }
 
 const SEARCH_KEYS: (keyof UserSearchValues)[] = [
@@ -43,6 +44,7 @@ const SEARCH_KEYS: (keyof UserSearchValues)[] = [
   'parentPhonenumber',
   'role',
   'status',
+  'classId',
 ];
 
 function buildUrlParams(state: UrlState): URLSearchParams {
@@ -56,7 +58,7 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-export default function UsersPageClient({ urlState, rows, meta, stats, provinces }: Props) {
+export default function UsersPageClient({ urlState, rows, meta, stats, provinces, classes }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -85,10 +87,11 @@ export default function UsersPageClient({ urlState, rows, meta, stats, provinces
         description="Thêm, kích hoạt và quản lý tài khoản học sinh, quản trị viên."
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <StatsCard label="Tổng người dùng" value={stats.total} icon={Users} tone="primary" />
         <StatsCard label="Đã kích hoạt" value={stats.activated} icon={UserCheck} tone="success" />
         <StatsCard label="Chờ kích hoạt" value={stats.unactivated} icon={UserX} tone="warning" />
+        <StatsCard label="Vô hiệu hóa" value={stats.disabled} icon={ShieldOff} tone="muted" />
         <StatsCard label="Quản trị viên" value={stats.admins} icon={ShieldCheck} tone="muted" />
       </div>
 
@@ -99,6 +102,7 @@ export default function UsersPageClient({ urlState, rows, meta, stats, provinces
         <CardContent className="pb-6">
           <UserSearchForm
             provinces={provinces}
+            classes={classes}
             initial={urlState}
             onSearch={(v) => updateUrl({ ...v, page: 1 })}
           />

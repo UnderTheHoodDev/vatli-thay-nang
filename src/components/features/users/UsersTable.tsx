@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { Mail, Power, Users as UsersIcon } from 'lucide-react';
+import { Mail, Power, ShieldOff, Users as UsersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { handleActionResult } from '@/lib/actions';
@@ -28,6 +28,7 @@ const SKELETON_COLUMNS = [
   'w-28',
   'w-24',
   'w-14',
+  'w-28',
   'w-20',
   'w-32',
 ];
@@ -53,11 +54,9 @@ function roleBadge(r: Role) {
 }
 
 function statusBadge(s: UserStatus) {
-  return s === 'ACTIVATED' ? (
-    <Badge variant="success">Kích hoạt</Badge>
-  ) : (
-    <Badge variant="destructive">Chưa kích hoạt</Badge>
-  );
+  if (s === 'ACTIVATED') return <Badge variant="success">Kích hoạt</Badge>;
+  if (s === 'DISABLED') return <Badge variant="destructive">Vô hiệu hóa</Badge>;
+  return <Badge variant="secondary">Chưa kích hoạt</Badge>;
 }
 
 interface Props {
@@ -69,11 +68,20 @@ export default function UsersTable({ rows, loading }: Props) {
   const [pending, startTransition] = useTransition();
 
   function handleToggleStatus(id: number, current: UserStatus) {
-    const next: UserStatus = current === 'ACTIVATED' ? 'UNACTIVATED' : 'ACTIVATED';
+    let next: UserStatus;
+    let successMessage: string;
+    if (current === 'ACTIVATED') {
+      next = 'DISABLED';
+      successMessage = 'Đã vô hiệu hóa tài khoản';
+    } else if (current === 'DISABLED') {
+      next = 'ACTIVATED';
+      successMessage = 'Đã kích hoạt lại tài khoản';
+    } else {
+      next = 'ACTIVATED';
+      successMessage = 'Đã gửi mail kích hoạt';
+    }
     startTransition(async () => {
       const res = await setUserStatusAction(id, next);
-      const successMessage =
-        next === 'ACTIVATED' ? 'Gửi mail kích hoạt thành công' : 'Vô hiệu hoá tài khoản thành công';
       handleActionResult(res.errors, undefined, successMessage);
     });
   }
@@ -93,60 +101,85 @@ export default function UsersTable({ rows, loading }: Props) {
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className="w-14">ID</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Họ và tên</TableHead>
-          <TableHead>Giới tính</TableHead>
-          <TableHead>Ngày sinh</TableHead>
-          <TableHead>Tỉnh</TableHead>
-          <TableHead>Trường</TableHead>
-          <TableHead>SĐT phụ huynh</TableHead>
-          <TableHead>Vai trò</TableHead>
-          <TableHead>Trạng thái</TableHead>
-          <TableHead className="text-right">Hành động</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
-          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-        ) : (
-          rows.map((u) => {
-            const activated = u.status === 'ACTIVATED';
-            return (
+            <TableHead className="min-w-45">Email</TableHead>
+            <TableHead className="min-w-35">Họ và tên</TableHead>
+            <TableHead>Giới tính</TableHead>
+            <TableHead className="min-w-22.5">Ngày sinh</TableHead>
+            <TableHead>Tỉnh</TableHead>
+            <TableHead className="min-w-30">Trường</TableHead>
+            <TableHead>SĐT phụ huynh</TableHead>
+            <TableHead>Vai trò</TableHead>
+            <TableHead className="min-w-30">Lớp</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+          ) : (
+            rows.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="text-muted-foreground">{u.id}</TableCell>
                 <TableCell className="text-foreground font-medium">{u.email}</TableCell>
                 <TableCell>{u.fullName ?? '—'}</TableCell>
                 <TableCell>{genderBadge(u.gender)}</TableCell>
-                <TableCell>{formatBirthday(u.birthday)}</TableCell>
+                <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
                 <TableCell>{u.province ?? '—'}</TableCell>
                 <TableCell>{u.schoolName ?? '—'}</TableCell>
                 <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
                 <TableCell>{roleBadge(u.role)}</TableCell>
+                <TableCell>
+                  {u.classes && u.classes.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {u.classes.map((c) => (
+                        <Badge key={c.id} variant="outline" className="font-mono text-xs">
+                          {c.code}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell>{statusBadge(u.status)}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant={activated ? 'outline' : 'default'}
-                    className="cursor-pointer"
-                    disabled={pending}
-                    onClick={() => handleToggleStatus(u.id, u.status)}
-                  >
-                    {activated ? (
-                      <>
-                        <Power /> Vô hiệu hoá
-                      </>
-                    ) : (
-                      <>
-                        <Mail /> Gửi mail kích hoạt
-                      </>
-                    )}
-                  </Button>
+                  {u.status === 'ACTIVATED' ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="cursor-pointer"
+                      disabled={pending}
+                      onClick={() => handleToggleStatus(u.id, u.status)}
+                    >
+                      <ShieldOff /> Vô hiệu hóa
+                    </Button>
+                  ) : u.status === 'DISABLED' ? (
+                    <Button
+                      size="sm"
+                      variant="success"
+                      className="cursor-pointer"
+                      disabled={pending}
+                      onClick={() => handleToggleStatus(u.id, u.status)}
+                    >
+                      <Power /> Kích hoạt lại
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="cursor-pointer"
+                      disabled={pending}
+                      onClick={() => handleToggleStatus(u.id, u.status)}
+                    >
+                      <Mail /> Gửi mail kích hoạt
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
-            );
-          })
-        )}
-      </TableBody>
-    </Table>
+            ))
+          )}
+        </TableBody>
+      </Table>
   );
 }

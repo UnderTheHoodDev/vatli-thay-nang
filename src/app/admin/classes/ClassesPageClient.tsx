@@ -50,9 +50,11 @@ import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
 import { handleActionResult } from '@/lib/actions';
 import { deleteClassAction } from '@/actions/v1/classes/delete-class';
 import ClassFormModal from '@/components/features/classes/ClassFormModal';
+import AttendanceExportCard from '@/components/features/classes/AttendanceExportCard';
 import type { ListMeta } from '@/types/auth';
 import type { ClassRow } from '@/types/class-management';
 import type { ClassesListStats } from '@/types/actions/class-management';
@@ -61,6 +63,8 @@ export interface UrlState {
   name: string;
   code: string;
   status: string;
+  createdFrom: string;
+  createdTo: string;
   page: number;
   pageSize: number;
 }
@@ -71,6 +75,7 @@ interface Props {
   meta: ListMeta;
   stats: ClassesListStats;
   errors: string[];
+  allClasses: ClassRow[];
 }
 
 const CLASS_STATUS_OPTIONS = [
@@ -83,14 +88,23 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   if (state.name) sp.set('name', state.name);
   if (state.code) sp.set('code', state.code);
   if (state.status && state.status !== ALL_VALUE) sp.set('status', state.status);
+  if (state.createdFrom) sp.set('createdFrom', state.createdFrom);
+  if (state.createdTo) sp.set('createdTo', state.createdTo);
   if (state.page !== 1) sp.set('page', String(state.page));
   if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
   return sp;
 }
 
-const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-28', 'w-20'];
+const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-24', 'w-28', 'w-20'];
 
-export default function ClassesPageClient({ urlState, rows, meta, stats, errors }: Props) {
+export default function ClassesPageClient({
+  urlState,
+  rows,
+  meta,
+  stats,
+  errors,
+  allClasses,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
@@ -108,6 +122,8 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
   const [searchName, setSearchName] = useState(urlState.name);
   const [searchCode, setSearchCode] = useState(urlState.code);
   const [searchStatus, setSearchStatus] = useState(urlState.status);
+  const [searchCreatedFrom, setSearchCreatedFrom] = useState(urlState.createdFrom);
+  const [searchCreatedTo, setSearchCreatedTo] = useState(urlState.createdTo);
 
   const updateUrl = useCallback(
     (next: Partial<UrlState>) => {
@@ -121,14 +137,16 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
   );
 
   const handleSearch = () => {
-    updateUrl({ name: searchName, code: searchCode, status: searchStatus, page: 1 });
+    updateUrl({ name: searchName, code: searchCode, status: searchStatus, createdFrom: searchCreatedFrom, createdTo: searchCreatedTo, page: 1 });
   };
 
   const handleResetFilters = () => {
     setSearchName('');
     setSearchCode('');
     setSearchStatus(ALL_VALUE);
-    updateUrl({ name: '', code: '', status: ALL_VALUE, page: 1 });
+    setSearchCreatedFrom('');
+    setSearchCreatedTo('');
+    updateUrl({ name: '', code: '', status: ALL_VALUE, createdFrom: '', createdTo: '', page: 1 });
   };
 
   const confirmDelete = async () => {
@@ -168,12 +186,14 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
         />
       </div>
 
+      <AttendanceExportCard classes={allClasses} />
+
       <Card>
         <CardHeader>
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-1.5">
               <Label htmlFor="search-name">Tên lớp</Label>
               <Input
@@ -210,7 +230,25 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-3 lg:col-span-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="created-from">Ngày tạo từ</Label>
+              <Input
+                id="created-from"
+                type="date"
+                value={searchCreatedFrom}
+                onChange={(e) => setSearchCreatedFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="created-to">Ngày tạo đến</Label>
+              <Input
+                id="created-to"
+                type="date"
+                value={searchCreatedTo}
+                onChange={(e) => setSearchCreatedTo(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row md:col-span-3 lg:col-span-4">
               <Button
                 type="button"
                 variant="outline"
@@ -279,6 +317,8 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
                   <TableHead>Tên lớp</TableHead>
                   <TableHead>Mã lớp</TableHead>
                   <TableHead className="w-32 text-center">Số học sinh</TableHead>
+                  <TableHead className="w-28 text-center">Số buổi học</TableHead>
+                  <TableHead className="w-32">Ngày tạo</TableHead>
                   <TableHead className="w-36">Trạng thái</TableHead>
                   <TableHead className="w-32 text-right">Hành động</TableHead>
                 </TableRow>
@@ -302,6 +342,12 @@ export default function ClassesPageClient({ urlState, rows, meta, stats, errors 
                       </TableCell>
                       <TableCell className="text-center font-medium">
                         {row.studentCount ?? 0}
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {row.sessionCount ?? 0}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                        {row.createdAt ? formatDate(row.createdAt) : '—'}
                       </TableCell>
                       <TableCell>
                         <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>

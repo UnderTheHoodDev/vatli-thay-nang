@@ -51,6 +51,7 @@ export interface LessonItemTree {
   title: string;
   type: LessonItemType;
   order: number;
+  parentId: number | null;
   durationSeconds: number | null;
   fileName: string | null;
   fileSize: number | null;
@@ -63,6 +64,7 @@ export interface LessonItemTree {
   thumbnailUrl: string | null;
   fileUrl: string | null;
   fileStorageKey: string | null;
+  children: LessonItemTree[];
 }
 
 export interface CourseStatsRow {

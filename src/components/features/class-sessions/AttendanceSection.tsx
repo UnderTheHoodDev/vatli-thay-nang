@@ -40,12 +40,12 @@ export default function AttendanceSection({
         </div>
         <div className="flex items-center gap-2">
           {hasActive ? (
-            <span className="text-purple inline-flex items-center gap-1.5 text-sm font-medium">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
               <Radio className="size-4 animate-pulse" />
               Đang có phiên điểm danh
             </span>
           ) : (
-            <Button onClick={() => setOpenDialog(true)} className="cursor-pointer">
+            <Button variant="success" onClick={() => setOpenDialog(true)} className="cursor-pointer">
               <Power className="size-4" />
               Bật điểm danh
             </Button>

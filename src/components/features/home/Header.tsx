@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { ASSETS } from '@/constants/assets';
 import { MENU_ITEMS } from '@/constants/menu';
 
-export default function Header() {
+interface HeaderProps {
+  role?: 'ADMIN' | 'STUDENT' | null;
+}
+
+export default function Header({ role }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -70,30 +75,57 @@ export default function Header() {
               menuOpen ? 'max-md:flex' : 'max-md:hidden'
             }`}
           >
-            {MENU_ITEMS.map((item, i) => (
+            {MENU_ITEMS.filter((item) => !item.isButton).map((item, i) => (
               <motion.li
                 key={item.href}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 + i * 0.07, ease: 'easeOut' }}
               >
-                {item.isButton ? (
-                  <a
-                    href={item.href}
-                    className="bg-purple font-paytone hover:bg-purple-dark inline-block rounded-full px-7 py-3 text-base text-white no-underline transition-all duration-200 hover:-translate-y-0.5"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <a
-                    href={item.href}
-                    className="font-paytone hover:text-pink text-base font-medium text-[#503c39] no-underline transition-colors duration-200"
-                  >
-                    {item.label}
-                  </a>
-                )}
+                <a
+                  href={item.href}
+                  className="font-paytone hover:text-pink text-base font-medium text-[#503c39] no-underline transition-colors duration-200"
+                >
+                  {item.label}
+                </a>
               </motion.li>
             ))}
+            <motion.li
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 + MENU_ITEMS.length * 0.07, ease: 'easeOut' }}
+            >
+              {role === 'ADMIN' ? (
+                <Link
+                  href="/admin/accounts"
+                  className="bg-purple font-paytone hover:bg-purple-dark inline-block rounded-full px-7 py-3 text-base text-white no-underline transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  Trang quản trị
+                </Link>
+              ) : role === 'STUDENT' ? (
+                <Link
+                  href="/dashboard"
+                  className="bg-purple font-paytone hover:bg-purple-dark inline-block rounded-full px-7 py-3 text-base text-white no-underline transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  Vào học
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/auth/login"
+                    className="border-purple text-purple font-paytone hover:bg-purple hover:text-white inline-block rounded-full border-2 px-5 py-2.5 text-base no-underline transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <a
+                    href="#contact"
+                    className="bg-purple font-paytone hover:bg-purple-dark inline-block rounded-full px-7 py-3 text-base text-white no-underline transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    ĐĂNG KÍ
+                  </a>
+                </div>
+              )}
+            </motion.li>
           </ul>
 
           <button

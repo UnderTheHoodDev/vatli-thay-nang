@@ -1,6 +1,6 @@
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type Role = 'ADMIN' | 'STUDENT';
-export type UserStatus = 'ACTIVATED' | 'UNACTIVATED';
+export type UserStatus = 'ACTIVATED' | 'UNACTIVATED' | 'DISABLED';
 
 export interface UserRow {
   id: number;
@@ -15,6 +15,7 @@ export interface UserRow {
   facebookLink: string | null;
   role: Role;
   status: UserStatus;
+  classes: { id: number; code: string }[];
 }
 
 export interface Province {

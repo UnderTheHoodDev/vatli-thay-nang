@@ -142,6 +142,7 @@ export interface IUpdateLessonPayload {
 export interface ICreateLessonItemPayload {
   title: string;
   type: LessonItemType;
+  parentId?: number;
   videoUrl?: string;
   videoStorageKey?: string;
   bunnyVideoId?: string;

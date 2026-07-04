@@ -29,6 +29,7 @@ import PageHeader from '@/components/app/PageHeader';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import type { ListMeta } from '@/types/auth';
@@ -69,7 +70,7 @@ function formatDate(iso: string) {
   });
 }
 
-const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28'];
+const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28', 'w-24', 'w-32'];
 
 export default function ClassSessionsAllPageClient({ urlState, rows, meta, errors }: Props) {
   const router = useRouter();
@@ -128,7 +129,7 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-1.5">
               <Label htmlFor="search-code">Mã lớp</Label>
               <Input
@@ -157,7 +158,7 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                 onChange={(e) => setSearchEndDate(e.target.value)}
               />
             </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row md:col-span-3 lg:col-span-4">
+            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row md:col-span-3 lg:col-span-4">
               <Button
                 type="button"
                 variant="outline"
@@ -220,6 +221,8 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                   <TableHead className="w-40">Bắt đầu</TableHead>
                   <TableHead className="w-40">Kết thúc</TableHead>
                   <TableHead className="w-32">Trạng thái</TableHead>
+                  <TableHead className="w-24 text-center">Điểm danh</TableHead>
+                  <TableHead className="w-48">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -260,6 +263,16 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                         </TableCell>
                         <TableCell>
                           <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <AttendanceToggle
+                            classSessionId={row.id}
+                            activeAttendanceSession={row.activeAttendanceSession ?? null}
+                            onChanged={() => router.refresh()}
+                          />
                         </TableCell>
                       </TableRow>
                     );
