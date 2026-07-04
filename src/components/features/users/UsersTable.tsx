@@ -101,85 +101,85 @@ export default function UsersTable({ rows, loading }: Props) {
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className="w-14">ID</TableHead>
-            <TableHead className="min-w-45">Email</TableHead>
-            <TableHead className="min-w-35">Họ và tên</TableHead>
-            <TableHead>Giới tính</TableHead>
-            <TableHead className="min-w-22.5">Ngày sinh</TableHead>
-            <TableHead>Tỉnh</TableHead>
-            <TableHead className="min-w-30">Trường</TableHead>
-            <TableHead>SĐT phụ huynh</TableHead>
-            <TableHead>Vai trò</TableHead>
-            <TableHead className="min-w-30">Lớp</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-          ) : (
-            rows.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell className="text-muted-foreground">{u.id}</TableCell>
-                <TableCell className="text-foreground font-medium">{u.email}</TableCell>
-                <TableCell>{u.fullName ?? '—'}</TableCell>
-                <TableCell>{genderBadge(u.gender)}</TableCell>
-                <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
-                <TableCell>{u.province ?? '—'}</TableCell>
-                <TableCell>{u.schoolName ?? '—'}</TableCell>
-                <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
-                <TableCell>{roleBadge(u.role)}</TableCell>
-                <TableCell>
-                  {u.classes && u.classes.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {u.classes.map((c) => (
-                        <Badge key={c.id} variant="outline" className="font-mono text-xs">
-                          {c.code}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>{statusBadge(u.status)}</TableCell>
-                <TableCell className="text-right">
-                  {u.status === 'ACTIVATED' ? (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="cursor-pointer"
-                      disabled={pending}
-                      onClick={() => handleToggleStatus(u.id, u.status)}
-                    >
-                      <ShieldOff /> Vô hiệu hóa
-                    </Button>
-                  ) : u.status === 'DISABLED' ? (
-                    <Button
-                      size="sm"
-                      variant="success"
-                      className="cursor-pointer"
-                      disabled={pending}
-                      onClick={() => handleToggleStatus(u.id, u.status)}
-                    >
-                      <Power /> Kích hoạt lại
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="cursor-pointer"
-                      disabled={pending}
-                      onClick={() => handleToggleStatus(u.id, u.status)}
-                    >
-                      <Mail /> Gửi mail kích hoạt
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+          <TableHead className="min-w-45">Email</TableHead>
+          <TableHead className="min-w-35">Họ và tên</TableHead>
+          <TableHead>Giới tính</TableHead>
+          <TableHead className="min-w-22.5">Ngày sinh</TableHead>
+          <TableHead>Tỉnh</TableHead>
+          <TableHead className="min-w-30">Trường</TableHead>
+          <TableHead>SĐT phụ huynh</TableHead>
+          <TableHead>Vai trò</TableHead>
+          <TableHead className="min-w-30">Lớp</TableHead>
+          <TableHead>Trạng thái</TableHead>
+          <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {loading ? (
+          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+        ) : (
+          rows.map((u) => (
+            <TableRow key={u.id}>
+              <TableCell className="text-muted-foreground">{u.id}</TableCell>
+              <TableCell className="text-foreground font-medium">{u.email}</TableCell>
+              <TableCell>{u.fullName ?? '—'}</TableCell>
+              <TableCell>{genderBadge(u.gender)}</TableCell>
+              <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
+              <TableCell>{u.province ?? '—'}</TableCell>
+              <TableCell>{u.schoolName ?? '—'}</TableCell>
+              <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
+              <TableCell>{roleBadge(u.role)}</TableCell>
+              <TableCell>
+                {u.classes && u.classes.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {u.classes.map((c) => (
+                      <Badge key={c.id} variant="outline" className="font-mono text-xs">
+                        {c.code}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell>{statusBadge(u.status)}</TableCell>
+              <TableCell className="text-right">
+                {u.status === 'ACTIVATED' ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="cursor-pointer"
+                    disabled={pending}
+                    onClick={() => handleToggleStatus(u.id, u.status)}
+                  >
+                    <ShieldOff /> Vô hiệu hóa
+                  </Button>
+                ) : u.status === 'DISABLED' ? (
+                  <Button
+                    size="sm"
+                    variant="success"
+                    className="cursor-pointer"
+                    disabled={pending}
+                    onClick={() => handleToggleStatus(u.id, u.status)}
+                  >
+                    <Power /> Kích hoạt lại
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="cursor-pointer"
+                    disabled={pending}
+                    onClick={() => handleToggleStatus(u.id, u.status)}
+                  >
+                    <Mail /> Gửi mail kích hoạt
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }

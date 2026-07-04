@@ -15,11 +15,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { handleActionResult } from '@/lib/actions';
 import { formatRemaining } from '@/lib/format';
+import { getEffectiveStatus } from '@/lib/class-sessions';
 import { closeAttendanceAction } from '@/actions/v1/attendance/close-attendance';
 import OpenAttendanceDialog from './OpenAttendanceDialog';
 
 interface Props {
   classSessionId: number;
+  startTime: string;
+  endTime: string;
   activeAttendanceSession: { id: number; closedAt: string } | null;
   /** Gọi lại khi trạng thái điểm danh thay đổi (bật/tắt/hết giờ) — thường là router.refresh(). */
   onChanged: () => void;
@@ -27,6 +30,8 @@ interface Props {
 
 export default function AttendanceToggle({
   classSessionId,
+  startTime,
+  endTime,
   activeAttendanceSession,
   onChanged,
 }: Props) {
@@ -77,11 +82,15 @@ export default function AttendanceToggle({
   };
 
   if (!activeAttendanceSession) {
+    const isInProgress = getEffectiveStatus(startTime, endTime) === 'IN_PROGRESS';
+    if (!isInProgress) {
+      return <span className="text-muted-foreground">—</span>;
+    }
     return (
       <>
         <Button
           type="button"
-          variant="outline"
+          variant="success"
           size="sm"
           className="cursor-pointer"
           onClick={() => setOpenDialogOpen(true)}
@@ -101,8 +110,7 @@ export default function AttendanceToggle({
     );
   }
 
-  const remainingMs =
-    now !== null ? new Date(activeAttendanceSession.closedAt).getTime() - now : 0;
+  const remainingMs = now !== null ? new Date(activeAttendanceSession.closedAt).getTime() - now : 0;
 
   return (
     <>

@@ -9,10 +9,13 @@ import EmptyState from '@/components/app/EmptyState';
 import OpenAttendanceDialog from '@/components/features/class-sessions/OpenAttendanceDialog';
 import AttendanceSessionsTimeline from '@/components/features/class-sessions/AttendanceSessionsTimeline';
 import AttendanceSummaryTable from '@/components/features/class-sessions/AttendanceSummaryTable';
+import { getEffectiveStatus } from '@/lib/class-sessions';
 import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
 
 interface Props {
   classSessionId: number;
+  startTime: string;
+  endTime: string;
   activeAttendanceSession: { id: number; closedAt: string } | null;
   attendanceSessions: AttendanceSessionListRow[];
   summary: AttendanceSummary | null;
@@ -20,6 +23,8 @@ interface Props {
 
 export default function AttendanceSection({
   classSessionId,
+  startTime,
+  endTime,
   activeAttendanceSession,
   attendanceSessions,
   summary,
@@ -28,6 +33,7 @@ export default function AttendanceSection({
   const [openDialog, setOpenDialog] = useState(false);
 
   const hasActive = !!activeAttendanceSession;
+  const isInProgress = getEffectiveStatus(startTime, endTime) === 'IN_PROGRESS';
 
   return (
     <Card>
@@ -44,11 +50,19 @@ export default function AttendanceSection({
               <Radio className="size-4 animate-pulse" />
               Đang có phiên điểm danh
             </span>
-          ) : (
-            <Button variant="success" onClick={() => setOpenDialog(true)} className="cursor-pointer">
+          ) : isInProgress ? (
+            <Button
+              variant="success"
+              onClick={() => setOpenDialog(true)}
+              className="cursor-pointer"
+            >
               <Power className="size-4" />
               Bật điểm danh
             </Button>
+          ) : (
+            <span className="text-muted-foreground text-sm">
+              Chỉ có thể bật điểm danh khi buổi học đang diễn ra
+            </span>
           )}
         </div>
       </CardHeader>

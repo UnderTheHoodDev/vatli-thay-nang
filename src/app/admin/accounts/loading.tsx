@@ -1,9 +1,29 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 // 12 cột khớp UsersTable: ID email fullName gender dob province school phone role class status action
-const COLS = ['w-8', 'w-48', 'w-32', 'w-12', 'w-20', 'w-20', 'w-28', 'w-24', 'w-14', 'w-28', 'w-20', 'w-32'];
+const COLS = [
+  'w-8',
+  'w-48',
+  'w-32',
+  'w-12',
+  'w-20',
+  'w-20',
+  'w-28',
+  'w-24',
+  'w-14',
+  'w-28',
+  'w-20',
+  'w-32',
+];
 
 export default function AccountsLoading() {
   return (

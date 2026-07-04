@@ -25,7 +25,8 @@ import { handleActionResult, handleActionErrors } from '@/lib/actions';
 import { createLessonItemAction } from '@/actions/v1/lesson-items/create-lesson-item';
 import { updateLessonItemAction } from '@/actions/v1/lesson-items/update-lesson-item';
 import { getBunnyTusUploadAction } from '@/actions/v1/bunny/get-tus-upload';
-import LessonContentUploader, { type DocumentValue } from './LessonContentUploader';
+import DocumentUploader, { type DocumentValue } from './DocumentUploader';
+import VideoUploader from './VideoUploader';
 import { useUploadManager } from './UploadManagerProvider';
 import type { LessonItemTree, LessonItemType } from '@/types/course-management';
 
@@ -35,7 +36,6 @@ interface Props {
   mode: 'create' | 'edit';
   courseId: number;
   lessonId: number;
-  parentId?: number;
   initialData?: LessonItemTree;
 }
 
@@ -45,31 +45,24 @@ export default function LessonItemFormModal({
   mode,
   courseId,
   lessonId,
-  parentId,
   initialData,
 }: Props) {
   const router = useRouter();
   const { enqueue } = useUploadManager();
   const [title, setTitle] = useState('');
+  const [type, setType] = useState<LessonItemType>('VIDEO');
   const [document, setDocument] = useState<DocumentValue | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const hasExistingVideo = mode === 'edit' && !!initialData?.bunnyVideoId;
-  // Edit mode: loại mục không đổi được (payload update không có field `type`).
-  const lockedType = mode === 'edit' ? (initialData?.type ?? null) : null;
-  // Loại được suy ra từ tệp đã chọn/đã có — người dùng không còn chọn loại thủ công.
-  const detectedType: LessonItemType | null = videoFile
-    ? 'VIDEO'
-    : document?.url
-      ? 'DOCUMENT'
-      : lockedType;
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     setTitle(initialData?.title ?? '');
+    setType(initialData?.type ?? 'VIDEO');
     setDocument(
       initialData?.fileUrl
         ? {
@@ -87,7 +80,13 @@ export default function LessonItemFormModal({
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tên mục' : '';
-  const fileError = submitted && !detectedType ? 'Vui lòng chọn tệp PDF hoặc video' : '';
+  const docError =
+    submitted && type === 'DOCUMENT' && !document?.url ? 'Vui lòng tải lên tài liệu' : '';
+  // Video bắt buộc khi tạo mới; khi edit nếu đã có video thì không bắt buộc chọn lại.
+  const videoError =
+    submitted && type === 'VIDEO' && !videoFile && !hasExistingVideo
+      ? 'Vui lòng chọn video bài giảng'
+      : '';
 
   const close = () => {
     onOpenChange(false);
@@ -98,16 +97,15 @@ export default function LessonItemFormModal({
     e.preventDefault();
     setSubmitted(true);
     if (!title.trim()) return;
-    if (!detectedType) return;
-    if (detectedType === 'VIDEO' && !videoFile && !hasExistingVideo) return;
+    if (type === 'DOCUMENT' && !document?.url) return;
+    if (type === 'VIDEO' && !videoFile && !hasExistingVideo) return;
 
     setLoading(true);
     try {
-      if (detectedType === 'DOCUMENT') {
+      if (type === 'DOCUMENT') {
         const payload = {
           title: title.trim(),
           type: 'DOCUMENT' as const,
-          ...(mode === 'create' && parentId !== undefined ? { parentId } : {}),
           fileUrl: document?.url,
           fileStorageKey: document?.storageKey,
           fileName: document?.fileName,
@@ -149,7 +147,6 @@ export default function LessonItemFormModal({
         const res = await createLessonItemAction(lessonId, courseId, {
           title: title.trim(),
           type: 'VIDEO',
-          ...(parentId !== undefined ? { parentId } : {}),
           bunnyVideoId: videoId,
           bunnyLibraryId: libraryId,
         });
@@ -218,38 +215,47 @@ export default function LessonItemFormModal({
 
           <div className="space-y-1.5">
             <Label>Loại nội dung</Label>
-            <Select value="DOCUMENT" disabled>
+            <Select
+              value={type}
+              onValueChange={(v) => setType(v as LessonItemType)}
+              disabled={mode === 'edit'}
+            >
               <SelectTrigger className="cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="VIDEO">Video</SelectItem>
                 <SelectItem value="DOCUMENT">Tài liệu</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>
-              Tệp nội dung
-              {!hasExistingVideo && !document?.url && <span className="text-destructive">*</span>}
-            </Label>
-            <LessonContentUploader
-              videoFile={videoFile}
-              onVideoFileChange={setVideoFile}
-              document={document}
-              onDocumentChange={setDocument}
-              disabled={loading}
-              lockedType={lockedType}
-              existingVideoStatus={hasExistingVideo ? initialData!.bunnyStatus : null}
-            />
-            {fileError && <p className="text-destructive text-xs">{fileError}</p>}
-            {detectedType === 'VIDEO' && (
+          {type === 'VIDEO' ? (
+            <div className="space-y-1.5">
+              <Label>
+                Video bài giảng {!hasExistingVideo && <span className="text-destructive">*</span>}
+              </Label>
+              <VideoUploader
+                file={videoFile}
+                onFileChange={setVideoFile}
+                disabled={loading}
+                existingStatus={hasExistingVideo ? initialData!.bunnyStatus : null}
+              />
+              {videoError && <p className="text-destructive text-xs">{videoError}</p>}
               <p className="text-muted-foreground text-xs">
                 Sau khi lưu, video tải lên nền (xem ở khay góc phải). Thời lượng tự cập nhật khi xử
                 lý xong.
               </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>
+                Tài liệu <span className="text-destructive">*</span>
+              </Label>
+              <DocumentUploader value={document} onChange={setDocument} disabled={loading} />
+              {docError && <p className="text-destructive text-xs">{docError}</p>}
+            </div>
+          )}
 
           <DialogFooter className="gap-2 pt-2">
             <Button

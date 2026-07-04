@@ -1,6 +1,13 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 // 8 cột khớp ClassesPageClient: ID tên mã #hs #buổi ngày-tạo trạng-thái hành-động
 const COLS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-10', 'w-24', 'w-28', 'w-20'];

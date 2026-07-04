@@ -81,6 +81,8 @@ export default function ClassSessionDetailPageClient({
 
       <AttendanceSection
         classSessionId={classSession.id}
+        startTime={classSession.startTime}
+        endTime={classSession.endTime}
         activeAttendanceSession={classSession.activeAttendanceSession}
         attendanceSessions={attendanceSessions}
         summary={summary}

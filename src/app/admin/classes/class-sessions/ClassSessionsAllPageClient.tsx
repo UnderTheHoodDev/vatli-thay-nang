@@ -30,10 +30,12 @@ import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
-import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
+import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRowWithClass } from '@/types/actions/class-management';
+import type { ClassRow } from '@/types/class-management';
 
 export interface UrlState {
   classCode: string;
@@ -48,6 +50,7 @@ interface Props {
   rows: ClassSessionListRowWithClass[];
   meta: ListMeta;
   errors: string[];
+  classes: ClassRow[];
 }
 
 function buildUrlParams(state: UrlState): URLSearchParams {
@@ -72,10 +75,17 @@ function formatDate(iso: string) {
 
 const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28', 'w-24', 'w-32'];
 
-export default function ClassSessionsAllPageClient({ urlState, rows, meta, errors }: Props) {
+export default function ClassSessionsAllPageClient({
+  urlState,
+  rows,
+  meta,
+  errors,
+  classes,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     if (errors.length > 0) {
@@ -131,14 +141,23 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
         <CardContent className="pb-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label htmlFor="search-code">Mã lớp</Label>
-              <Input
-                id="search-code"
-                placeholder="Tìm theo mã lớp..."
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+              <Label>Mã lớp</Label>
+              <Select
+                value={searchCode || ALL_VALUE}
+                onValueChange={(v) => setSearchCode(v === ALL_VALUE ? '' : v)}
+              >
+                <SelectTrigger className="w-full cursor-pointer">
+                  <SelectValue placeholder="Tất cả lớp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.code}>
+                      <span className="font-mono text-xs">{c.code}</span> — {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="search-start">Từ ngày</Label>
@@ -202,6 +221,9 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                 ))}
               </SelectContent>
             </Select>
+            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+              Tạo buổi học
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
@@ -270,6 +292,8 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <AttendanceToggle
                             classSessionId={row.id}
+                            startTime={row.startTime}
+                            endTime={row.endTime}
                             activeAttendanceSession={row.activeAttendanceSession ?? null}
                             onChanged={() => router.refresh()}
                           />
@@ -295,6 +319,13 @@ export default function ClassSessionsAllPageClient({ urlState, rows, meta, error
           </div>
         )}
       </Card>
+
+      <ClassSessionFormModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        mode="create"
+        classes={classes}
+      />
     </div>
   );
 }

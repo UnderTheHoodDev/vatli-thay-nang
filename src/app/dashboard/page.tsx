@@ -101,7 +101,9 @@ export default async function DashboardPage() {
                   </CardHeader>
                   <CardContent className="space-y-3 pb-5">
                     {row.description ? (
-                      <p className="text-muted-foreground line-clamp-2 text-sm">{row.description}</p>
+                      <p className="text-muted-foreground line-clamp-2 text-sm">
+                        {row.description}
+                      </p>
                     ) : (
                       <p className="text-muted-foreground text-sm italic">Không có mô tả</p>
                     )}

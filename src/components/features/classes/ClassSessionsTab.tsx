@@ -75,9 +75,11 @@ export default function ClassSessionsTab({
           <div>
             <CardTitle>Buổi học</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Chưa có buổi học nào'
-                : `Hiển thị ${start}–${end} trên tổng ${total} buổi học`}
+              {loading
+                ? 'Đang tải...'
+                : total === 0
+                  ? 'Chưa có buổi học nào'
+                  : `Hiển thị ${start}–${end} trên tổng ${total} buổi học`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -167,6 +169,8 @@ export default function ClassSessionsTab({
                         <div className="flex flex-wrap items-center justify-end gap-2">
                           <AttendanceToggle
                             classSessionId={row.id}
+                            startTime={row.startTime}
+                            endTime={row.endTime}
                             activeAttendanceSession={row.activeAttendanceSession ?? null}
                             onChanged={() => router.refresh()}
                           />

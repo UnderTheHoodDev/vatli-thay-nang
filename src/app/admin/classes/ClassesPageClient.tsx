@@ -137,7 +137,14 @@ export default function ClassesPageClient({
   );
 
   const handleSearch = () => {
-    updateUrl({ name: searchName, code: searchCode, status: searchStatus, createdFrom: searchCreatedFrom, createdTo: searchCreatedTo, page: 1 });
+    updateUrl({
+      name: searchName,
+      code: searchCode,
+      status: searchStatus,
+      createdFrom: searchCreatedFrom,
+      createdTo: searchCreatedTo,
+      page: 1,
+    });
   };
 
   const handleResetFilters = () => {

@@ -41,8 +41,14 @@ export default function CreateUserDialog() {
   function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
     const value = email.trim();
-    if (!value) { toast.error(VALIDATION_MESSAGES.EMAIL_REQUIRED); return; }
-    if (!EMAIL_REGEX.test(value)) { toast.error(VALIDATION_MESSAGES.EMAIL_INVALID); return; }
+    if (!value) {
+      toast.error(VALIDATION_MESSAGES.EMAIL_REQUIRED);
+      return;
+    }
+    if (!EMAIL_REGEX.test(value)) {
+      toast.error(VALIDATION_MESSAGES.EMAIL_INVALID);
+      return;
+    }
     startTransition(async () => {
       const res = await createUserAction(value);
       const succeeded = handleActionResult(res.errors);
@@ -71,7 +77,10 @@ export default function CreateUserDialog() {
         result.data.forEach((row, idx) => {
           const email = row.email?.trim();
           const status = row.status?.trim() as 'active' | 'inactive';
-          if (!email) { errors.push(`Dòng ${idx + 2}: thiếu email`); return; }
+          if (!email) {
+            errors.push(`Dòng ${idx + 2}: thiếu email`);
+            return;
+          }
           if (status !== 'active' && status !== 'inactive') {
             errors.push(`Dòng ${idx + 2}: status phải là "active" hoặc "inactive"`);
             return;
@@ -79,7 +88,10 @@ export default function CreateUserDialog() {
           rows.push({ email, status });
         });
         if (errors.length > 0) {
-          setCsvError(errors.slice(0, 3).join('; ') + (errors.length > 3 ? ` (và ${errors.length - 3} lỗi khác)` : ''));
+          setCsvError(
+            errors.slice(0, 3).join('; ') +
+              (errors.length > 3 ? ` (và ${errors.length - 3} lỗi khác)` : ''),
+          );
         } else {
           setCsvRows(rows);
         }
@@ -89,7 +101,10 @@ export default function CreateUserDialog() {
   }
 
   function stopPoll() {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
   }
 
   async function handleBulkSync() {
@@ -107,7 +122,11 @@ export default function CreateUserDialog() {
 
     pollRef.current = setInterval(async () => {
       const statusRes = await getBulkJobStatusAction(jobId);
-      if (statusRes.errors.length > 0) { stopPoll(); setSyncing(false); return; }
+      if (statusRes.errors.length > 0) {
+        stopPoll();
+        setSyncing(false);
+        return;
+      }
       const data = statusRes.data!;
       setJobStatus(data);
       if (data.status === 'DONE' || data.status === 'FAILED') {
@@ -125,7 +144,9 @@ export default function CreateUserDialog() {
   }
 
   const progress = jobStatus
-    ? jobStatus.total > 0 ? Math.round((jobStatus.processed / jobStatus.total) * 100) : 0
+    ? jobStatus.total > 0
+      ? Math.round((jobStatus.processed / jobStatus.total) * 100)
+      : 0
     : 0;
 
   return (
@@ -142,8 +163,12 @@ export default function CreateUserDialog() {
         </DialogHeader>
         <Tabs defaultValue="single">
           <TabsList className="w-full">
-            <TabsTrigger value="single" className="flex-1">Tạo 1 user</TabsTrigger>
-            <TabsTrigger value="bulk" className="flex-1">Đồng bộ CSV</TabsTrigger>
+            <TabsTrigger value="single" className="flex-1">
+              Tạo 1 user
+            </TabsTrigger>
+            <TabsTrigger value="bulk" className="flex-1">
+              Đồng bộ CSV
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="single" className="mt-4">
@@ -159,10 +184,21 @@ export default function CreateUserDialog() {
                 disabled={pending}
               />
               <DialogFooter className="gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending} className="cursor-pointer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={pending}
+                  className="cursor-pointer"
+                >
                   Hủy
                 </Button>
-                <ActionButton type="submit" isLoading={pending} loadingText="Đang tạo..." className="cursor-pointer">
+                <ActionButton
+                  type="submit"
+                  isLoading={pending}
+                  loadingText="Đang tạo..."
+                  className="cursor-pointer"
+                >
                   <UserPlus /> Tạo tài khoản
                 </ActionButton>
               </DialogFooter>
@@ -210,20 +246,40 @@ export default function CreateUserDialog() {
               <div className="space-y-2">
                 <Progress value={progress} className="h-2" />
                 <div className="text-muted-foreground grid grid-cols-3 gap-1 text-xs">
-                  <span>Đã xử lý: {jobStatus.processed}/{jobStatus.total}</span>
+                  <span>
+                    Đã xử lý: {jobStatus.processed}/{jobStatus.total}
+                  </span>
                   <span>Tạo mới: {jobStatus.created}</span>
                   <span>Kích hoạt: {jobStatus.activated}</span>
                   <span>Vô hiệu: {jobStatus.disabled}</span>
                   <span>Lỗi: {jobStatus.failed}</span>
-                  <span className={jobStatus.status === 'DONE' ? 'text-green-600' : jobStatus.status === 'FAILED' ? 'text-destructive' : ''}>
-                    {jobStatus.status === 'RUNNING' ? 'Đang xử lý...' : jobStatus.status === 'DONE' ? 'Hoàn tất' : 'Thất bại'}
+                  <span
+                    className={
+                      jobStatus.status === 'DONE'
+                        ? 'text-green-600'
+                        : jobStatus.status === 'FAILED'
+                          ? 'text-destructive'
+                          : ''
+                    }
+                  >
+                    {jobStatus.status === 'RUNNING'
+                      ? 'Đang xử lý...'
+                      : jobStatus.status === 'DONE'
+                        ? 'Hoàn tất'
+                        : 'Thất bại'}
                   </span>
                 </div>
               </div>
             )}
 
             <DialogFooter className="gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={syncing} className="cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleClose(false)}
+                disabled={syncing}
+                className="cursor-pointer"
+              >
                 Đóng
               </Button>
               <Button

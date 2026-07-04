@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="font-opensans bg-muted/40 min-h-svh">
       <SidebarProvider defaultOpen={defaultOpen}>
         <AppSidebar title="VLTN" items={DASHBOARD_NAV} />
-        <SidebarInset className="min-w-0 bg-muted/40">
+        <SidebarInset className="bg-muted/40 min-w-0">
           <AppTopbar email={session.email} role={session.role} />
           <main className="min-w-0 flex-1 px-4 pt-3 pb-4 md:px-6 md:pt-4 md:pb-6 lg:px-8 lg:pt-5 lg:pb-8">
             {children}

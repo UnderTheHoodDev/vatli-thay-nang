@@ -7,7 +7,7 @@ interface Props {
   value: React.ReactNode;
   icon: LucideIcon;
   hint?: string;
-  tone?: 'primary' | 'success' | 'warning' | 'destructive' | 'muted';
+  tone?: 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'muted';
   className?: string;
 }
 
@@ -16,6 +16,7 @@ const TONE_BG: Record<NonNullable<Props['tone']>, string> = {
   success: 'bg-emerald-100 text-emerald-700',
   warning: 'bg-amber-100 text-amber-700',
   destructive: 'bg-red-100 text-red-700',
+  info: 'bg-purple/10 text-purple',
   muted: 'bg-muted text-muted-foreground',
 };
 

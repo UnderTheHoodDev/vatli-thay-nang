@@ -184,10 +184,10 @@ export default function StudentClassDetailClient({
                         className="hover:bg-muted cursor-pointer transition-colors"
                       >
                         <TableCell className="text-foreground font-medium">{s.title}</TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                           {formatDateTime(s.startTime)}
                         </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                           {formatDateTime(s.endTime)}
                         </TableCell>
                         <TableCell>

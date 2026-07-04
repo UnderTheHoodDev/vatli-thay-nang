@@ -5,7 +5,6 @@ import { Download, ExternalLink, FileText, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { formatBytes } from '@/lib/format';
 import { buildOfficeEmbedUrl, mapToViewer, type ViewerKind } from '@/lib/document-viewer';
 
 interface Props {
@@ -18,6 +17,18 @@ interface Props {
 }
 
 const OFFICE_TIMEOUT_MS = 15_000;
+
+function formatBytes(n?: number | null): string {
+  if (!n || n <= 0) return '';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let v = n;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+}
 
 export default function DocumentViewer({
   fileUrl,

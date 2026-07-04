@@ -35,7 +35,12 @@ export interface NavItem {
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', href: '/admin/accounts', icon: Users, section: 'Quản lý' },
   { label: 'Lớp học', href: '/admin/classes', icon: School, section: 'Quản lý' },
-  { label: 'Buổi học', href: '/admin/classes/class-sessions', icon: LayoutDashboard, section: 'Quản lý' },
+  {
+    label: 'Buổi học',
+    href: '/admin/classes/class-sessions',
+    icon: LayoutDashboard,
+    section: 'Quản lý',
+  },
   { label: 'Khóa học', href: '/admin/courses', icon: BookOpen, section: 'Quản lý' },
   { label: 'Danh mục', href: '/admin/courses/categories', icon: GraduationCap, section: 'Quản lý' },
   { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound, section: 'Tài khoản' },
