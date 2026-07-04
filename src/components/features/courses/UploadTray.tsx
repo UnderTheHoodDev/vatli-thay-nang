@@ -42,7 +42,7 @@ export default function UploadTray() {
         <div className="bg-muted/40 flex items-center gap-2 px-3 py-2">
           <Upload className="text-muted-foreground size-4" />
           <span className="text-foreground flex-1 text-sm font-medium">
-            {activeCount > 0 ? `Đang tải lên ${activeCount} video` : 'Tải lên hoàn tất'}
+            {activeCount > 0 ? `Đang tải lên ${activeCount} tệp` : 'Tải lên hoàn tất'}
           </span>
           <Button
             size="icon-xs"
@@ -96,7 +96,7 @@ export default function UploadTray() {
                   </span>
 
                   <div className="flex items-center gap-0.5">
-                    {t.phase === 'uploading' && (
+                    {t.kind === 'video' && t.phase === 'uploading' && (
                       <Button
                         size="icon-xs"
                         variant="ghost"
@@ -107,7 +107,7 @@ export default function UploadTray() {
                         <Pause />
                       </Button>
                     )}
-                    {t.phase === 'paused' && (
+                    {t.kind === 'video' && t.phase === 'paused' && (
                       <Button
                         size="icon-xs"
                         variant="ghost"

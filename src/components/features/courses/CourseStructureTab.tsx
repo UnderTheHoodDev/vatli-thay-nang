@@ -67,6 +67,7 @@ import { deleteCourseNodeAction } from '@/actions/v1/course-nodes/delete-course-
 import { getCourseVideoStatusAction } from '@/actions/v1/courses/get-video-status';
 import NodeFormModal, { type NodeFormMode } from './NodeFormModal';
 import NodeContentViewer from './NodeContentViewer';
+import { useCourseFileUpload } from './useCourseFileUpload';
 import {
   BUNNY_STATUS_META,
   type BunnyVideoStatus,
@@ -228,9 +229,54 @@ export default function CourseStructureTab({ course }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [preview, setPreview] = useState<CourseNodeTree | null>(null);
 
-  // ===== DnD =====
+  // ===== DnD (sắp xếp/di chuyển node — dnd-kit pointer) =====
   const [dropFolderId, setDropFolderId] = useState<number | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  // ===== Upload kiểu Drive: chọn/kéo file → tạo node + upload nền NGAY =====
+  const { addFiles } = useCourseFileUpload(course.id);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pickParentRef = useRef<number | null>(null);
+  // Highlight vùng thả file OS (tách khỏi dropFolderId của dnd-kit). 'root' = gốc.
+  const [fileDropId, setFileDropId] = useState<number | 'root' | null>(null);
+
+  function openPicker(parentId: number | null) {
+    pickParentRef.current = parentId;
+    fileInputRef.current?.click();
+  }
+  function onPicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files && files.length) void addFiles(files, pickParentRef.current);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+  const hasFiles = (e: React.DragEvent) => Array.from(e.dataTransfer.types).includes('Files');
+  function onFileDragOver(e: React.DragEvent, target: number | 'root') {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+    setFileDropId(target);
+  }
+  function onFilesDropped(e: React.DragEvent, parentId: number | null) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setFileDropId(null);
+    const items = e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
+    const hasDir = items.some((it) => {
+      const getEntry = (it as unknown as { webkitGetAsEntry?: () => { isDirectory?: boolean } | null })
+        .webkitGetAsEntry;
+      return getEntry ? getEntry.call(it)?.isDirectory === true : false;
+    });
+    if (hasDir) {
+      handleActionErrors(['Chưa hỗ trợ kéo cả thư mục — vui lòng kéo từng tệp.']);
+      return;
+    }
+    if (e.dataTransfer.files.length) void addFiles(e.dataTransfer.files, parentId);
+  }
+  function onRootDragLeave(e: React.DragEvent) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFileDropId(null);
+  }
 
   const sortableIds = useMemo(() => {
     const acc: number[] = [];
@@ -352,8 +398,8 @@ export default function CourseStructureTab({ course }: Props) {
           <div>
             <CardTitle>Nội dung khóa học</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              Tổ chức theo thư mục (như Google Drive). Kéo để sắp xếp; thả lên thư mục để chuyển vào
-              trong.
+              Tổ chức theo thư mục (như Google Drive). <strong>Kéo tệp/video thả vào thư mục</strong> để
+              tải lên ngay, hoặc kéo node để sắp xếp.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -364,10 +410,7 @@ export default function CourseStructureTab({ course }: Props) {
             >
               <FolderPlus /> Thư mục
             </Button>
-            <Button
-              onClick={() => setModal({ mode: 'create-file', parentId: null })}
-              className="cursor-pointer"
-            >
+            <Button onClick={() => openPicker(null)} className="cursor-pointer">
               <Plus /> Tệp
             </Button>
           </div>
@@ -379,52 +422,63 @@ export default function CourseStructureTab({ course }: Props) {
           </div>
         )}
         <CardContent className="pb-6">
-          {displayNodes.length === 0 ? (
-            <EmptyState
-              icon={FolderTree}
-              title="Chưa có nội dung"
-              description="Tạo thư mục hoặc tải lên tệp đầu tiên để bắt đầu xây dựng khóa học."
-              action={
-                <Button
-                  onClick={() => setModal({ mode: 'create-file', parentId: null })}
-                  className="cursor-pointer"
-                >
-                  <Plus /> Thêm tệp
-                </Button>
-              }
-            />
-          ) : (
-            <DndContext
-              id="course-structure-dnd"
-              sensors={sensors}
-              collisionDetection={pointerWithin}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={sortableIds}>
-                <ul className="space-y-1">
-                  {displayNodes.map((node) => (
-                    <NodeRow
-                      key={node.id}
-                      node={node}
-                      depth={0}
-                      courseId={course.id}
-                      expanded={expanded}
-                      onToggle={toggle}
-                      dropFolderId={dropFolderId}
-                      onAddFolder={(pid) => setModal({ mode: 'create-folder', parentId: pid })}
-                      onAddFile={(pid) => setModal({ mode: 'create-file', parentId: pid })}
-                      onEdit={(n) => setModal({ mode: 'edit', node: n })}
-                      onDelete={(n) =>
-                        setDeleteTarget({ id: n.id, title: n.title, isFolder: n.type === 'FOLDER' })
-                      }
-                      onView={(n) => setPreview(n)}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
+          <input ref={fileInputRef} type="file" multiple hidden onChange={onPicked} />
+          <div
+            onDragOver={(e) => onFileDragOver(e, 'root')}
+            onDrop={(e) => onFilesDropped(e, null)}
+            onDragLeave={onRootDragLeave}
+            className={cn(
+              'rounded-lg transition',
+              fileDropId === 'root' && 'ring-primary bg-primary/5 ring-2',
+            )}
+          >
+            {displayNodes.length === 0 ? (
+              <EmptyState
+                icon={FolderTree}
+                title="Chưa có nội dung"
+                description="Kéo tệp/video thả vào đây, hoặc bấm để chọn tệp."
+                action={
+                  <Button onClick={() => openPicker(null)} className="cursor-pointer">
+                    <Plus /> Thêm tệp
+                  </Button>
+                }
+              />
+            ) : (
+              <DndContext
+                id="course-structure-dnd"
+                sensors={sensors}
+                collisionDetection={pointerWithin}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={sortableIds}>
+                  <ul className="space-y-1">
+                    {displayNodes.map((node) => (
+                      <NodeRow
+                        key={node.id}
+                        node={node}
+                        depth={0}
+                        courseId={course.id}
+                        expanded={expanded}
+                        onToggle={toggle}
+                        dropFolderId={dropFolderId}
+                        fileDropId={typeof fileDropId === 'number' ? fileDropId : null}
+                        onFileDragOver={onFileDragOver}
+                        onFileDrop={onFilesDropped}
+                        onAddFolder={(pid) => setModal({ mode: 'create-folder', parentId: pid })}
+                        onAddFile={(pid) => openPicker(pid)}
+                        onEdit={(n) => setModal({ mode: 'edit', node: n })}
+                        onDelete={(n) =>
+                          setDeleteTarget({ id: n.id, title: n.title, isFolder: n.type === 'FOLDER' })
+                        }
+                        onView={(n) => setPreview(n)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -524,6 +578,9 @@ interface NodeRowProps {
   expanded: Set<number>;
   onToggle: (id: number) => void;
   dropFolderId: number | null;
+  fileDropId: number | null;
+  onFileDragOver: (e: React.DragEvent, id: number) => void;
+  onFileDrop: (e: React.DragEvent, parentId: number) => void;
   onAddFolder: (parentId: number) => void;
   onAddFile: (parentId: number) => void;
   onEdit: (node: CourseNodeTree) => void;
@@ -538,6 +595,9 @@ function NodeRow({
   expanded,
   onToggle,
   dropFolderId,
+  fileDropId,
+  onFileDragOver,
+  onFileDrop,
   onAddFolder,
   onAddFile,
   onEdit,
@@ -550,10 +610,13 @@ function NodeRow({
   const style = { transform: CSS.Transform.toString(transform), transition };
   const isFolder = node.type === 'FOLDER';
   const isVideo = node.type === 'FILE' && node.fileKind === 'VIDEO';
+  const isDoc = node.type === 'FILE' && node.fileKind === 'DOCUMENT';
   const open = expanded.has(node.id);
   const isDropTarget = dropFolderId === node.id;
+  const isFileDropTarget = isFolder && fileDropId === node.id;
 
   const { enqueue, hasActive } = useUploadManager();
+  const docUploading = isDoc && hasActive(node.id);
   const reuploadRef = useRef<HTMLInputElement | null>(null);
   const [reuploading, setReuploading] = useState(false);
   const canResume =
@@ -590,11 +653,14 @@ function NodeRow({
           không nhầm thả-lên-con thành thả-vào-folder. */}
       <div
         ref={setNodeRef}
+        onDragOver={isFolder ? (e) => onFileDragOver(e, node.id) : undefined}
+        onDrop={isFolder ? (e) => onFileDrop(e, node.id) : undefined}
         className={cn(
           'border-divider bg-card flex items-center gap-2 rounded-md border px-2 py-1.5',
           isFolder && 'bg-muted/30',
           isDragging && 'opacity-50 shadow',
           isDropTarget && 'ring-primary ring-2',
+          isFileDropTarget && 'ring-primary bg-primary/10 ring-2',
         )}
         style={{ ...style, marginLeft: depth * 20 }}
       >
@@ -634,6 +700,13 @@ function NodeRow({
           </Badge>
         ) : isVideo ? (
           <VideoBadge status={node.bunnyStatus} />
+        ) : docUploading ? (
+          <Badge
+            variant="secondary"
+            className="flex shrink-0 items-center gap-1 px-1.5 py-0 text-[10px]"
+          >
+            <Loader2 className="size-3 animate-spin" /> Đang tải lên
+          </Badge>
         ) : (
           <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
             Tài liệu
@@ -722,6 +795,9 @@ function NodeRow({
                   expanded={expanded}
                   onToggle={onToggle}
                   dropFolderId={dropFolderId}
+                  fileDropId={fileDropId}
+                  onFileDragOver={onFileDragOver}
+                  onFileDrop={onFileDrop}
                   onAddFolder={onAddFolder}
                   onAddFile={onAddFile}
                   onEdit={onEdit}
