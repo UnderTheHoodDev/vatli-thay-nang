@@ -8,7 +8,6 @@ import {
   BookOpen,
   CheckCircle2,
   FileEdit,
-  Pencil,
   Plus,
   Search,
   Trash2,
@@ -346,6 +345,7 @@ export default function CoursesPageClient({
                             <img
                               src={row.thumbnailUrl}
                               alt={row.title}
+                              loading="lazy"
                               className="size-12 rounded object-cover"
                             />
                           ) : (
@@ -375,15 +375,6 @@ export default function CoursesPageClient({
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Chi tiết"
-                              className="cursor-pointer"
-                              onClick={() => router.push(`/admin/courses/${row.id}`)}
-                            >
-                              <Pencil />
-                            </Button>
                             {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
                               <Button
                                 variant="ghost"

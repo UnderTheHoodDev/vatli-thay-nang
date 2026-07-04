@@ -104,16 +104,18 @@ export default function CourseDetailPageClient({
             <h1 className="font-paytone text-foreground text-2xl tracking-tight">{course.title}</h1>
             {statusBadge(course.status)}
           </div>
-          <p className="text-muted-foreground text-sm">
-            Mã khóa học:{' '}
-            <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-              {course.code}
-            </code>
-            <span className="mx-2">·</span>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span className="inline-flex items-center gap-1">
+              Mã khóa học:
+              <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                {course.code}
+              </code>
+            </span>
+            <span className="text-muted-foreground/50">·</span>
             <span>{course.category?.name}</span>
-            <span className="mx-2">·</span>
+            <span className="text-muted-foreground/50">·</span>
             <span>{course.enrollmentCount ?? 0} học sinh</span>
-          </p>
+          </div>
         </div>
       </div>
 

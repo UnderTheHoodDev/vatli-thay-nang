@@ -373,7 +373,7 @@ export default function CourseStructureTab({ course }: Props) {
           </div>
         </CardHeader>
         {pendingCount > 0 && (
-          <div className="border-divider mx-6 mb-2 flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+          <div className="mx-6 mb-2 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
             <Loader2 className="size-4 animate-spin" />
             {pendingCount} video đang tải lên / xử lý — trạng thái sẽ tự cập nhật khi hoàn tất.
           </div>
@@ -591,7 +591,7 @@ function NodeRow({
       <div
         ref={setNodeRef}
         className={cn(
-          'border-divider flex items-center gap-2 rounded-md border bg-white px-2 py-1.5',
+          'border-divider bg-card flex items-center gap-2 rounded-md border px-2 py-1.5',
           isFolder && 'bg-muted/30',
           isDragging && 'opacity-50 shadow',
           isDropTarget && 'ring-primary ring-2',
@@ -677,26 +677,29 @@ function NodeRow({
         )}
 
         {isFolder && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              title="Thêm thư mục con"
-              className="cursor-pointer"
-              onClick={() => onAddFolder(node.id)}
-            >
-              <FolderPlus />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              title="Thêm tệp"
-              className="cursor-pointer"
-              onClick={() => onAddFile(node.id)}
-            >
-              <Plus />
-            </Button>
-          </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Thêm vào thư mục"
+                className="cursor-pointer"
+              >
+                <Plus />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={() => onAddFolder(node.id)}
+              >
+                <FolderPlus className="size-4" /> Thư mục con
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => onAddFile(node.id)}>
+                <FileText className="size-4" /> Tệp
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         <RowActions
