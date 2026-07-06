@@ -17,6 +17,13 @@ export interface ClassRow {
   description: string | null;
   status: ClassStatus;
   studentCount?: number;
+  sessionCount?: number;
+  createdAt?: string;
+  // STUDENT only.
+  attendedCount?: number;
+  leaveCount?: number;
+  notAttendedCount?: number;
+  hasActiveAttendance?: boolean;
 }
 
 export interface ClassDetail extends ClassRow {

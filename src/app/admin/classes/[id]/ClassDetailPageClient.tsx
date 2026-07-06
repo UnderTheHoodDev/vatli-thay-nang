@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Info, Users as UsersIcon } from 'lucide-react';
@@ -67,6 +67,15 @@ export default function ClassDetailPageClient({
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
+  // Tab hiển thị đổi ngay khi bấm; urlState.tab (đến từ server) chỉ dùng để đồng bộ
+  // lại khi có điều hướng bên ngoài (back/forward, deep link) — tránh việc tab bị
+  // "kẹt" chờ round-trip server rồi mới chuyển, gây cảm giác lag khi bấm tab.
+  const [activeTab, setActiveTab] = useState<ClassDetailTab>(urlState.tab);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab(urlState.tab);
+  }, [urlState.tab]);
+
   useEffect(() => {
     studentsErrors.forEach((e) => toast.error(e));
   }, [studentsErrors]);
@@ -86,6 +95,12 @@ export default function ClassDetailPageClient({
     },
     [router, pathname, urlState],
   );
+
+  function handleTabChange(v: string) {
+    const tab = v as ClassDetailTab;
+    setActiveTab(tab);
+    updateUrl({ tab, page: 1 });
+  }
 
   const studentsSearch: ClassStudentSearchValues = {
     email: urlState.email,
@@ -123,11 +138,7 @@ export default function ClassDetailPageClient({
         </div>
       </div>
 
-      <Tabs
-        value={urlState.tab}
-        onValueChange={(v) => updateUrl({ tab: v as ClassDetailTab, page: 1 })}
-        className="gap-4"
-      >
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
         <TabsList>
           <TabsTrigger value="info" className="cursor-pointer">
             <Info className="size-4" /> Thông tin

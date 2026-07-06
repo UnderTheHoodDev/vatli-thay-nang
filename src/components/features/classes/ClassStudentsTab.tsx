@@ -58,9 +58,11 @@ export default function ClassStudentsTab({
           <div>
             <CardTitle>Học sinh trong lớp</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Chưa có học sinh nào trong lớp'
-                : `Hiển thị ${start}–${end} trên tổng ${total} học sinh`}
+              {loading
+                ? 'Đang tải...'
+                : total === 0
+                  ? 'Chưa có học sinh nào trong lớp'
+                  : `Hiển thị ${start}–${end} trên tổng ${total} học sinh`}
             </p>
           </div>
           <div className="flex items-center gap-2">

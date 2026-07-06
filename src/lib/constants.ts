@@ -12,6 +12,7 @@ export const ROLE_OPTIONS = [
 export const STATUS_OPTIONS = [
   { value: 'ACTIVATED', label: 'Kích hoạt' },
   { value: 'UNACTIVATED', label: 'Chưa kích hoạt' },
+  { value: 'DISABLED', label: 'Vô hiệu hóa' },
 ] as const;
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];

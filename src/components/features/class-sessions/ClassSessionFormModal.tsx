@@ -12,10 +12,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { handleActionResult } from '@/lib/actions';
 import { createClassSessionAction } from '@/actions/v1/class-sessions/create-class-session';
 import { updateClassSessionAction } from '@/actions/v1/class-sessions/update-class-session';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
+import type { ClassRow } from '@/types/class-management';
 
 function toLocalDatetimeValue(iso: string): string {
   const d = new Date(iso);
@@ -27,7 +35,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
-  classId: number;
+  /** Bắt buộc khi không truyền `classes` (modal mở từ trong ngữ cảnh 1 lớp cố định). */
+  classId?: number;
+  /** Truyền vào khi modal mở ở nơi không gắn với 1 lớp cố định (VD: trang danh sách buổi học) — hiện thêm dropdown chọn lớp. */
+  classes?: ClassRow[];
   initialData?: ClassSessionListRow;
 }
 
@@ -36,11 +47,13 @@ export default function ClassSessionFormModal({
   onOpenChange,
   mode,
   classId,
+  classes,
   initialData,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(classId ?? null);
 
   const [title, setTitle] = useState(initialData?.title ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
@@ -54,6 +67,7 @@ export default function ClassSessionFormModal({
 
   const nowValue = toLocalDatetimeValue(new Date().toISOString());
 
+  const classError = submitted && classes && !selectedClassId ? 'Vui lòng chọn lớp' : '';
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tiêu đề' : '';
   const startTimeError =
     submitted && !startTime
@@ -73,15 +87,19 @@ export default function ClassSessionFormModal({
   const handleSubmit = async () => {
     setSubmitted(true);
     if (!title.trim() || !startTime || !endTime) return;
+    if (classes && !selectedClassId) return;
     const now = new Date();
     if (new Date(startTime) < now) return;
     if (new Date(endTime) < now) return;
     if (new Date(endTime) <= new Date(startTime)) return;
 
+    const effectiveClassId = selectedClassId ?? classId;
+    if (!effectiveClassId) return;
+
     setLoading(true);
     try {
       if (mode === 'create') {
-        const result = await createClassSessionAction(classId, {
+        const result = await createClassSessionAction(effectiveClassId, {
           title: title.trim(),
           description: description.trim() || undefined,
           startTime: new Date(startTime).toISOString(),
@@ -97,7 +115,7 @@ export default function ClassSessionFormModal({
           'Tạo buổi học thành công',
         );
       } else if (initialData) {
-        const result = await updateClassSessionAction(initialData.id, classId, {
+        const result = await updateClassSessionAction(initialData.id, effectiveClassId, {
           title: title.trim(),
           description: description.trim() || undefined,
           startTime: new Date(startTime).toISOString(),
@@ -126,6 +144,30 @@ export default function ClassSessionFormModal({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {classes && (
+            <div>
+              <Label>
+                Lớp <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={selectedClassId ? String(selectedClassId) : ''}
+                onValueChange={(v) => setSelectedClassId(Number(v))}
+              >
+                <SelectTrigger className="w-full cursor-pointer">
+                  <SelectValue placeholder="Chọn lớp" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      <span className="font-mono text-xs">{c.code}</span> — {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {classError && <p className="mt-1 text-xs text-red-500">{classError}</p>}
+            </div>
+          )}
+
           <div>
             <Label htmlFor="session-title">
               Tiêu đề <span className="text-red-500">*</span>

@@ -1,4 +1,5 @@
 import { listAllClassSessions } from '@/actions/v1/class-sessions/list-all-class-sessions';
+import { listClasses } from '@/actions/v1/classes/list-classes';
 import ClassSessionsAllPageClient, { type UrlState } from './ClassSessionsAllPageClient';
 
 interface Props {
@@ -19,13 +20,16 @@ export default async function ClassSessionsAllPage({ searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  const result = await listAllClassSessions({
-    classCode: urlState.classCode || undefined,
-    startDate: urlState.startDate || undefined,
-    endDate: urlState.endDate || undefined,
-    page: urlState.page,
-    pageSize: urlState.pageSize,
-  });
+  const [result, allClassesResult] = await Promise.all([
+    listAllClassSessions({
+      classCode: urlState.classCode || undefined,
+      startDate: urlState.startDate || undefined,
+      endDate: urlState.endDate || undefined,
+      page: urlState.page,
+      pageSize: urlState.pageSize,
+    }),
+    listClasses({ page: 1, pageSize: 200 }),
+  ]);
 
   return (
     <ClassSessionsAllPageClient
@@ -33,6 +37,7 @@ export default async function ClassSessionsAllPage({ searchParams }: Props) {
       rows={result.data}
       meta={result.meta}
       errors={result.errors}
+      classes={allClassesResult.data}
     />
   );
 }

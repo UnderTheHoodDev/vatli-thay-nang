@@ -14,7 +14,7 @@ export async function listUsers(params: IListUsersParams): Promise<IListUsersRes
     return {
       data: [],
       meta: { total: 0, page: 1, pageSize: 20 },
-      stats: { total: 0, activated: 0, unactivated: 0, admins: 0, students: 0 },
+      stats: { total: 0, activated: 0, unactivated: 0, disabled: 0, admins: 0, students: 0 },
     };
   }
 }
