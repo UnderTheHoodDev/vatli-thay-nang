@@ -3,6 +3,7 @@ import { Paytone_One, Cabin, Open_Sans } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import UploadProviders from '@/components/app/UploadProviders';
 import '@/styles/globals.css';
 
 const paytoneOne = Paytone_One({
@@ -38,7 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" className={`${paytoneOne.variable} ${cabin.variable} ${openSans.variable}`}>
       <body className="bg-light-bg font-cabin overflow-x-hidden text-[#333]">
         <NextTopLoader color="#723bcf" showSpinner={false} />
-        <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+        <TooltipProvider delayDuration={150}>
+          <UploadProviders>{children}</UploadProviders>
+        </TooltipProvider>
         <Toaster position="top-right" richColors />
       </body>
     </html>

@@ -2,19 +2,23 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import * as tus from 'tus-js-client';
-import { markUploadedAction } from '@/actions/v1/lesson-items/mark-uploaded';
+import { markUploadedAction } from '@/actions/v1/course-nodes/mark-uploaded';
+import { deleteCourseNodeAction } from '@/actions/v1/course-nodes/delete-course-node';
 
 const MAX_CONCURRENT = 3;
 const CHUNK_SIZE = 64 * 1024 * 1024; // 64MB (bội số 256KB theo yêu cầu bunny)
 
 export type UploadPhase = 'queued' | 'uploading' | 'paused' | 'error' | 'done';
+export type UploadKind = 'video' | 'document';
 
 export interface UploadTask {
   id: string;
-  lessonItemId: number;
+  kind: UploadKind;
+  nodeId: number;
   courseId: number;
-  videoId: string;
+  videoId?: string;
   fileName: string;
   fileSize: number;
   progress: number; // 0..100
@@ -22,8 +26,9 @@ export interface UploadTask {
   error?: string;
 }
 
+/** Video (bunny TUS). */
 export interface EnqueueArgs {
-  lessonItemId: number;
+  nodeId: number;
   courseId: number;
   videoId: string;
   libraryId: number;
@@ -32,15 +37,28 @@ export interface EnqueueArgs {
   tusEndpoint: string;
 }
 
+/** Tài liệu (R2 presigned PUT). Node đã tạo sẵn với publicUrl. */
+export interface DocumentEnqueueArgs {
+  nodeId: number;
+  courseId: number;
+  putUrl: string;
+  contentType: string;
+}
+
+type TaskMeta =
+  | { kind: 'video'; v: EnqueueArgs }
+  | { kind: 'document'; d: DocumentEnqueueArgs };
+
 interface UploadManagerValue {
   tasks: UploadTask[];
   enqueue: (file: File, args: EnqueueArgs) => void;
+  enqueueDocument: (file: File, args: DocumentEnqueueArgs) => void;
   pause: (id: string) => void;
   resume: (id: string) => void;
   cancel: (id: string) => Promise<void>;
   retry: (id: string) => void;
-  /** Có upload nào cho lessonItemId này đang chạy không (để tree biết). */
-  hasActive: (lessonItemId: number) => boolean;
+  /** Có upload nào cho nodeId này đang chạy không (để tree biết). */
+  hasActive: (nodeId: number) => boolean;
 }
 
 const UploadManagerContext = createContext<UploadManagerValue | null>(null);
@@ -54,12 +72,12 @@ export function useUploadManager(): UploadManagerValue {
 }
 
 async function markUploadedWithRetry(
-  lessonItemId: number,
+  nodeId: number,
   courseId: number,
   attempts = 3,
 ): Promise<void> {
   for (let i = 0; i < attempts; i++) {
-    const res = await markUploadedAction(lessonItemId, courseId);
+    const res = await markUploadedAction(nodeId, courseId);
     if (!res.errors.length) return;
     await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
   }
@@ -68,10 +86,10 @@ async function markUploadedWithRetry(
 export default function UploadManagerProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [tasks, setTasks] = useState<UploadTask[]>([]);
-  // Refs không-render: tus instance, File, và metadata để pump hàng đợi.
-  const uploadsRef = useRef<Map<string, tus.Upload>>(new Map());
+  // Refs không-render: handle upload (tus / AbortController), File, và metadata để pump.
+  const uploadsRef = useRef<Map<string, tus.Upload | AbortController>>(new Map());
   const filesRef = useRef<Map<string, File>>(new Map());
-  const argsRef = useRef<Map<string, EnqueueArgs>>(new Map());
+  const argsRef = useRef<Map<string, TaskMeta>>(new Map());
 
   const patchTask = useCallback((id: string, patch: Partial<UploadTask>) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
@@ -89,60 +107,87 @@ export default function UploadManagerProvider({ children }: { children: React.Re
     [router],
   );
 
-  // Bắt đầu thực sự upload 1 task (tạo tus.Upload).
+  // Bắt đầu thực sự upload 1 task (video TUS hoặc tài liệu R2 PUT).
   const startTask = useCallback(
     (taskId: string) => {
       // Idempotent: chống double-start (pump có thể chạy updater 2 lần ở StrictMode).
       if (uploadsRef.current.has(taskId)) return;
       const file = filesRef.current.get(taskId);
-      const args = argsRef.current.get(taskId);
-      if (!file || !args) return;
+      const meta = argsRef.current.get(taskId);
+      if (!file || !meta) return;
 
-      const upload = new tus.Upload(file, {
-        endpoint: args.tusEndpoint,
-        retryDelays: [0, 3000, 5000, 10000, 20000],
-        chunkSize: CHUNK_SIZE,
-        removeFingerprintOnSuccess: true,
-        metadata: {
-          filetype: file.type || 'video/mp4',
-          title: file.name,
-        },
-        headers: {
-          AuthorizationSignature: args.signature,
-          AuthorizationExpire: String(args.expire),
-          LibraryId: String(args.libraryId),
-          VideoId: args.videoId,
-        },
-        onProgress: (sent, total) => {
-          patchTask(taskId, {
-            progress: total ? Math.round((sent / total) * 100) : 0,
-            phase: 'uploading',
-          });
-        },
-        onError: (err) => {
-          patchTask(taskId, { phase: 'error', error: err.message });
-          pumpRef.current();
-        },
-        onSuccess: async () => {
+      if (meta.kind === 'video') {
+        const args = meta.v;
+        const upload = new tus.Upload(file, {
+          endpoint: args.tusEndpoint,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          chunkSize: CHUNK_SIZE,
+          removeFingerprintOnSuccess: true,
+          metadata: { filetype: file.type || 'video/mp4', title: file.name },
+          headers: {
+            AuthorizationSignature: args.signature,
+            AuthorizationExpire: String(args.expire),
+            LibraryId: String(args.libraryId),
+            VideoId: args.videoId,
+          },
+          onProgress: (sent, total) => {
+            patchTask(taskId, {
+              progress: total ? Math.round((sent / total) * 100) : 0,
+              phase: 'uploading',
+            });
+          },
+          onError: (err) => {
+            patchTask(taskId, { phase: 'error', error: err.message });
+            pumpRef.current();
+          },
+          onSuccess: async () => {
+            patchTask(taskId, { phase: 'done', progress: 100 });
+            await markUploadedWithRetry(args.nodeId, args.courseId);
+            refreshIfOn(args.courseId);
+            setTimeout(() => removeTaskRef.current(taskId), 4000);
+            pumpRef.current();
+          },
+        });
+        uploadsRef.current.set(taskId, upload);
+        patchTask(taskId, { phase: 'uploading' });
+        upload
+          .findPreviousUploads()
+          .then((prev) => {
+            if (prev.length > 0) upload.resumeFromPreviousUpload(prev[0]);
+            upload.start();
+          })
+          .catch(() => upload.start());
+        return;
+      }
+
+      // ===== document (R2 PUT với progress) =====
+      const d = meta.d;
+      const controller = new AbortController();
+      uploadsRef.current.set(taskId, controller);
+      patchTask(taskId, { phase: 'uploading' });
+      axios
+        .put(d.putUrl, file, {
+          headers: { 'Content-Type': d.contentType },
+          signal: controller.signal,
+          onUploadProgress: (e) => {
+            patchTask(taskId, {
+              progress: e.total ? Math.round((e.loaded / e.total) * 100) : 0,
+              phase: 'uploading',
+            });
+          },
+        })
+        .then(() => {
           patchTask(taskId, { phase: 'done', progress: 100 });
-          await markUploadedWithRetry(args.lessonItemId, args.courseId);
-          refreshIfOn(args.courseId);
-          // tự dọn task done sau vài giây
+          refreshIfOn(d.courseId);
           setTimeout(() => removeTaskRef.current(taskId), 4000);
           pumpRef.current();
-        },
-      });
-
-      uploadsRef.current.set(taskId, upload);
-      patchTask(taskId, { phase: 'uploading' });
-      // Resume nếu có upload dở trùng fingerprint (cùng file).
-      upload
-        .findPreviousUploads()
-        .then((prev) => {
-          if (prev.length > 0) upload.resumeFromPreviousUpload(prev[0]);
-          upload.start();
         })
-        .catch(() => upload.start());
+        .catch((err: unknown) => {
+          if (axios.isCancel(err)) return; // huỷ chủ động — cancel() tự xử lý
+          const msg = err instanceof Error ? err.message : 'Tải lên tài liệu thất bại';
+          patchTask(taskId, { phase: 'error', error: msg });
+          pumpRef.current();
+        });
     },
     [patchTask, refreshIfOn],
   );
@@ -157,7 +202,6 @@ export default function UploadManagerProvider({ children }: { children: React.Re
         if (slots <= 0) break;
         if (t.phase === 'queued') {
           slots--;
-          // start ngoài setState để tránh side-effect trong updater
           queueMicrotask(() => startTask(t.id));
         }
       }
@@ -172,28 +216,31 @@ export default function UploadManagerProvider({ children }: { children: React.Re
     setTasks((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Refs tới hàm mới nhất (tránh stale trong callback tus).
+  // Refs tới hàm mới nhất (tránh stale trong callback tus/axios).
   const pumpRef = useRef(pump);
   const removeTaskRef = useRef(removeTask);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free tus callbacks
+    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free callbacks
     pumpRef.current = pump;
-    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free tus callbacks
+    // eslint-disable-next-line react-hooks/immutability -- "latest closure" ref pattern; required for stale-free callbacks
     removeTaskRef.current = removeTask;
   }, [pump, removeTask]);
 
+  const newId = () =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+
   const enqueue = useCallback((file: File, args: EnqueueArgs) => {
-    const id =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    const id = newId();
     filesRef.current.set(id, file);
-    argsRef.current.set(id, args);
+    argsRef.current.set(id, { kind: 'video', v: args });
     setTasks((prev) => [
       ...prev,
       {
         id,
-        lessonItemId: args.lessonItemId,
+        kind: 'video',
+        nodeId: args.nodeId,
         courseId: args.courseId,
         videoId: args.videoId,
         fileName: file.name,
@@ -205,23 +252,46 @@ export default function UploadManagerProvider({ children }: { children: React.Re
     queueMicrotask(() => pumpRef.current());
   }, []);
 
+  const enqueueDocument = useCallback((file: File, args: DocumentEnqueueArgs) => {
+    const id = newId();
+    filesRef.current.set(id, file);
+    argsRef.current.set(id, { kind: 'document', d: args });
+    setTasks((prev) => [
+      ...prev,
+      {
+        id,
+        kind: 'document',
+        nodeId: args.nodeId,
+        courseId: args.courseId,
+        fileName: file.name,
+        fileSize: file.size,
+        progress: 0,
+        phase: 'queued',
+      },
+    ]);
+    queueMicrotask(() => pumpRef.current());
+  }, []);
+
+  // Video-only (tài liệu không tạm dừng được).
   const pause = useCallback(
     (id: string) => {
-      uploadsRef.current.get(id)?.abort();
-      patchTask(id, { phase: 'paused' });
-      pumpRef.current();
+      const handle = uploadsRef.current.get(id);
+      if (handle instanceof tus.Upload) {
+        handle.abort();
+        patchTask(id, { phase: 'paused' });
+        pumpRef.current();
+      }
     },
     [patchTask],
   );
 
   const resume = useCallback(
     (id: string) => {
-      const upload = uploadsRef.current.get(id);
-      if (upload) {
+      const handle = uploadsRef.current.get(id);
+      if (handle instanceof tus.Upload) {
         patchTask(id, { phase: 'uploading' });
-        upload.start();
+        handle.start();
       } else {
-        // chưa có instance (vd reload) → start lại từ file nếu còn
         patchTask(id, { phase: 'queued' });
         pumpRef.current();
       }
@@ -231,6 +301,8 @@ export default function UploadManagerProvider({ children }: { children: React.Re
 
   const retry = useCallback(
     (id: string) => {
+      // Xoá handle cũ để startTask tạo lại (cả video lẫn tài liệu).
+      uploadsRef.current.delete(id);
       patchTask(id, { phase: 'queued', error: undefined, progress: 0 });
       pumpRef.current();
     },
@@ -239,22 +311,32 @@ export default function UploadManagerProvider({ children }: { children: React.Re
 
   const cancel = useCallback(
     async (id: string) => {
-      const upload = uploadsRef.current.get(id);
+      const meta = argsRef.current.get(id);
+      const handle = uploadsRef.current.get(id);
       try {
-        await upload?.abort(true); // true = xoá fingerprint localStorage
+        if (handle instanceof tus.Upload) {
+          await handle.abort(true); // true = xoá fingerprint localStorage
+        } else {
+          handle?.abort();
+        }
       } catch {
         /* noop */
       }
+      // Tài liệu: huỷ = xoá node dở (node đã tạo trước khi PUT xong).
+      if (meta?.kind === 'document') {
+        await deleteCourseNodeAction(meta.d.nodeId, meta.d.courseId);
+        refreshIfOn(meta.d.courseId);
+      }
       removeTask(id);
     },
-    [removeTask],
+    [removeTask, refreshIfOn],
   );
 
   const hasActive = useCallback(
-    (lessonItemId: number) =>
+    (nodeId: number) =>
       tasks.some(
         (t) =>
-          t.lessonItemId === lessonItemId &&
+          t.nodeId === nodeId &&
           (t.phase === 'uploading' || t.phase === 'queued' || t.phase === 'paused'),
       ),
     [tasks],
@@ -274,7 +356,7 @@ export default function UploadManagerProvider({ children }: { children: React.Re
 
   return (
     <UploadManagerContext.Provider
-      value={{ tasks, enqueue, pause, resume, cancel, retry, hasActive }}
+      value={{ tasks, enqueue, enqueueDocument, pause, resume, cancel, retry, hasActive }}
     >
       {children}
     </UploadManagerContext.Provider>

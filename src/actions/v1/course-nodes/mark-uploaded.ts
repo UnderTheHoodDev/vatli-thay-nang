@@ -5,20 +5,20 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
-import type { ICreateChapterPayload } from '@/types/actions/course-management';
 
-export async function createChapterAction(
+/** Báo BE đã upload xong bytes video (UPLOADING → QUEUED). */
+export async function markUploadedAction(
+  nodeId: number,
   courseId: number,
-  payload: ICreateChapterPayload,
 ): Promise<IActionState> {
   try {
-    await api.post(`/api/v1/courses/${courseId}/chapters`, payload);
+    await api.post(`/api/v1/nodes/${nodeId}/mark-uploaded`);
     revalidatePath(`/admin/courses/${courseId}`);
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Tạo chương thất bại'] };
+    return { errors: ['Đánh dấu upload hoàn tất thất bại'] };
   }
 }

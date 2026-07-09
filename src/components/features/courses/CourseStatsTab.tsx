@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -152,7 +152,7 @@ export default function CourseStatsTab({ courseId }: Props) {
             <CardTitle>Thống kê xem video</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
               {total === 0
-                ? 'Chưa có học sinh enrolled hoặc chưa ai xem'
+                ? 'Chưa có học sinh ghi danh hoặc chưa ai xem'
                 : `Hiển thị ${start}–${end} trên tổng ${total} học sinh`}
             </p>
           </div>
@@ -194,63 +194,60 @@ export default function CourseStatsTab({ courseId }: Props) {
               description="Khi học sinh xem video, dữ liệu sẽ hiển thị ở đây."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-12">TT</TableHead>
-                  <TableHead>Họ và tên</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Lần truy cập gần nhất</TableHead>
-                  <TableHead className="text-right">Lượt xem</TableHead>
-                  <TableHead className="text-right">Số giờ xem</TableHead>
-                  <TableHead className="w-28 text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : (
-                  rows.map((r, idx) => (
-                    <TableRow key={r.studentId}>
-                      <TableCell className="text-muted-foreground">
-                        {(page - 1) * pageSize + idx + 1}
-                      </TableCell>
-                      <TableCell className="text-foreground font-medium">
-                        {r.fullName ?? '—'}
-                      </TableCell>
-                      <TableCell>{r.email}</TableCell>
-                      <TableCell>{r.lastViewedAt ? formatDate(r.lastViewedAt) : '—'}</TableCell>
-                      <TableCell className="text-right">{r.totalViewCount}</TableCell>
-                      <TableCell className="text-right">{formatHours(r.totalWatchedSec)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="cursor-pointer"
-                          onClick={() =>
-                            startTransition(() => {
-                              void openDrilldown(r.studentId);
-                            })
-                          }
-                        >
-                          <Eye /> Chi tiết
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-12">TT</TableHead>
+                    <TableHead>Họ và tên</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Lần truy cập gần nhất</TableHead>
+                    <TableHead className="text-right">Lượt xem</TableHead>
+                    <TableHead className="text-right">Số giờ xem</TableHead>
+                    <TableHead className="w-28 text-right">Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+                  ) : (
+                    rows.map((r, idx) => (
+                      <TableRow key={r.studentId}>
+                        <TableCell className="text-muted-foreground">
+                          {(page - 1) * pageSize + idx + 1}
+                        </TableCell>
+                        <TableCell className="text-foreground font-medium">
+                          {r.fullName ?? '—'}
+                        </TableCell>
+                        <TableCell>{r.email}</TableCell>
+                        <TableCell>{r.lastViewedAt ? formatDate(r.lastViewedAt) : '—'}</TableCell>
+                        <TableCell className="text-right">{r.totalViewCount}</TableCell>
+                        <TableCell className="text-right">
+                          {formatHours(r.totalWatchedSec)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="cursor-pointer"
+                            onClick={() =>
+                              startTransition(() => {
+                                void openDrilldown(r.studentId);
+                              })
+                            }
+                          >
+                            <Eye /> Chi tiết
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagerFooter page={page} totalPages={totalPages} onPageChange={setPage} />
       </Card>
 
       <Dialog
@@ -259,7 +256,7 @@ export default function CourseStatsTab({ courseId }: Props) {
           if (!open) setDrilldown(null);
         }}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent size="lg">
           <DialogHeader>
             <DialogTitle>
               {drilldown
@@ -271,7 +268,7 @@ export default function CourseStatsTab({ courseId }: Props) {
             <div className="text-muted-foreground py-8 text-center text-sm">
               Đang tải dữ liệu...
             </div>
-          ) : drilldown && drilldown.lessons.length === 0 ? (
+          ) : drilldown && drilldown.files.length === 0 ? (
             <EmptyState
               icon={BarChart3}
               title="Chưa có dữ liệu xem"
@@ -282,9 +279,8 @@ export default function CourseStatsTab({ courseId }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Chương</TableHead>
-                    <TableHead>Bài học</TableHead>
-                    <TableHead>Mục video</TableHead>
+                    <TableHead>Đường dẫn</TableHead>
+                    <TableHead>Video</TableHead>
                     <TableHead className="text-right">Lượt xem</TableHead>
                     <TableHead className="text-right">Số giờ xem</TableHead>
                     <TableHead className="text-right">Vị trí cuối</TableHead>
@@ -292,17 +288,18 @@ export default function CourseStatsTab({ courseId }: Props) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {drilldown.lessons.map((l) => (
-                    <TableRow key={l.lessonItemId}>
-                      <TableCell>{l.chapterTitle}</TableCell>
-                      <TableCell>{l.lessonTitle}</TableCell>
-                      <TableCell>{l.lessonItemTitle}</TableCell>
-                      <TableCell className="text-right">{l.viewCount}</TableCell>
-                      <TableCell className="text-right">{formatHours(l.totalWatchedSec)}</TableCell>
-                      <TableCell className="text-right">
-                        {formatPosition(l.lastPositionSec, l.durationSeconds)}
+                  {drilldown.files.map((f) => (
+                    <TableRow key={f.nodeId}>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {f.pathTitles.length ? f.pathTitles.join(' / ') : '(gốc)'}
                       </TableCell>
-                      <TableCell>{l.lastViewedAt ? formatDate(l.lastViewedAt) : '—'}</TableCell>
+                      <TableCell>{f.nodeTitle}</TableCell>
+                      <TableCell className="text-right">{f.viewCount}</TableCell>
+                      <TableCell className="text-right">{formatHours(f.totalWatchedSec)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatPosition(f.lastPositionSec, f.durationSeconds)}
+                      </TableCell>
+                      <TableCell>{f.lastViewedAt ? formatDate(f.lastViewedAt) : '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

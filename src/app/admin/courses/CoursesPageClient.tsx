@@ -8,7 +8,6 @@ import {
   BookOpen,
   CheckCircle2,
   FileEdit,
-  Pencil,
   Plus,
   Search,
   Trash2,
@@ -22,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +44,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -54,8 +52,9 @@ import { handleActionResult } from '@/lib/actions';
 import { deleteCourseAction } from '@/actions/v1/courses/delete-course';
 import CourseFormModal from '@/components/features/courses/CourseFormModal';
 import type { ListMeta } from '@/types/auth';
-import type { CourseCategoryRow, CourseRow, CourseStatus } from '@/types/course-management';
+import type { CourseCategoryRow, CourseRow } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
+import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
 import type { CoursesListStats } from '@/types/actions/course-management';
 
 export interface UrlState {
@@ -87,25 +86,7 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-const SKELETON_COLUMNS = [
-  'w-8',
-  'w-16',
-  'w-52',
-  'w-20',
-  'w-28',
-  'w-32',
-  'w-24',
-  'w-14',
-  'w-14',
-  'w-14',
-  'w-20',
-];
-
-function statusBadge(status: CourseStatus) {
-  if (status === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;
-  if (status === 'DRAFT') return <Badge variant="warning">Bản nháp</Badge>;
-  return <Badge variant="secondary">Đã lưu trữ</Badge>;
-}
+const SKELETON_COLUMNS = ['w-8', 'w-16', 'w-52', 'w-20', 'w-28', 'w-32', 'w-24', 'w-16', 'w-14', 'w-20'];
 
 export default function CoursesPageClient({
   urlState,
@@ -336,8 +317,7 @@ export default function CoursesPageClient({
                     <TableHead>Danh mục</TableHead>
                     <TableHead>Giảng viên</TableHead>
                     <TableHead className="w-32">Trạng thái</TableHead>
-                    <TableHead className="w-20 text-center">Chương</TableHead>
-                    <TableHead className="w-20 text-center">Bài học</TableHead>
+                    <TableHead className="w-24 text-center">Nội dung</TableHead>
                     <TableHead className="w-20 text-center">Học sinh</TableHead>
                     <TableHead className="w-24 text-right">Hành động</TableHead>
                   </TableRow>
@@ -359,6 +339,7 @@ export default function CoursesPageClient({
                             <img
                               src={row.thumbnailUrl}
                               alt={row.title}
+                              loading="lazy"
                               className="size-12 rounded object-cover"
                             />
                           ) : (
@@ -379,27 +360,17 @@ export default function CoursesPageClient({
                         <TableCell className="text-muted-foreground text-sm">
                           {row.instructor?.fullName ?? row.instructor?.email ?? '—'}
                         </TableCell>
-                        <TableCell>{statusBadge(row.status)}</TableCell>
-                        <TableCell className="text-center font-medium">
-                          {row.totalChapters ?? 0}
+                        <TableCell>
+                          <CourseStatusBadge status={row.status} />
                         </TableCell>
                         <TableCell className="text-center font-medium">
-                          {row.totalLessons ?? 0}
+                          {row.nodeCount ?? 0}
                         </TableCell>
                         <TableCell className="text-center font-medium">
                           {row.enrollmentCount ?? 0}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Chi tiết"
-                              className="cursor-pointer"
-                              onClick={() => router.push(`/admin/courses/${row.id}`)}
-                            >
-                              <Pencil />
-                            </Button>
                             {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
                               <Button
                                 variant="ghost"
@@ -421,18 +392,11 @@ export default function CoursesPageClient({
             </div>
           )}
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={(p) => updateUrl({ page: p })}
-            />
-          </div>
-        )}
+        <TablePagerFooter
+          page={page}
+          totalPages={totalPages}
+          onPageChange={(p) => updateUrl({ page: p })}
+        />
       </Card>
 
       <CourseFormModal

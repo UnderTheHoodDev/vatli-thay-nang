@@ -54,7 +54,6 @@ interface FormState {
   targetAudience: string;
   learningOutcomes: string;
   instructorBio: string;
-  previewLessonCount: string;
   status: CourseStatus;
 }
 
@@ -73,7 +72,6 @@ function emptyForm(): FormState {
     targetAudience: '',
     learningOutcomes: '',
     instructorBio: '',
-    previewLessonCount: '3',
     status: 'DRAFT',
   };
 }
@@ -110,7 +108,6 @@ function fromForm(initial: CourseDetail | undefined): FormState {
     targetAudience: initial.targetAudience ?? '',
     learningOutcomes: initial.learningOutcomes ?? '',
     instructorBio: initial.instructorBio ?? '',
-    previewLessonCount: String(initial.previewLessonCount ?? 3),
     status: initial.status,
   };
 }
@@ -187,7 +184,6 @@ export default function CourseFormModal({
       enrollmentDeadline: form.enrollmentDeadline || undefined,
       targetAudience: form.targetAudience.trim() || undefined,
       learningOutcomes: form.learningOutcomes.trim() || undefined,
-      previewLessonCount: form.previewLessonCount ? Number(form.previewLessonCount) : undefined,
     };
 
     setSubmitting(true);
@@ -234,7 +230,7 @@ export default function CourseFormModal({
         if (!submitting) onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-2xl lg:max-w-3xl">
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Tạo khóa học' : 'Chỉnh sửa khóa học'}</DialogTitle>
           <DialogDescription>
@@ -354,28 +350,16 @@ export default function CourseFormModal({
             </TabsContent>
 
             <TabsContent value="detail" className="space-y-4 pt-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="course-price">Học phí (VNĐ)</Label>
-                  <Input
-                    id="course-price"
-                    type="number"
-                    min={0}
-                    step={1000}
-                    value={form.price}
-                    onChange={(e) => set('price', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="course-preview-count">Số bài học preview</Label>
-                  <Input
-                    id="course-preview-count"
-                    type="number"
-                    min={0}
-                    value={form.previewLessonCount}
-                    onChange={(e) => set('previewLessonCount', e.target.value)}
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="course-price">Học phí (VNĐ)</Label>
+                <Input
+                  id="course-price"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={form.price}
+                  onChange={(e) => set('price', e.target.value)}
+                />
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

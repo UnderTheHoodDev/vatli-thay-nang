@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -175,60 +175,55 @@ export default function CourseEnrollmentsTab({
               description='Dùng nút "Thêm học sinh" để ghi danh học sinh vào khóa học.'
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-14">ID</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Họ và tên</TableHead>
-                  <TableHead className="w-32">Trạng thái</TableHead>
-                  <TableHead>Ngày ghi danh</TableHead>
-                  <TableHead className="w-40 text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : (
-                  rows.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="text-muted-foreground">{e.studentId}</TableCell>
-                      <TableCell className="text-foreground font-medium">{e.email}</TableCell>
-                      <TableCell>{e.fullName ?? '—'}</TableCell>
-                      <TableCell>
-                        <Badge variant={e.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                          {e.status === 'ACTIVE' ? 'Đang học' : 'Đã thu hồi'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(e.enrolledAt)}</TableCell>
-                      <TableCell className="text-right">
-                        {e.status === 'ACTIVE' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-destructive hover:text-destructive cursor-pointer"
-                            onClick={() => setTarget(e)}
-                            disabled={pending}
-                          >
-                            <Trash2 /> Thu hồi
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-14">ID</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Họ và tên</TableHead>
+                    <TableHead className="w-32">Trạng thái</TableHead>
+                    <TableHead>Ngày ghi danh</TableHead>
+                    <TableHead className="w-40 text-right">Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+                  ) : (
+                    rows.map((e) => (
+                      <TableRow key={e.id}>
+                        <TableCell className="text-muted-foreground">{e.studentId}</TableCell>
+                        <TableCell className="text-foreground font-medium">{e.email}</TableCell>
+                        <TableCell>{e.fullName ?? '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant={e.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                            {e.status === 'ACTIVE' ? 'Đang học' : 'Đã thu hồi'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(e.enrolledAt)}</TableCell>
+                        <TableCell className="text-right">
+                          {e.status === 'ACTIVE' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive cursor-pointer"
+                              onClick={() => setTarget(e)}
+                              disabled={pending}
+                            >
+                              <Trash2 /> Thu hồi
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
-          </div>
-        )}
+        <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
       </Card>
 
       <AlertDialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>

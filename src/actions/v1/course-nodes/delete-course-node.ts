@@ -5,21 +5,20 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
-import type { IReorderPayload } from '@/types/actions/course-management';
 
-export async function reorderLessonsAction(
-  chapterId: number,
+/** Xoá node (folder cascade + dọn R2/bunny các tệp con). */
+export async function deleteCourseNodeAction(
+  nodeId: number,
   courseId: number,
-  payload: IReorderPayload,
 ): Promise<IActionState> {
   try {
-    await api.patch(`/api/v1/chapters/${chapterId}/lessons/reorder`, payload);
+    await api.delete(`/api/v1/nodes/${nodeId}`);
     revalidatePath(`/admin/courses/${courseId}`);
     return { errors: [] };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {
       return { errors: extractErrors(error.response.data) };
     }
-    return { errors: ['Sắp xếp bài học thất bại'] };
+    return { errors: ['Xoá nội dung thất bại'] };
   }
 }

@@ -6,18 +6,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, BarChart3, Info, LayoutList, Users as UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseInfoTab from '@/components/features/courses/CourseInfoTab';
 import CourseStructureTab from '@/components/features/courses/CourseStructureTab';
 import CourseEnrollmentsTab from '@/components/features/courses/CourseEnrollmentsTab';
 import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
+import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
 import type { ListMeta } from '@/types/auth';
 import type {
   CourseCategoryRow,
   CourseDetail,
   CourseEnrollmentRow,
-  CourseStatus,
 } from '@/types/course-management';
 
 export type CourseDetailTab = 'info' | 'structure' | 'enrollments' | 'stats';
@@ -50,12 +49,6 @@ function buildUrlParams(state: CourseDetailUrlState): URLSearchParams {
   if (state.page !== 1) sp.set('page', String(state.page));
   if (state.pageSize !== DEFAULT_PAGE_SIZE) sp.set('pageSize', String(state.pageSize));
   return sp;
-}
-
-function statusBadge(s: CourseStatus) {
-  if (s === 'PUBLISHED') return <Badge variant="success">Đang phát hành</Badge>;
-  if (s === 'DRAFT') return <Badge variant="warning">Bản nháp</Badge>;
-  return <Badge variant="secondary">Đã lưu trữ</Badge>;
 }
 
 export default function CourseDetailPageClient({
@@ -102,18 +95,20 @@ export default function CourseDetailPageClient({
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-paytone text-foreground text-2xl tracking-tight">{course.title}</h1>
-            {statusBadge(course.status)}
+            <CourseStatusBadge status={course.status} />
           </div>
-          <p className="text-muted-foreground text-sm">
-            Mã khóa học:{' '}
-            <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-              {course.code}
-            </code>
-            <span className="mx-2">·</span>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span className="inline-flex items-center gap-1">
+              Mã khóa học:
+              <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                {course.code}
+              </code>
+            </span>
+            <span className="text-muted-foreground/50">·</span>
             <span>{course.category?.name}</span>
-            <span className="mx-2">·</span>
+            <span className="text-muted-foreground/50">·</span>
             <span>{course.enrollmentCount ?? 0} học sinh</span>
-          </p>
+          </div>
         </div>
       </div>
 

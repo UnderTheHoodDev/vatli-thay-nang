@@ -1,63 +1,55 @@
-import type { CourseDetail, LessonItemTree } from '@/types/course-management';
+import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
-export interface FlatItem {
-  item: LessonItemTree;
-  lessonId: number;
-  lessonTitle: string;
-  lessonIsPreview: boolean;
-  chapterTitle: string;
-  chapterOrder: number;
-  /** Học sinh có quyền xem item này không (enrolled hoặc lesson preview). */
+export interface FlatFile {
+  node: CourseNodeTree;
+  /** Breadcrumb các folder cha (từ gốc → gần nhất). */
+  pathTitles: string[];
+  /** Học sinh có quyền xem tệp này không (đã ghi danh). */
   accessible: boolean;
 }
 
 /**
- * Duyệt cây khóa học thành danh sách phẳng theo thứ tự
- * chapter.order → lesson.order → item.order.
+ * Duyệt cây khóa học (DFS theo order) thành danh sách phẳng các TỆP (FILE),
+ * bỏ qua FOLDER. Không còn preview → `accessible = isEnrolled` cho mọi tệp.
  */
-export function flattenItems(course: CourseDetail, isEnrolled: boolean): FlatItem[] {
-  const flat: FlatItem[] = [];
-  for (const chapter of course.chapters) {
-    for (const lesson of chapter.lessons) {
-      const accessible = isEnrolled || lesson.isPreview;
-      for (const item of lesson.items) {
-        flat.push({
-          item,
-          lessonId: lesson.id,
-          lessonTitle: lesson.title,
-          lessonIsPreview: lesson.isPreview,
-          chapterTitle: chapter.title,
-          chapterOrder: chapter.order,
-          accessible,
-        });
+export function flattenTree(course: CourseDetail, isEnrolled: boolean): FlatFile[] {
+  const flat: FlatFile[] = [];
+  const walk = (nodes: CourseNodeTree[], path: string[]) => {
+    const sorted = [...nodes].sort((a, b) => a.order - b.order);
+    for (const n of sorted) {
+      if (n.type === 'FOLDER') {
+        walk(n.children ?? [], [...path, n.title]);
+      } else {
+        flat.push({ node: n, pathTitles: path, accessible: isEnrolled });
       }
     }
-  }
+  };
+  walk(course.nodes, []);
   return flat;
 }
 
-export function findItemIndex(flat: FlatItem[], itemId: number | null): number {
-  if (itemId == null) return -1;
-  return flat.findIndex((f) => f.item.id === itemId);
+export function findFileIndex(flat: FlatFile[], nodeId: number | null): number {
+  if (nodeId == null) return -1;
+  return flat.findIndex((f) => f.node.id === nodeId);
 }
 
-/** Item liền trước (không skip item khóa); null nếu đã ở đầu. */
-export function prevItem(flat: FlatItem[], itemId: number | null): FlatItem | null {
-  const idx = findItemIndex(flat, itemId);
+/** Tệp liền trước (không skip tệp khóa); null nếu đã ở đầu. */
+export function prevFile(flat: FlatFile[], nodeId: number | null): FlatFile | null {
+  const idx = findFileIndex(flat, nodeId);
   if (idx <= 0) return null;
   return flat[idx - 1];
 }
 
-/** Item liền sau (không skip item khóa); null nếu đã ở cuối. */
-export function nextItem(flat: FlatItem[], itemId: number | null): FlatItem | null {
-  const idx = findItemIndex(flat, itemId);
+/** Tệp liền sau (không skip tệp khóa); null nếu đã ở cuối. */
+export function nextFile(flat: FlatFile[], nodeId: number | null): FlatFile | null {
+  const idx = findFileIndex(flat, nodeId);
   if (idx < 0 || idx >= flat.length - 1) return null;
   return flat[idx + 1];
 }
 
-/** Item active hiện tại; fallback item đầu tiên nếu id không hợp lệ. */
-export function resolveActive(flat: FlatItem[], itemId: number | null): FlatItem | null {
-  const idx = findItemIndex(flat, itemId);
+/** Tệp active hiện tại; fallback tệp đầu tiên nếu id không hợp lệ. */
+export function resolveActiveFile(flat: FlatFile[], nodeId: number | null): FlatFile | null {
+  const idx = findFileIndex(flat, nodeId);
   if (idx >= 0) return flat[idx];
   return flat[0] ?? null;
 }

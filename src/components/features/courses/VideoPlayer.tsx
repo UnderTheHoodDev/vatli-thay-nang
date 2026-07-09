@@ -3,25 +3,32 @@
 import { useEffect, useRef, useState } from 'react';
 import { endView, getProgress, heartbeat, startView } from '@/lib/video-tracking-client';
 import { loadPlayerJs, type BunnyPlayer } from '@/lib/bunny-player';
+import { cn } from '@/lib/utils';
 import type { BunnyVideoStatus } from '@/types/course-management';
 
 interface Props {
-  lessonItemId: number;
+  nodeId: number;
   videoUrl: string;
   durationSeconds?: number | null;
   bunnyStatus: BunnyVideoStatus;
   title?: string;
+  /** false = xem thuần (admin preview): không gọi tracking, phát từ đầu. Mặc định true. */
+  track?: boolean;
+  /** true = lấp đầy khung cha thay vì aspect-video (modal xem gần full màn hình). */
+  fill?: boolean;
 }
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MAX_DELTA_SEC = 60;
 
 export default function VideoPlayer({
-  lessonItemId,
+  nodeId,
   videoUrl,
   durationSeconds,
   bunnyStatus,
   title,
+  track = true,
+  fill = false,
 }: Props) {
   const [initialPosition, setInitialPosition] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -38,8 +45,14 @@ export default function VideoPlayer({
   // Lấy vị trí resume trước khi mount iframe.
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED') return;
+    // Admin preview (track=false): không gọi tracking, phát từ đầu.
+    if (!track) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInitialPosition(0);
+      return;
+    }
     let cancelled = false;
-    getProgress(lessonItemId)
+    getProgress(nodeId)
       .then((res) => {
         if (cancelled) return;
         setInitialPosition(res.data.lastPositionSec ?? 0);
@@ -50,7 +63,7 @@ export default function VideoPlayer({
     return () => {
       cancelled = true;
     };
-  }, [lessonItemId, bunnyStatus]);
+  }, [nodeId, bunnyStatus, track]);
 
   // Player.js: seek tới vị trí dở + lắng nghe vị trí thật. Fallback im lặng nếu
   // script không tải được (adblock) — khi đó dùng cơ chế ?t= + accumulated.
@@ -96,11 +109,12 @@ export default function VideoPlayer({
       playerReadyRef.current = false;
       isPlayingRef.current = false;
     };
-  }, [initialPosition, bunnyStatus, lessonItemId]);
+  }, [initialPosition, bunnyStatus, nodeId]);
 
   // Tracking lifecycle (start / heartbeat / end).
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED' || initialPosition == null) return;
+    if (!track) return; // admin preview: không ghi tracking
 
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let cancelled = false;
@@ -112,7 +126,7 @@ export default function VideoPlayer({
 
     const begin = async () => {
       try {
-        const res = await startView(lessonItemId, initialPosition);
+        const res = await startView(nodeId, initialPosition);
         if (cancelled) return;
         viewIdRef.current = res.data.viewId;
         lastTickRef.current = Date.now();
@@ -165,11 +179,16 @@ export default function VideoPlayer({
         viewIdRef.current = null;
       }
     };
-  }, [lessonItemId, initialPosition, bunnyStatus]);
+  }, [nodeId, initialPosition, bunnyStatus, track]);
+
+  const boxClass = cn(
+    'bg-muted flex items-center justify-center rounded-lg',
+    fill ? 'h-full' : 'aspect-video',
+  );
 
   if (bunnyStatus !== 'FINISHED') {
     return (
-      <div className="bg-muted flex aspect-video items-center justify-center rounded-lg">
+      <div className={boxClass}>
         <div className="text-muted-foreground text-center text-sm">
           {bunnyStatus === 'ERROR' ? (
             <>Video xử lý lỗi, vui lòng liên hệ giáo viên.</>
@@ -183,7 +202,7 @@ export default function VideoPlayer({
 
   if (initialPosition == null) {
     return (
-      <div className="bg-muted flex aspect-video items-center justify-center rounded-lg">
+      <div className={boxClass}>
         <div className="text-muted-foreground text-center text-sm">Đang chuẩn bị player...</div>
       </div>
     );
@@ -192,8 +211,8 @@ export default function VideoPlayer({
   // Giữ &t= làm hint cho fallback (Player.js setCurrentTime là cơ chế chính).
   const src = `${videoUrl}?autoplay=false&t=${initialPosition}`;
   return (
-    <div className="overflow-hidden rounded-lg bg-black">
-      <div className="relative aspect-video w-full">
+    <div className={cn('overflow-hidden rounded-lg bg-black', fill && 'flex h-full flex-col')}>
+      <div className={cn('relative w-full', fill ? 'min-h-0 flex-1' : 'aspect-video')}>
         <iframe
           ref={iframeRef}
           src={src}
@@ -205,8 +224,10 @@ export default function VideoPlayer({
         />
       </div>
       {durationSeconds ? (
-        <div className="text-muted-foreground bg-background px-3 py-2 text-xs">
-          Thời lượng: {formatDuration(durationSeconds)} · Tự lưu &amp; tiếp tục vị trí xem
+        <div className="text-muted-foreground bg-background shrink-0 px-3 py-2 text-xs">
+          Thời lượng: {formatDuration(durationSeconds)}
+          <span className="mx-1.5">·</span>
+          Tự lưu &amp; tiếp tục vị trí xem
         </div>
       ) : null}
     </div>

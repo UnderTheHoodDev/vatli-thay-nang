@@ -21,8 +21,8 @@ export default async function CourseEntryPage({ params }: Props) {
   if (resume === null) notFound(); // 404 thật sự: khóa không tồn tại
 
   // redirect() throw — đặt ngoài mọi try/catch.
-  if (!resume?.lessonItemId) {
+  if (!resume?.nodeId) {
     redirect(`/dashboard/courses/${courseId}/learn`);
   }
-  redirect(`/dashboard/courses/${courseId}/learn?item=${resume.lessonItemId}`);
+  redirect(`/dashboard/courses/${courseId}/learn?item=${resume.nodeId}`);
 }

@@ -34,11 +34,8 @@ export interface ProgressResult {
   };
 }
 
-export async function startView(
-  lessonItemId: number,
-  lastPositionSec = 0,
-): Promise<StartViewResult> {
-  return postJson<StartViewResult>('start', { lessonItemId, lastPositionSec });
+export async function startView(nodeId: number, lastPositionSec = 0): Promise<StartViewResult> {
+  return postJson<StartViewResult>('start', { nodeId, lastPositionSec });
 }
 
 export async function heartbeat(
@@ -64,8 +61,8 @@ export function endView(viewId: number, currentPositionSec: number): void {
   }).catch(() => undefined);
 }
 
-export async function getProgress(lessonItemId: number): Promise<ProgressResult> {
-  const res = await fetch(`/api/video-tracking/progress?lessonItemId=${lessonItemId}`, {
+export async function getProgress(nodeId: number): Promise<ProgressResult> {
+  const res = await fetch(`/api/video-tracking/progress?nodeId=${nodeId}`, {
     credentials: 'same-origin',
   });
   if (!res.ok) throw new Error(`get-progress ${res.status}`);
