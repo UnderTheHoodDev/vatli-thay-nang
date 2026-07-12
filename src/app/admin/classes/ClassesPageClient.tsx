@@ -48,7 +48,7 @@ import {
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -270,15 +270,7 @@ function ClassesPaginationSection({
 }) {
   const { meta } = use(promise);
   const totalPages = Math.max(1, Math.ceil(meta.total / pageSize));
-  if (totalPages <= 1) return null;
-  return (
-    <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-      <div className="text-muted-foreground text-sm whitespace-nowrap">
-        Trang {page} / {totalPages}
-      </div>
-      <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
-    </div>
-  );
+  return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
 }
 
 export default function ClassesPageClient({ urlState, classesPromise, allClasses }: Props) {
