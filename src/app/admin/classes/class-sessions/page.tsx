@@ -20,23 +20,19 @@ export default async function ClassSessionsAllPage({ searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  const [result, allClassesResult] = await Promise.all([
-    listAllClassSessions({
-      classCode: urlState.classCode || undefined,
-      startDate: urlState.startDate || undefined,
-      endDate: urlState.endDate || undefined,
-      page: urlState.page,
-      pageSize: urlState.pageSize,
-    }),
-    listClasses({ page: 1, pageSize: 200 }),
-  ]);
+  const allClassesResult = await listClasses({ page: 1, pageSize: 200 });
+  const sessionsPromise = listAllClassSessions({
+    classCode: urlState.classCode || undefined,
+    startDate: urlState.startDate || undefined,
+    endDate: urlState.endDate || undefined,
+    page: urlState.page,
+    pageSize: urlState.pageSize,
+  });
 
   return (
     <ClassSessionsAllPageClient
       urlState={urlState}
-      rows={result.data}
-      meta={result.meta}
-      errors={result.errors}
+      sessionsPromise={sessionsPromise}
       classes={allClassesResult.data}
     />
   );

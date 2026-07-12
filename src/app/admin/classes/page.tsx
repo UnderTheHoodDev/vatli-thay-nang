@@ -33,18 +33,13 @@ export default async function ClassesPage({ searchParams }: Props) {
     pageSize: urlState.pageSize,
   };
 
-  const [result, allClassesResult] = await Promise.all([
-    listClasses(apiParams),
-    listClasses({ page: 1, pageSize: 200 }),
-  ]);
+  const allClassesResult = await listClasses({ page: 1, pageSize: 200 });
+  const classesPromise = listClasses(apiParams);
 
   return (
     <ClassesPageClient
       urlState={urlState}
-      rows={result.data}
-      meta={result.meta}
-      stats={result.stats}
-      errors={result.errors}
+      classesPromise={classesPromise}
       allClasses={allClassesResult.data}
     />
   );

@@ -33,18 +33,13 @@ export default async function CoursesPage({ searchParams }: Props) {
     pageSize: urlState.pageSize,
   };
 
-  const [coursesRes, categoriesRes] = await Promise.all([
-    listCourses(apiParams),
-    listCourseCategories({ pageSize: 200 }),
-  ]);
+  const categoriesRes = await listCourseCategories({ pageSize: 200 });
+  const coursesPromise = listCourses(apiParams);
 
   return (
     <CoursesPageClient
       urlState={urlState}
-      rows={coursesRes.data}
-      meta={coursesRes.meta}
-      stats={coursesRes.stats}
-      errors={coursesRes.errors}
+      coursesPromise={coursesPromise}
       categories={categoriesRes.data}
     />
   );

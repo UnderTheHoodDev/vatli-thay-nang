@@ -16,18 +16,11 @@ export default async function StudentCoursesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  const result = await listCourses({
+  const coursesPromise = listCourses({
     status: 'PUBLISHED',
     page: urlState.page,
     pageSize: urlState.pageSize,
   });
 
-  return (
-    <StudentCoursesClient
-      urlState={urlState}
-      rows={result.data}
-      meta={result.meta}
-      errors={result.errors}
-    />
-  );
+  return <StudentCoursesClient urlState={urlState} coursesPromise={coursesPromise} />;
 }

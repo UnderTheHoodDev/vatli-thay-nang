@@ -7,10 +7,7 @@ import { extractErrors } from '@/lib/errors';
 import type { IActionState } from '@/types/actions/users';
 
 /** Báo BE đã upload xong bytes video (UPLOADING → QUEUED). */
-export async function markUploadedAction(
-  nodeId: number,
-  courseId: number,
-): Promise<IActionState> {
+export async function markUploadedAction(nodeId: number, courseId: number): Promise<IActionState> {
   try {
     await api.post(`/api/v1/nodes/${nodeId}/mark-uploaded`);
     revalidatePath(`/admin/courses/${courseId}`);

@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation';
 import { getCourse } from '@/actions/v1/courses/get-course';
 import { listCourseCategories } from '@/actions/v1/course-categories/list-course-categories';
-import { listCourseEnrollments } from '@/actions/v1/courses/list-course-enrollments';
+import {
+  listCourseEnrollments,
+  type ListCourseEnrollmentsResponse,
+} from '@/actions/v1/courses/list-course-enrollments';
 import CourseDetailPageClient, {
   type CourseDetailTab,
   type CourseDetailUrlState,
@@ -41,8 +44,8 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
   const course = await getCourse(courseId);
   if (!course) notFound();
 
-  const [categoriesRes, enrollmentsRes] = await Promise.all([
-    listCourseCategories({ pageSize: 200 }),
+  const categoriesRes = await listCourseCategories({ pageSize: 200 });
+  const enrollmentsPromise: Promise<ListCourseEnrollmentsResponse> =
     urlState.tab === 'enrollments'
       ? listCourseEnrollments(courseId, {
           email: urlState.email || undefined,
@@ -53,18 +56,15 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
       : Promise.resolve({
           data: [],
           meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
-          errors: [] as string[],
-        }),
-  ]);
+          errors: [],
+        });
 
   return (
     <CourseDetailPageClient
       course={course}
       urlState={urlState}
       categories={categoriesRes.data}
-      enrollments={enrollmentsRes.data}
-      enrollmentsMeta={enrollmentsRes.meta}
-      enrollmentsErrors={enrollmentsRes.errors}
+      enrollmentsPromise={enrollmentsPromise}
     />
   );
 }

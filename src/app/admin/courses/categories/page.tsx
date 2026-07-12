@@ -19,18 +19,11 @@ export default async function CourseCategoriesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  const result = await listCourseCategories({
+  const categoriesPromise = listCourseCategories({
     name: urlState.name || undefined,
     page: urlState.page,
     pageSize: urlState.pageSize,
   });
 
-  return (
-    <CourseCategoriesPageClient
-      urlState={urlState}
-      rows={result.data}
-      meta={result.meta}
-      errors={result.errors}
-    />
-  );
+  return <CourseCategoriesPageClient urlState={urlState} categoriesPromise={categoriesPromise} />;
 }

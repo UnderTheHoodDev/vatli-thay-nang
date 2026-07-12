@@ -383,7 +383,11 @@ export default function NodeFormModal({
               {file ? (
                 <div className="border-divider flex items-center gap-3 rounded-lg border p-3">
                   <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded">
-                    {kind === 'VIDEO' ? <Film className="size-5" /> : <FileText className="size-5" />}
+                    {kind === 'VIDEO' ? (
+                      <Film className="size-5" />
+                    ) : (
+                      <FileText className="size-5" />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-foreground truncate text-sm font-medium">{file.name}</p>

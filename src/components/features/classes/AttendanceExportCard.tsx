@@ -57,7 +57,7 @@ export default function AttendanceExportCard({ classes }: Props) {
                 <Button
                   variant="outline"
                   type="button"
-                  className="w-full cursor-pointer justify-between font-normal"
+                  className="border-input-border hover:text-foreground h-auto min-h-10 w-full cursor-pointer justify-between bg-white px-3 py-2 font-normal hover:bg-white"
                 >
                   <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1 overflow-hidden">
                     {selectedClasses.length === 0 ? (

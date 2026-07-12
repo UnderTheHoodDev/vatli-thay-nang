@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -133,9 +133,10 @@ export default function UserSearchForm({ provinces, classes, initial, onSearch }
             <Button
               variant="outline"
               type="button"
-              className="w-full cursor-pointer justify-between font-normal"
+              className="border-input-border hover:text-foreground h-10 w-full cursor-pointer justify-between bg-white px-3 font-normal hover:bg-white"
             >
               <span className="truncate">{provinceLabel}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-(--radix-popover-trigger-width) p-0">

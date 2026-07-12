@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -46,18 +47,19 @@ import {
 } from '@/components/ui/alert-dialog';
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
+import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
 import { handleActionResult } from '@/lib/actions';
 import { deleteClassAction } from '@/actions/v1/classes/delete-class';
 import ClassFormModal from '@/components/features/classes/ClassFormModal';
 import AttendanceExportCard from '@/components/features/classes/AttendanceExportCard';
-import type { ListMeta } from '@/types/auth';
 import type { ClassRow } from '@/types/class-management';
-import type { ClassesListStats } from '@/types/actions/class-management';
+import type { ListClassesResponse } from '@/actions/v1/classes/list-classes';
 
 export interface UrlState {
   name: string;
@@ -71,10 +73,7 @@ export interface UrlState {
 
 interface Props {
   urlState: UrlState;
-  rows: ClassRow[];
-  meta: ListMeta;
-  stats: ClassesListStats;
-  errors: string[];
+  classesPromise: Promise<ListClassesResponse>;
   allClasses: ClassRow[];
 }
 
@@ -82,6 +81,9 @@ const CLASS_STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Đang hoạt động' },
   { value: 'CLOSED', label: 'Đã đóng' },
 ] as const;
+
+const STATS_GRID = 'grid-cols-2 lg:grid-cols-4';
+const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-10', 'w-24', 'w-28', 'w-20'];
 
 function buildUrlParams(state: UrlState): URLSearchParams {
   const sp = new URLSearchParams();
@@ -95,16 +97,191 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-24', 'w-28', 'w-20'];
+function ClassesStatsSection({ promise }: { promise: Promise<ListClassesResponse> }) {
+  const { stats } = use(promise);
+  return (
+    <div className={`grid gap-3 ${STATS_GRID}`}>
+      <StatsCard label="Tổng số lớp" value={stats.total} icon={School} tone="primary" />
+      <StatsCard label="Đang hoạt động" value={stats.active} icon={CheckCircle2} tone="success" />
+      <StatsCard label="Đã đóng" value={stats.closed} icon={Lock} tone="muted" />
+      <StatsCard
+        label="Tổng học sinh"
+        value={stats.totalStudents}
+        icon={UsersIcon}
+        tone="warning"
+      />
+    </div>
+  );
+}
 
-export default function ClassesPageClient({
-  urlState,
-  rows,
-  meta,
-  stats,
-  errors,
-  allClasses,
-}: Props) {
+function ClassesResultSummary({
+  promise,
+  page,
+  pageSize,
+}: {
+  promise: Promise<ListClassesResponse>;
+  page: number;
+  pageSize: number;
+}) {
+  const { meta } = use(promise);
+  const total = meta.total;
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  return (
+    <p className="text-muted-foreground mt-1 text-sm">
+      {total === 0 ? 'Chưa có lớp học nào' : `Hiển thị ${start}–${end} trên tổng ${total} lớp`}
+    </p>
+  );
+}
+
+function ClassesTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        <TableHead className="w-14">ID</TableHead>
+        <TableHead>Tên lớp</TableHead>
+        <TableHead>Mã lớp</TableHead>
+        <TableHead className="w-32 text-center">Số học sinh</TableHead>
+        <TableHead className="w-28 text-center">Số buổi học</TableHead>
+        <TableHead className="w-32">Ngày tạo</TableHead>
+        <TableHead className="w-36">Trạng thái</TableHead>
+        <TableHead className="w-32 text-right">Hành động</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function ClassesTableFallback() {
+  return (
+    <Table>
+      <ClassesTableHead />
+      <TableBody>
+        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+      </TableBody>
+    </Table>
+  );
+}
+
+function ClassesTableSection({
+  promise,
+  isPending,
+  onCreate,
+  onEdit,
+  onDelete,
+}: {
+  promise: Promise<ListClassesResponse>;
+  isPending: boolean;
+  onCreate: () => void;
+  onEdit: (row: ClassRow) => void;
+  onDelete: (row: ClassRow) => void;
+}) {
+  const router = useRouter();
+  const { data: rows, errors } = use(promise);
+
+  useEffect(() => {
+    errors.forEach((e) => toast.error(e));
+  }, [errors]);
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={School}
+        title="Không có lớp học nào"
+        description="Tạo lớp đầu tiên để bắt đầu quản lý học sinh và bài học."
+        action={
+          <Button onClick={onCreate} className="cursor-pointer">
+            <Plus /> Tạo lớp mới
+          </Button>
+        }
+      />
+    );
+  }
+
+  return (
+    <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
+      <Table>
+        <ClassesTableHead />
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              key={row.id}
+              onClick={() => router.push(`/admin/classes/${row.id}`)}
+              className="hover:bg-muted cursor-pointer transition-colors"
+            >
+              <TableCell className="text-muted-foreground">{row.id}</TableCell>
+              <TableCell className="text-foreground font-medium">{row.name}</TableCell>
+              <TableCell>
+                <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                  {row.code}
+                </code>
+              </TableCell>
+              <TableCell className="text-center font-medium">{row.studentCount ?? 0}</TableCell>
+              <TableCell className="text-center font-medium">{row.sessionCount ?? 0}</TableCell>
+              <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                {row.createdAt ? formatDate(row.createdAt) : '—'}
+              </TableCell>
+              <TableCell>
+                <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                  {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
+                </Badge>
+              </TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Sửa"
+                    className="cursor-pointer"
+                    onClick={() => onEdit(row)}
+                  >
+                    <Pencil />
+                  </Button>
+                  {row.status === 'CLOSED' && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Xoá"
+                      className="text-destructive hover:text-destructive cursor-pointer"
+                      onClick={() => onDelete(row)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function ClassesPaginationSection({
+  promise,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  promise: Promise<ListClassesResponse>;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { meta } = use(promise);
+  const totalPages = Math.max(1, Math.ceil(meta.total / pageSize));
+  if (totalPages <= 1) return null;
+  return (
+    <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
+      <div className="text-muted-foreground text-sm whitespace-nowrap">
+        Trang {page} / {totalPages}
+      </div>
+      <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+    </div>
+  );
+}
+
+export default function ClassesPageClient({ urlState, classesPromise, allClasses }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
@@ -112,12 +289,6 @@ export default function ClassesPageClient({
   const [deletingClass, setDeletingClass] = useState<ClassRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (errors.length > 0) {
-      errors.forEach((e) => toast.error(e));
-    }
-  }, [errors]);
 
   const [searchName, setSearchName] = useState(urlState.name);
   const [searchCode, setSearchCode] = useState(urlState.code);
@@ -169,10 +340,6 @@ export default function ClassesPageClient({
   };
 
   const { page, pageSize } = urlState;
-  const total = meta.total;
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
@@ -181,17 +348,9 @@ export default function ClassesPageClient({
         description="Tạo, theo dõi và quản lý các lớp học vật lí của bạn."
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatsCard label="Tổng số lớp" value={stats.total} icon={School} tone="primary" />
-        <StatsCard label="Đang hoạt động" value={stats.active} icon={CheckCircle2} tone="success" />
-        <StatsCard label="Đã đóng" value={stats.closed} icon={Lock} tone="muted" />
-        <StatsCard
-          label="Tổng học sinh"
-          value={stats.totalStudents}
-          icon={UsersIcon}
-          tone="warning"
-        />
-      </div>
+      <Suspense fallback={<StatsGridSkeleton count={4} className={STATS_GRID} />}>
+        <ClassesStatsSection promise={classesPromise} />
+      </Suspense>
 
       <AttendanceExportCard classes={allClasses} />
 
@@ -276,11 +435,9 @@ export default function ClassesPageClient({
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Danh sách lớp học</CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Chưa có lớp học nào'
-                : `Hiển thị ${start}–${end} trên tổng ${total} lớp`}
-            </p>
+            <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
+              <ClassesResultSummary promise={classesPromise} page={page} pageSize={pageSize} />
+            </Suspense>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
@@ -305,105 +462,24 @@ export default function ClassesPageClient({
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          {!isPending && rows.length === 0 ? (
-            <EmptyState
-              icon={School}
-              title="Không có lớp học nào"
-              description="Tạo lớp đầu tiên để bắt đầu quản lý học sinh và bài học."
-              action={
-                <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-                  <Plus /> Tạo lớp mới
-                </Button>
-              }
+          <Suspense fallback={<ClassesTableFallback />}>
+            <ClassesTableSection
+              promise={classesPromise}
+              isPending={isPending}
+              onCreate={() => setCreateOpen(true)}
+              onEdit={setEditingClass}
+              onDelete={setDeletingClass}
             />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-14">ID</TableHead>
-                  <TableHead>Tên lớp</TableHead>
-                  <TableHead>Mã lớp</TableHead>
-                  <TableHead className="w-32 text-center">Số học sinh</TableHead>
-                  <TableHead className="w-28 text-center">Số buổi học</TableHead>
-                  <TableHead className="w-32">Ngày tạo</TableHead>
-                  <TableHead className="w-36">Trạng thái</TableHead>
-                  <TableHead className="w-32 text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isPending ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : (
-                  rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => router.push(`/admin/classes/${row.id}`)}
-                      className="hover:bg-muted cursor-pointer transition-colors"
-                    >
-                      <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                      <TableCell className="text-foreground font-medium">{row.name}</TableCell>
-                      <TableCell>
-                        <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                          {row.code}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {row.studentCount ?? 0}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {row.sessionCount ?? 0}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                        {row.createdAt ? formatDate(row.createdAt) : '—'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                          {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Sửa"
-                            className="cursor-pointer"
-                            onClick={() => setEditingClass(row)}
-                          >
-                            <Pencil />
-                          </Button>
-                          {row.status === 'CLOSED' && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Xoá"
-                              className="text-destructive hover:text-destructive cursor-pointer"
-                              onClick={() => setDeletingClass(row)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+          </Suspense>
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={(p) => updateUrl({ page: p })}
-            />
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <ClassesPaginationSection
+            promise={classesPromise}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(p) => updateUrl({ page: p })}
+          />
+        </Suspense>
       </Card>
 
       <ClassFormModal open={createOpen} onOpenChange={setCreateOpen} mode="create" />

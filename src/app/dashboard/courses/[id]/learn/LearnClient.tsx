@@ -92,7 +92,6 @@ export default function LearnClient({ course, initialNodeId }: Props) {
           </Link>
         </Button>
 
-        {/* Desktop: bật/tắt chế độ xem rộng (ẩn sidebar) */}
         <Button
           variant="outline"
           size="sm"
@@ -147,7 +146,6 @@ export default function LearnClient({ course, initialNodeId }: Props) {
         )}
       </div>
 
-      {/* Mobile: thanh điều hướng cố định đáy (prev / nội dung / next) */}
       <div className="border-divider bg-background/95 fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t px-3 py-2 backdrop-blur lg:hidden">
         <Button
           variant="outline"
@@ -177,7 +175,6 @@ export default function LearnClient({ course, initialNodeId }: Props) {
         </Button>
       </div>
 
-      {/* Mobile: sidebar dạng Sheet (điều khiển bằng state) */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="flex h-full w-[88vw] max-w-sm flex-col p-0">
           <SheetHeader className="sr-only">
@@ -210,7 +207,7 @@ function NavButton({
     <Button
       variant="outline"
       className={cn(
-        'h-auto min-w-0 max-w-[48%] cursor-pointer py-2',
+        'h-auto max-w-[48%] min-w-0 cursor-pointer py-2',
         isPrev ? 'justify-start pr-3' : 'justify-end pl-3',
       )}
       disabled={!target}

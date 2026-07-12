@@ -50,12 +50,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/app/EmptyState';
 import { cn } from '@/lib/utils';
 import { handleActionResult, handleActionErrors } from '@/lib/actions';
@@ -85,7 +80,12 @@ const POLL_INTERVAL_MS = 9000;
 const PENDING_STATUSES: BunnyVideoStatus[] = ['UPLOADING', 'QUEUED', 'PROCESSING'];
 
 function isPendingVideo(n: CourseNodeTree): boolean {
-  return n.type === 'FILE' && n.fileKind === 'VIDEO' && !!n.bunnyStatus && PENDING_STATUSES.includes(n.bunnyStatus);
+  return (
+    n.type === 'FILE' &&
+    n.fileKind === 'VIDEO' &&
+    !!n.bunnyStatus &&
+    PENDING_STATUSES.includes(n.bunnyStatus)
+  );
 }
 
 // ===== recursive tree helpers =====
@@ -169,9 +169,7 @@ interface Props {
 }
 
 type DeleteTarget = { id: number; title: string; isFolder: boolean };
-type ModalState =
-  | { mode: NodeFormMode; parentId?: number | null; node?: CourseNodeTree }
-  | null;
+type ModalState = { mode: NodeFormMode; parentId?: number | null; node?: CourseNodeTree } | null;
 
 export default function CourseStructureTab({ course }: Props) {
   const router = useRouter();
@@ -264,8 +262,9 @@ export default function CourseStructureTab({ course }: Props) {
     setFileDropId(null);
     const items = e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
     const hasDir = items.some((it) => {
-      const getEntry = (it as unknown as { webkitGetAsEntry?: () => { isDirectory?: boolean } | null })
-        .webkitGetAsEntry;
+      const getEntry = (
+        it as unknown as { webkitGetAsEntry?: () => { isDirectory?: boolean } | null }
+      ).webkitGetAsEntry;
       return getEntry ? getEntry.call(it)?.isDirectory === true : false;
     });
     if (hasDir) {
@@ -398,8 +397,9 @@ export default function CourseStructureTab({ course }: Props) {
           <div>
             <CardTitle>Nội dung khóa học</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              Tổ chức theo thư mục (như Google Drive). <strong>Kéo tệp/video thả vào thư mục</strong> để
-              tải lên ngay, hoặc kéo node để sắp xếp.
+              Tổ chức theo thư mục (như Google Drive).{' '}
+              <strong>Kéo tệp/video thả vào thư mục</strong> để tải lên ngay, hoặc kéo node để sắp
+              xếp.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -469,7 +469,11 @@ export default function CourseStructureTab({ course }: Props) {
                         onAddFile={(pid) => openPicker(pid)}
                         onEdit={(n) => setModal({ mode: 'edit', node: n })}
                         onDelete={(n) =>
-                          setDeleteTarget({ id: n.id, title: n.title, isFolder: n.type === 'FOLDER' })
+                          setDeleteTarget({
+                            id: n.id,
+                            title: n.title,
+                            isFolder: n.type === 'FOLDER',
+                          })
                         }
                         onView={(n) => setPreview(n)}
                       />
@@ -619,8 +623,7 @@ function NodeRow({
   const docUploading = isDoc && hasActive(node.id);
   const reuploadRef = useRef<HTMLInputElement | null>(null);
   const [reuploading, setReuploading] = useState(false);
-  const canResume =
-    isVideo && node.bunnyStatus === 'UPLOADING' && !hasActive(node.id);
+  const canResume = isVideo && node.bunnyStatus === 'UPLOADING' && !hasActive(node.id);
 
   async function handleReuploadFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -686,7 +689,11 @@ function NodeRow({
           </Button>
         ) : (
           <span className="text-muted-foreground w-8 text-center">
-            {isVideo ? <Film className="mx-auto size-4" /> : <FileText className="mx-auto size-4" />}
+            {isVideo ? (
+              <Film className="mx-auto size-4" />
+            ) : (
+              <FileText className="mx-auto size-4" />
+            )}
           </span>
         )}
 
@@ -841,7 +848,10 @@ function NodeRow({
 function VideoBadge({ status }: { status: BunnyVideoStatus | null }) {
   const meta = (status && BUNNY_STATUS_META[status]) ?? BUNNY_STATUS_META.ERROR;
   return (
-    <Badge variant={meta.variant} className="flex shrink-0 items-center gap-1 px-1.5 py-0 text-[10px]">
+    <Badge
+      variant={meta.variant}
+      className="flex shrink-0 items-center gap-1 px-1.5 py-0 text-[10px]"
+    >
       {meta.pending ? (
         <Loader2 className="size-3 animate-spin" />
       ) : (

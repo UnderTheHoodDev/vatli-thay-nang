@@ -1,18 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  Archive,
-  BookOpen,
-  CheckCircle2,
-  FileEdit,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { Archive, BookOpen, CheckCircle2, FileEdit, Plus, Search, Trash2, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -24,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -44,18 +36,19 @@ import {
 } from '@/components/ui/alert-dialog';
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
+import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { handleActionResult } from '@/lib/actions';
 import { deleteCourseAction } from '@/actions/v1/courses/delete-course';
 import CourseFormModal from '@/components/features/courses/CourseFormModal';
-import type { ListMeta } from '@/types/auth';
 import type { CourseCategoryRow, CourseRow } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
-import type { CoursesListStats } from '@/types/actions/course-management';
+import type { ListCoursesResponse } from '@/actions/v1/courses/list-courses';
 
 export interface UrlState {
   title: string;
@@ -68,10 +61,7 @@ export interface UrlState {
 
 interface Props {
   urlState: UrlState;
-  rows: CourseRow[];
-  meta: ListMeta;
-  stats: CoursesListStats;
-  errors: string[];
+  coursesPromise: Promise<ListCoursesResponse>;
   categories: CourseCategoryRow[];
 }
 
@@ -86,28 +76,219 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   return sp;
 }
 
-const SKELETON_COLUMNS = ['w-8', 'w-16', 'w-52', 'w-20', 'w-28', 'w-32', 'w-24', 'w-16', 'w-14', 'w-20'];
+const SKELETON_COLUMNS = [
+  'w-8',
+  'w-16',
+  'w-52',
+  'w-20',
+  'w-28',
+  'w-32',
+  'w-24',
+  'w-16',
+  'w-14',
+  'w-20',
+];
+const STATS_GRID = 'grid-cols-2 lg:grid-cols-4';
 
-export default function CoursesPageClient({
-  urlState,
-  rows,
-  meta,
-  stats,
-  errors,
-  categories,
-}: Props) {
+function CoursesStatsSection({ promise }: { promise: Promise<ListCoursesResponse> }) {
+  const { stats } = use(promise);
+  return (
+    <div className={cn('grid gap-3', STATS_GRID)}>
+      <StatsCard label="Tổng khóa học" value={stats.total} icon={BookOpen} tone="primary" />
+      <StatsCard label="Bản nháp" value={stats.draft} icon={FileEdit} tone="warning" />
+      <StatsCard
+        label="Đang phát hành"
+        value={stats.published}
+        icon={CheckCircle2}
+        tone="success"
+      />
+      <StatsCard label="Đã lưu trữ" value={stats.archived} icon={Archive} tone="muted" />
+    </div>
+  );
+}
+
+function CoursesResultSummary({
+  promise,
+  page,
+  pageSize,
+}: {
+  promise: Promise<ListCoursesResponse>;
+  page: number;
+  pageSize: number;
+}) {
+  const { meta } = use(promise);
+  const total = meta.total;
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  return (
+    <p className="text-muted-foreground mt-1 text-sm">
+      {total === 0
+        ? 'Chưa có khóa học nào'
+        : `Hiển thị ${start}–${end} trên tổng ${total} khóa học`}
+    </p>
+  );
+}
+
+function CoursesTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        <TableHead className="w-14">ID</TableHead>
+        <TableHead className="w-20">Ảnh</TableHead>
+        <TableHead className="min-w-50">Tiêu đề</TableHead>
+        <TableHead className="w-24">Mã</TableHead>
+        <TableHead>Danh mục</TableHead>
+        <TableHead>Giảng viên</TableHead>
+        <TableHead className="w-32">Trạng thái</TableHead>
+        <TableHead className="w-24 text-center">Nội dung</TableHead>
+        <TableHead className="w-20 text-center">Học sinh</TableHead>
+        <TableHead className="w-24 text-right">Hành động</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function CoursesTableFallback() {
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <CoursesTableHead />
+        <TableBody>
+          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function CoursesTableSection({
+  promise,
+  isPending,
+  onCreate,
+  onDeleteRow,
+}: {
+  promise: Promise<ListCoursesResponse>;
+  isPending: boolean;
+  onCreate: () => void;
+  onDeleteRow: (row: CourseRow) => void;
+}) {
+  const router = useRouter();
+  const { data: rows, errors } = use(promise);
+
+  useEffect(() => {
+    errors.forEach((e) => toast.error(e));
+  }, [errors]);
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={BookOpen}
+        title="Không có khóa học nào"
+        description="Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung."
+        action={
+          <Button onClick={onCreate} className="cursor-pointer">
+            <Plus /> Tạo khóa học
+          </Button>
+        }
+      />
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'overflow-x-auto transition-opacity',
+        isPending && 'pointer-events-none opacity-60',
+      )}
+    >
+      <Table>
+        <CoursesTableHead />
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              key={row.id}
+              onClick={() => router.push(`/admin/courses/${row.id}`)}
+              className="hover:bg-muted cursor-pointer transition-colors"
+            >
+              <TableCell className="text-muted-foreground">{row.id}</TableCell>
+              <TableCell>
+                {row.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={row.thumbnailUrl}
+                    alt={row.title}
+                    loading="lazy"
+                    className="size-12 rounded object-cover"
+                  />
+                ) : (
+                  <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded">
+                    <BookOpen className="size-5" />
+                  </div>
+                )}
+              </TableCell>
+              <TableCell className="text-foreground font-medium">{row.title}</TableCell>
+              <TableCell>
+                <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                  {row.code}
+                </code>
+              </TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {row.category?.name ?? '—'}
+              </TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {row.instructor?.fullName ?? row.instructor?.email ?? '—'}
+              </TableCell>
+              <TableCell>
+                <CourseStatusBadge status={row.status} />
+              </TableCell>
+              <TableCell className="text-center font-medium">{row.nodeCount ?? 0}</TableCell>
+              <TableCell className="text-center font-medium">{row.enrollmentCount ?? 0}</TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-end gap-1">
+                  {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Xoá"
+                      className="text-destructive hover:text-destructive cursor-pointer"
+                      onClick={() => onDeleteRow(row)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function CoursesPaginationSection({
+  promise,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  promise: Promise<ListCoursesResponse>;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { meta } = use(promise);
+  const totalPages = Math.max(1, Math.ceil(meta.total / pageSize));
+  return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
+}
+
+export default function CoursesPageClient({ urlState, coursesPromise, categories }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState<CourseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (errors.length > 0) {
-      errors.forEach((e) => toast.error(e));
-    }
-  }, [errors]);
 
   const [searchTitle, setSearchTitle] = useState(urlState.title);
   const [searchCode, setSearchCode] = useState(urlState.code);
@@ -162,10 +343,6 @@ export default function CoursesPageClient({
   };
 
   const { page, pageSize } = urlState;
-  const total = meta.total;
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
@@ -174,17 +351,9 @@ export default function CoursesPageClient({
         description="Tạo, quản lý nội dung và học sinh ghi danh các khóa học."
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatsCard label="Tổng khóa học" value={stats.total} icon={BookOpen} tone="primary" />
-        <StatsCard label="Bản nháp" value={stats.draft} icon={FileEdit} tone="warning" />
-        <StatsCard
-          label="Đang phát hành"
-          value={stats.published}
-          icon={CheckCircle2}
-          tone="success"
-        />
-        <StatsCard label="Đã lưu trữ" value={stats.archived} icon={Archive} tone="muted" />
-      </div>
+      <Suspense fallback={<StatsGridSkeleton count={4} className={STATS_GRID} />}>
+        <CoursesStatsSection promise={coursesPromise} />
+      </Suspense>
 
       <Card>
         <CardHeader>
@@ -265,11 +434,9 @@ export default function CoursesPageClient({
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Danh sách khóa học</CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Chưa có khóa học nào'
-                : `Hiển thị ${start}–${end} trên tổng ${total} khóa học`}
-            </p>
+            <Suspense fallback={<Skeleton className="mt-1 h-4 w-60" />}>
+              <CoursesResultSummary promise={coursesPromise} page={page} pageSize={pageSize} />
+            </Suspense>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
@@ -294,109 +461,23 @@ export default function CoursesPageClient({
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          {!isPending && rows.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title="Không có khóa học nào"
-              description="Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung."
-              action={
-                <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-                  <Plus /> Tạo khóa học
-                </Button>
-              }
+          <Suspense fallback={<CoursesTableFallback />}>
+            <CoursesTableSection
+              promise={coursesPromise}
+              isPending={isPending}
+              onCreate={() => setCreateOpen(true)}
+              onDeleteRow={setDeletingCourse}
             />
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-14">ID</TableHead>
-                    <TableHead className="w-20">Ảnh</TableHead>
-                    <TableHead className="min-w-50">Tiêu đề</TableHead>
-                    <TableHead className="w-24">Mã</TableHead>
-                    <TableHead>Danh mục</TableHead>
-                    <TableHead>Giảng viên</TableHead>
-                    <TableHead className="w-32">Trạng thái</TableHead>
-                    <TableHead className="w-24 text-center">Nội dung</TableHead>
-                    <TableHead className="w-20 text-center">Học sinh</TableHead>
-                    <TableHead className="w-24 text-right">Hành động</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isPending ? (
-                    <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                  ) : (
-                    rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        onClick={() => router.push(`/admin/courses/${row.id}`)}
-                        className="hover:bg-muted cursor-pointer transition-colors"
-                      >
-                        <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                        <TableCell>
-                          {row.thumbnailUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={row.thumbnailUrl}
-                              alt={row.title}
-                              loading="lazy"
-                              className="size-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded">
-                              <BookOpen className="size-5" />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-foreground font-medium">{row.title}</TableCell>
-                        <TableCell>
-                          <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                            {row.code}
-                          </code>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {row.category?.name ?? '—'}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {row.instructor?.fullName ?? row.instructor?.email ?? '—'}
-                        </TableCell>
-                        <TableCell>
-                          <CourseStatusBadge status={row.status} />
-                        </TableCell>
-                        <TableCell className="text-center font-medium">
-                          {row.nodeCount ?? 0}
-                        </TableCell>
-                        <TableCell className="text-center font-medium">
-                          {row.enrollmentCount ?? 0}
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-1">
-                            {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                title="Xoá"
-                                className="text-destructive hover:text-destructive cursor-pointer"
-                                onClick={() => setDeletingCourse(row)}
-                              >
-                                <Trash2 />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          </Suspense>
         </CardContent>
-        <TablePagerFooter
-          page={page}
-          totalPages={totalPages}
-          onPageChange={(p) => updateUrl({ page: p })}
-        />
+        <Suspense fallback={null}>
+          <CoursesPaginationSection
+            promise={coursesPromise}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(p) => updateUrl({ page: p })}
+          />
+        </Suspense>
       </Card>
 
       <CourseFormModal

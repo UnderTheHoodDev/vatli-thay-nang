@@ -50,7 +50,9 @@ export function useCourseFileUpload(courseId: number) {
           if (kind === 'VIDEO') {
             const tus = await getBunnyTusUploadAction({ title });
             if (tus.errors.length || !tus.data) {
-              handleActionErrors(tus.errors.length ? tus.errors : [`"${file.name}": không tạo được phiên upload`]);
+              handleActionErrors(
+                tus.errors.length ? tus.errors : [`"${file.name}": không tạo được phiên upload`],
+              );
               continue;
             }
             const res = await createCourseNodeAction(courseId, {
@@ -62,7 +64,9 @@ export function useCourseFileUpload(courseId: number) {
               bunnyLibraryId: tus.data.libraryId,
             });
             if (res.errors.length || !res.data) {
-              handleActionErrors(res.errors.length ? res.errors : [`"${file.name}": tạo mục thất bại`]);
+              handleActionErrors(
+                res.errors.length ? res.errors : [`"${file.name}": tạo mục thất bại`],
+              );
               continue;
             }
             enqueue(file, {
@@ -84,7 +88,11 @@ export function useCourseFileUpload(courseId: number) {
               fileSize: file.size,
             });
             if (presign.errors.length || !presign.data) {
-              handleActionErrors(presign.errors.length ? presign.errors : [`"${file.name}": không lấy được URL tải lên`]);
+              handleActionErrors(
+                presign.errors.length
+                  ? presign.errors
+                  : [`"${file.name}": không lấy được URL tải lên`],
+              );
               continue;
             }
             const res = await createCourseNodeAction(courseId, {
@@ -99,7 +107,9 @@ export function useCourseFileUpload(courseId: number) {
               mimeType: contentType,
             });
             if (res.errors.length || !res.data) {
-              handleActionErrors(res.errors.length ? res.errors : [`"${file.name}": tạo mục thất bại`]);
+              handleActionErrors(
+                res.errors.length ? res.errors : [`"${file.name}": tạo mục thất bại`],
+              );
               continue;
             }
             enqueueDocument(file, {
