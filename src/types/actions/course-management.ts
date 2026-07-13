@@ -204,17 +204,37 @@ export interface ICourseVideoStatusResult {
   allSettled: boolean;
 }
 
-export interface IGetUploadUrlPayload {
-  folder: StorageFolder;
+interface GetUploadUrlBase {
   fileName: string;
   mimeType: string;
-  fileSize?: number;
+  /** BẮT BUỘC: BE ký fileSize vào ContentLength của presigned URL. */
+  fileSize: number;
 }
+
+/**
+ * Union chứ không phải `testId?: number`: BE bắt buộc testId khi nộp bài (cần biết bài
+ * nào để kiểm tra ghi danh + bài có đang mở không). Để optional thì quên là 400 lúc
+ * chạy — ép ở kiểu để TypeScript chặn ngay.
+ */
+export type IGetUploadUrlPayload =
+  | (GetUploadUrlBase & { folder: 'test-submissions'; testId: number })
+  | (GetUploadUrlBase & {
+      folder: Exclude<StorageFolder, 'test-submissions'>;
+      testId?: never;
+    });
 
 export interface IGetUploadUrlResult {
   url: string;
   storageKey: string;
   publicUrl: string;
+  /**
+   * Content-Type ĐÃ ĐƯỢC KÝ vào URL — phải PUT lên R2 đúng bằng giá trị này.
+   *
+   * BE tự suy Content-Type từ đuôi file khi browser trả File.type rỗng /
+   * application/octet-stream. Client gửi lại giá trị của mình thì chữ ký sai và R2
+   * từ chối request.
+   */
+  contentType: string;
   expiresIn: number;
 }
 
