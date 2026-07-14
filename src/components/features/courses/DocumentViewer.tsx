@@ -109,12 +109,7 @@ export default function DocumentViewer({
       )}
     >
       {actionBar}
-      <div
-        className={cn(
-          'bg-card relative',
-          fill ? 'min-h-0 flex-1' : 'h-[60vh] md:h-[75vh]',
-        )}
-      >
+      <div className={cn('bg-card relative', fill ? 'min-h-0 flex-1' : 'h-[60vh] md:h-[75vh]')}>
         {loading && kind !== 'download' && kind !== 'image' && (
           <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
         )}

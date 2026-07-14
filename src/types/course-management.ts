@@ -27,6 +27,20 @@ export interface CourseCategoryBrief {
   slug: string;
 }
 
+export interface PublicCourse {
+  id: number;
+  code: string;
+  title: string;
+  description: string | null;
+  thumbnailUrl: string | null;
+  price: number;
+  status: CourseStatus;
+  startDate: string | null;
+  endDate: string | null;
+  enrollmentDeadline: string | null;
+  category: CourseCategoryBrief;
+}
+
 export interface CourseRow {
   id: number;
   code: string;

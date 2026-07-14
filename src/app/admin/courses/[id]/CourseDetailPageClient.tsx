@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, BarChart3, Info, LayoutList, Users as UsersIcon } from 'lucide-react';
@@ -9,15 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseInfoTab from '@/components/features/courses/CourseInfoTab';
 import CourseStructureTab from '@/components/features/courses/CourseStructureTab';
-import CourseEnrollmentsTab from '@/components/features/courses/CourseEnrollmentsTab';
+import CourseEnrollmentsTab, {
+  type EnrollmentSearchValues,
+} from '@/components/features/courses/CourseEnrollmentsTab';
 import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
-import type { ListMeta } from '@/types/auth';
-import type {
-  CourseCategoryRow,
-  CourseDetail,
-  CourseEnrollmentRow,
-} from '@/types/course-management';
+import type { CourseCategoryRow, CourseDetail } from '@/types/course-management';
+import type { ListCourseEnrollmentsResponse } from '@/actions/v1/courses/list-course-enrollments';
 
 export type CourseDetailTab = 'info' | 'structure' | 'enrollments' | 'stats';
 
@@ -33,9 +31,7 @@ interface Props {
   course: CourseDetail;
   urlState: CourseDetailUrlState;
   categories: CourseCategoryRow[];
-  enrollments: CourseEnrollmentRow[];
-  enrollmentsMeta: ListMeta;
-  enrollmentsErrors: string[];
+  enrollmentsPromise: Promise<ListCourseEnrollmentsResponse>;
 }
 
 const DEFAULT_TAB: CourseDetailTab = 'info';
@@ -51,21 +47,58 @@ function buildUrlParams(state: CourseDetailUrlState): URLSearchParams {
   return sp;
 }
 
+interface EnrollmentsTabHandlers {
+  onSearchChange: (v: EnrollmentSearchValues) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}
+
+function EnrollmentsTabData({
+  promise,
+  courseId,
+  search,
+  isPending,
+  handlers,
+}: {
+  promise: Promise<ListCourseEnrollmentsResponse>;
+  courseId: number;
+  search: EnrollmentSearchValues;
+  isPending: boolean;
+  handlers: EnrollmentsTabHandlers;
+}) {
+  const { data, meta, errors } = use(promise);
+
+  useEffect(() => {
+    errors.forEach((e) => toast.error(e));
+  }, [errors]);
+
+  return (
+    <CourseEnrollmentsTab
+      courseId={courseId}
+      search={search}
+      rows={data}
+      meta={meta}
+      loading={isPending}
+      {...handlers}
+    />
+  );
+}
+
 export default function CourseDetailPageClient({
   course,
   urlState,
   categories,
-  enrollments,
-  enrollmentsMeta,
-  enrollmentsErrors,
+  enrollmentsPromise,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
+  const [activeTab, setActiveTab] = useState<CourseDetailTab>(urlState.tab);
   useEffect(() => {
-    enrollmentsErrors.forEach((e) => toast.error(e));
-  }, [enrollmentsErrors]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab(urlState.tab);
+  }, [urlState.tab]);
 
   const updateUrl = useCallback(
     (next: Partial<CourseDetailUrlState>) => {
@@ -78,6 +111,12 @@ export default function CourseDetailPageClient({
     },
     [router, pathname, urlState],
   );
+
+  function handleTabChange(v: string) {
+    const tab = v as CourseDetailTab;
+    setActiveTab(tab);
+    updateUrl({ tab, page: 1 });
+  }
 
   return (
     <div className="space-y-6">
@@ -112,11 +151,7 @@ export default function CourseDetailPageClient({
         </div>
       </div>
 
-      <Tabs
-        value={urlState.tab}
-        onValueChange={(v) => updateUrl({ tab: v as CourseDetailTab, page: 1 })}
-        className="gap-4"
-      >
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
         <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="info" className="shrink-0 cursor-pointer">
             <Info className="size-4" /> Thông tin
@@ -141,16 +176,32 @@ export default function CourseDetailPageClient({
         </TabsContent>
 
         <TabsContent value="enrollments">
-          <CourseEnrollmentsTab
-            courseId={course.id}
-            search={{ email: urlState.email, fullName: urlState.fullName }}
-            rows={enrollments}
-            meta={enrollmentsMeta}
-            loading={isPending}
-            onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
-            onPageChange={(p) => updateUrl({ page: p })}
-            onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
-          />
+          <Suspense
+            fallback={
+              <CourseEnrollmentsTab
+                courseId={course.id}
+                search={{ email: urlState.email, fullName: urlState.fullName }}
+                rows={[]}
+                meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
+                loading
+                onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
+                onPageChange={(p) => updateUrl({ page: p })}
+                onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+              />
+            }
+          >
+            <EnrollmentsTabData
+              promise={enrollmentsPromise}
+              courseId={course.id}
+              search={{ email: urlState.email, fullName: urlState.fullName }}
+              isPending={isPending}
+              handlers={{
+                onSearchChange: (v) => updateUrl({ ...v, page: 1 }),
+                onPageChange: (p) => updateUrl({ page: p }),
+                onPageSizeChange: (s) => updateUrl({ pageSize: s, page: 1 }),
+              }}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="stats">

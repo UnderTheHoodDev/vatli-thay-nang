@@ -67,9 +67,6 @@ export default function ClassDetailPageClient({
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
-  // Tab hiển thị đổi ngay khi bấm; urlState.tab (đến từ server) chỉ dùng để đồng bộ
-  // lại khi có điều hướng bên ngoài (back/forward, deep link) — tránh việc tab bị
-  // "kẹt" chờ round-trip server rồi mới chuyển, gây cảm giác lag khi bấm tab.
   const [activeTab, setActiveTab] = useState<ClassDetailTab>(urlState.tab);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

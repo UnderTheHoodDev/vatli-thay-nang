@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -26,16 +27,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import PageHeader from '@/components/app/PageHeader';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
-import type { ListMeta } from '@/types/auth';
-import type { ClassSessionListRowWithClass } from '@/types/actions/class-management';
 import type { ClassRow } from '@/types/class-management';
+import type { ListAllClassSessionsResponse } from '@/actions/v1/class-sessions/list-all-class-sessions';
 
 export interface UrlState {
   classCode: string;
@@ -47,9 +48,7 @@ export interface UrlState {
 
 interface Props {
   urlState: UrlState;
-  rows: ClassSessionListRowWithClass[];
-  meta: ListMeta;
-  errors: string[];
+  sessionsPromise: Promise<ListAllClassSessionsResponse>;
   classes: ClassRow[];
 }
 
@@ -75,23 +74,160 @@ function formatDate(iso: string) {
 
 const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28', 'w-24', 'w-32'];
 
-export default function ClassSessionsAllPageClient({
-  urlState,
-  rows,
-  meta,
-  errors,
-  classes,
-}: Props) {
+function SessionsResultSummary({
+  promise,
+  page,
+  pageSize,
+}: {
+  promise: Promise<ListAllClassSessionsResponse>;
+  page: number;
+  pageSize: number;
+}) {
+  const { meta } = use(promise);
+  const total = meta.total;
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  return (
+    <p className="text-muted-foreground mt-1 text-sm">
+      {total === 0 ? 'Không có buổi học nào' : `Hiển thị ${start}–${end} trên tổng ${total} buổi`}
+    </p>
+  );
+}
+
+function SessionsTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        <TableHead className="w-14">ID</TableHead>
+        <TableHead className="w-32">Mã lớp</TableHead>
+        <TableHead>Tiêu đề</TableHead>
+        <TableHead className="w-40">Bắt đầu</TableHead>
+        <TableHead className="w-40">Kết thúc</TableHead>
+        <TableHead className="w-32">Trạng thái</TableHead>
+        <TableHead className="w-24 text-center">Điểm danh</TableHead>
+        <TableHead className="w-48">Hành động</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function SessionsTableFallback() {
+  return (
+    <Table>
+      <SessionsTableHead />
+      <TableBody>
+        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+      </TableBody>
+    </Table>
+  );
+}
+
+function SessionsTableSection({
+  promise,
+  isPending,
+}: {
+  promise: Promise<ListAllClassSessionsResponse>;
+  isPending: boolean;
+}) {
+  const router = useRouter();
+  const { data: rows, errors } = use(promise);
+
+  useEffect(() => {
+    errors.forEach((e) => toast.error(e));
+  }, [errors]);
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={CalendarClock}
+        title="Không có buổi học nào"
+        description="Thử thay đổi bộ lọc để xem kết quả khác."
+      />
+    );
+  }
+
+  return (
+    <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
+      <Table>
+        <SessionsTableHead />
+        <TableBody>
+          {rows.map((row) => {
+            const statusInfo =
+              CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.startTime, row.endTime)];
+            return (
+              <TableRow
+                key={row.id}
+                onClick={() =>
+                  router.push(
+                    `/admin/classes/${row.classId}/class-sessions/${row.id}?from=sessions-list`,
+                  )
+                }
+                className="hover:bg-muted cursor-pointer transition-colors"
+              >
+                <TableCell className="text-muted-foreground">{row.id}</TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Link
+                    href={`/admin/classes/${row.classId}`}
+                    className="hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                      {row.classCode}
+                    </code>
+                  </Link>
+                </TableCell>
+                <TableCell className="text-foreground font-medium">{row.title}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {formatDate(row.startTime)}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {formatDate(row.endTime)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell className="text-center font-medium">
+                  {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <AttendanceToggle
+                    classSessionId={row.id}
+                    startTime={row.startTime}
+                    endTime={row.endTime}
+                    activeAttendanceSession={row.activeAttendanceSession ?? null}
+                    onChanged={() => router.refresh()}
+                  />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function SessionsPaginationSection({
+  promise,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  promise: Promise<ListAllClassSessionsResponse>;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { meta } = use(promise);
+  const totalPages = Math.max(1, Math.ceil(meta.total / pageSize));
+  return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
+}
+
+export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, classes }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
-
-  useEffect(() => {
-    if (errors.length > 0) {
-      errors.forEach((e) => toast.error(e));
-    }
-  }, [errors]);
 
   const [searchCode, setSearchCode] = useState(urlState.classCode);
   const [searchStartDate, setSearchStartDate] = useState(urlState.startDate);
@@ -125,10 +261,6 @@ export default function ClassSessionsAllPageClient({
   };
 
   const { page, pageSize } = urlState;
-  const total = meta.total;
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
@@ -198,11 +330,9 @@ export default function ClassSessionsAllPageClient({
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Kết quả</CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Không có buổi học nào'
-                : `Hiển thị ${start}–${end} trên tổng ${total} buổi`}
-            </p>
+            <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
+              <SessionsResultSummary promise={sessionsPromise} page={page} pageSize={pageSize} />
+            </Suspense>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
@@ -227,97 +357,18 @@ export default function ClassSessionsAllPageClient({
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          {!isPending && rows.length === 0 ? (
-            <EmptyState
-              icon={CalendarClock}
-              title="Không có buổi học nào"
-              description="Thử thay đổi bộ lọc để xem kết quả khác."
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-14">ID</TableHead>
-                  <TableHead className="w-32">Mã lớp</TableHead>
-                  <TableHead>Tiêu đề</TableHead>
-                  <TableHead className="w-40">Bắt đầu</TableHead>
-                  <TableHead className="w-40">Kết thúc</TableHead>
-                  <TableHead className="w-32">Trạng thái</TableHead>
-                  <TableHead className="w-24 text-center">Điểm danh</TableHead>
-                  <TableHead className="w-48">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isPending ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : (
-                  rows.map((row) => {
-                    const statusInfo =
-                      CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.startTime, row.endTime)];
-                    return (
-                      <TableRow
-                        key={row.id}
-                        onClick={() =>
-                          router.push(
-                            `/admin/classes/${row.classId}/class-sessions/${row.id}?from=sessions-list`,
-                          )
-                        }
-                        className="hover:bg-muted cursor-pointer transition-colors"
-                      >
-                        <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Link
-                            href={`/admin/classes/${row.classId}`}
-                            className="hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                              {row.classCode}
-                            </code>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-foreground font-medium">{row.title}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {formatDate(row.startTime)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {formatDate(row.endTime)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center font-medium">
-                          {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <AttendanceToggle
-                            classSessionId={row.id}
-                            startTime={row.startTime}
-                            endTime={row.endTime}
-                            activeAttendanceSession={row.activeAttendanceSession ?? null}
-                            onChanged={() => router.refresh()}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <Suspense fallback={<SessionsTableFallback />}>
+            <SessionsTableSection promise={sessionsPromise} isPending={isPending} />
+          </Suspense>
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={(p) => updateUrl({ page: p })}
-            />
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <SessionsPaginationSection
+            promise={sessionsPromise}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(p) => updateUrl({ page: p })}
+          />
+        </Suspense>
       </Card>
 
       <ClassSessionFormModal

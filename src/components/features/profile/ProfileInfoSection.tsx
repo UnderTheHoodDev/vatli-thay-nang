@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Pencil } from 'lucide-react';
+import { ChevronDown, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -191,10 +191,11 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
                   <Button
                     variant="outline"
                     type="button"
-                    className="w-full cursor-pointer justify-between font-normal"
+                    className="border-input-border hover:text-foreground h-10 w-full cursor-pointer justify-between bg-white px-3 font-normal hover:bg-white"
                     disabled={pending}
                   >
                     <span className="truncate">{provinceLabel}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-(--radix-popover-trigger-width) p-0">

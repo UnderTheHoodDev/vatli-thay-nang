@@ -43,20 +43,18 @@ export default async function AccountsPage({ searchParams }: Props) {
     pageSize: urlState.pageSize,
   };
 
-  const [usersRes, provinces, classesRes] = await Promise.all([
-    listUsers(apiParams),
+  const [provinces, classesRes] = await Promise.all([
     listProvinces(),
     listClasses({ pageSize: 200 }),
   ]);
+  const usersPromise = listUsers(apiParams);
 
   const classes = classesRes.data.map((c) => ({ id: c.id, code: c.code, name: c.name }));
 
   return (
     <UsersPageClient
       urlState={urlState}
-      rows={usersRes.data}
-      meta={usersRes.meta}
-      stats={usersRes.stats}
+      usersPromise={usersPromise}
       provinces={provinces}
       classes={classes}
     />

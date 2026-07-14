@@ -45,9 +45,7 @@ export interface DocumentEnqueueArgs {
   contentType: string;
 }
 
-type TaskMeta =
-  | { kind: 'video'; v: EnqueueArgs }
-  | { kind: 'document'; d: DocumentEnqueueArgs };
+type TaskMeta = { kind: 'video'; v: EnqueueArgs } | { kind: 'document'; d: DocumentEnqueueArgs };
 
 interface UploadManagerValue {
   tasks: UploadTask[];

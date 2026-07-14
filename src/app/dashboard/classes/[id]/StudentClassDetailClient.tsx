@@ -219,7 +219,7 @@ export default function StudentClassDetailClient({
         </CardContent>
         {totalPages > 1 && (
           <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
+            <div className="text-muted-foreground text-sm whitespace-nowrap">
               Trang {page} / {totalPages}
             </div>
             <DataPagination

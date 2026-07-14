@@ -184,7 +184,11 @@ function SidebarNode({
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
         {showProcessing && (
           <Badge variant={statusMeta!.variant} className="px-1 py-0 text-[10px]">
-            {node.bunnyStatus === 'UPLOADING' ? 'Tải' : node.bunnyStatus === 'QUEUED' ? 'Chờ' : 'Xử lý'}
+            {node.bunnyStatus === 'UPLOADING'
+              ? 'Tải'
+              : node.bunnyStatus === 'QUEUED'
+                ? 'Chờ'
+                : 'Xử lý'}
           </Badge>
         )}
       </button>

@@ -22,7 +22,7 @@
 
   /* Form */
   --color-divider: #f0eff5;
-  --color-input-border: #e0dde8;
+  --color-input-border: var(--input);
 
   /* Fonts */
   --font-paytone: 'Paytone One', sans-serif;
@@ -120,6 +120,12 @@
   --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html {

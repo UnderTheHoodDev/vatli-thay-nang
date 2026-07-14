@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { FolderTree, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
@@ -42,18 +42,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ActionButton } from '@/components/ui/custom';
 import PageHeader from '@/components/app/PageHeader';
-import DataPagination from '@/components/app/DataPagination';
+import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { handleActionResult } from '@/lib/actions';
 import { createCourseCategoryAction } from '@/actions/v1/course-categories/create-course-category';
 import { updateCourseCategoryAction } from '@/actions/v1/course-categories/update-course-category';
 import { deleteCourseCategoryAction } from '@/actions/v1/course-categories/delete-course-category';
-import type { ListMeta } from '@/types/auth';
 import type { CourseCategoryRow } from '@/types/course-management';
+import type { ListCourseCategoriesResponse } from '@/actions/v1/course-categories/list-course-categories';
 
 export interface UrlState {
   name: string;
@@ -63,9 +65,7 @@ export interface UrlState {
 
 interface Props {
   urlState: UrlState;
-  rows: CourseCategoryRow[];
-  meta: ListMeta;
-  errors: string[];
+  categoriesPromise: Promise<ListCourseCategoriesResponse>;
 }
 
 function buildUrlParams(state: UrlState): URLSearchParams {
@@ -87,16 +87,158 @@ interface CategoryFormState {
 
 const EMPTY_FORM: CategoryFormState = { name: '', slug: '', description: '', order: '0' };
 
-export default function CourseCategoriesPageClient({ urlState, rows, meta, errors }: Props) {
+function CategoriesResultSummary({
+  promise,
+  page,
+  pageSize,
+}: {
+  promise: Promise<ListCourseCategoriesResponse>;
+  page: number;
+  pageSize: number;
+}) {
+  const { meta } = use(promise);
+  const total = meta.total;
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  return (
+    <p className="text-muted-foreground mt-1 text-sm">
+      {total === 0
+        ? 'Chưa có danh mục nào'
+        : `Hiển thị ${start}–${end} trên tổng ${total} danh mục`}
+    </p>
+  );
+}
+
+function CategoriesTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        <TableHead className="w-14">ID</TableHead>
+        <TableHead>Tên</TableHead>
+        <TableHead>Slug</TableHead>
+        <TableHead>Mô tả</TableHead>
+        <TableHead className="w-24 text-center">Khóa học</TableHead>
+        <TableHead className="w-20 text-center">Thứ tự</TableHead>
+        <TableHead className="w-32 text-right">Hành động</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function CategoriesTableFallback() {
+  return (
+    <Table>
+      <CategoriesTableHead />
+      <TableBody>
+        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+      </TableBody>
+    </Table>
+  );
+}
+
+function CategoriesTableSection({
+  promise,
+  isPending,
+  onCreate,
+  onEdit,
+  onDelete,
+}: {
+  promise: Promise<ListCourseCategoriesResponse>;
+  isPending: boolean;
+  onCreate: () => void;
+  onEdit: (row: CourseCategoryRow) => void;
+  onDelete: (row: CourseCategoryRow) => void;
+}) {
+  const { data: rows, errors } = use(promise);
+
+  useEffect(() => {
+    errors.forEach((e) => toast.error(e));
+  }, [errors]);
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon={FolderTree}
+        title="Chưa có danh mục nào"
+        description="Tạo danh mục đầu tiên để bắt đầu phân loại khóa học."
+        action={
+          <Button onClick={onCreate} className="cursor-pointer">
+            <Plus /> Tạo danh mục
+          </Button>
+        }
+      />
+    );
+  }
+
+  return (
+    <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
+      <Table>
+        <CategoriesTableHead />
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell className="text-muted-foreground">{row.id}</TableCell>
+              <TableCell className="text-foreground font-medium">{row.name}</TableCell>
+              <TableCell>
+                <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                  {row.slug}
+                </code>
+              </TableCell>
+              <TableCell className="text-muted-foreground max-w-xs truncate text-sm">
+                {row.description || <span className="italic">—</span>}
+              </TableCell>
+              <TableCell className="text-center font-medium">{row.courseCount ?? 0}</TableCell>
+              <TableCell className="text-center">{row.order ?? 0}</TableCell>
+              <TableCell>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Sửa"
+                    className="cursor-pointer"
+                    onClick={() => onEdit(row)}
+                  >
+                    <Pencil />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Xoá"
+                    className="text-destructive hover:text-destructive cursor-pointer"
+                    onClick={() => onDelete(row)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function CategoriesPaginationSection({
+  promise,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  promise: Promise<ListCourseCategoriesResponse>;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { meta } = use(promise);
+  const totalPages = Math.max(1, Math.ceil(meta.total / pageSize));
+  return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
+}
+
+export default function CourseCategoriesPageClient({ urlState, categoriesPromise }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (errors.length > 0) {
-      errors.forEach((e) => toast.error(e));
-    }
-  }, [errors]);
 
   const [searchName, setSearchName] = useState(urlState.name);
   const [modalOpen, setModalOpen] = useState(false);
@@ -205,10 +347,6 @@ export default function CourseCategoriesPageClient({ urlState, rows, meta, error
   };
 
   const { page, pageSize } = urlState;
-  const total = meta.total;
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
@@ -254,11 +392,13 @@ export default function CourseCategoriesPageClient({ urlState, rows, meta, error
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Danh sách danh mục</CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {total === 0
-                ? 'Chưa có danh mục nào'
-                : `Hiển thị ${start}–${end} trên tổng ${total} danh mục`}
-            </p>
+            <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
+              <CategoriesResultSummary
+                promise={categoriesPromise}
+                page={page}
+                pageSize={pageSize}
+              />
+            </Suspense>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
@@ -283,91 +423,24 @@ export default function CourseCategoriesPageClient({ urlState, rows, meta, error
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          {!isPending && rows.length === 0 ? (
-            <EmptyState
-              icon={FolderTree}
-              title="Chưa có danh mục nào"
-              description="Tạo danh mục đầu tiên để bắt đầu phân loại khóa học."
-              action={
-                <Button onClick={openCreateModal} className="cursor-pointer">
-                  <Plus /> Tạo danh mục
-                </Button>
-              }
+          <Suspense fallback={<CategoriesTableFallback />}>
+            <CategoriesTableSection
+              promise={categoriesPromise}
+              isPending={isPending}
+              onCreate={openCreateModal}
+              onEdit={openEditModal}
+              onDelete={setDeletingCategory}
             />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-14">ID</TableHead>
-                  <TableHead>Tên</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Mô tả</TableHead>
-                  <TableHead className="w-24 text-center">Khóa học</TableHead>
-                  <TableHead className="w-20 text-center">Thứ tự</TableHead>
-                  <TableHead className="w-32 text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isPending ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : (
-                  rows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                      <TableCell className="text-foreground font-medium">{row.name}</TableCell>
-                      <TableCell>
-                        <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                          {row.slug}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-xs truncate text-sm">
-                        {row.description || <span className="italic">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {row.courseCount ?? 0}
-                      </TableCell>
-                      <TableCell className="text-center">{row.order ?? 0}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Sửa"
-                            className="cursor-pointer"
-                            onClick={() => openEditModal(row)}
-                          >
-                            <Pencil />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Xoá"
-                            className="text-destructive hover:text-destructive cursor-pointer"
-                            onClick={() => setDeletingCategory(row)}
-                          >
-                            <Trash2 />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+          </Suspense>
         </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={(p) => updateUrl({ page: p })}
-            />
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <CategoriesPaginationSection
+            promise={categoriesPromise}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(p) => updateUrl({ page: p })}
+          />
+        </Suspense>
       </Card>
 
       <Dialog
