@@ -33,9 +33,12 @@ import {
 } from '@/lib/course-navigation';
 import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
+type LearnTab = 'content' | 'exams';
+
 interface Props {
   course: CourseDetail;
   initialNodeId: number | null;
+  initialTab: LearnTab;
 }
 
 function formatVnd(v: number | null | undefined): string {
@@ -50,7 +53,7 @@ function countFiles(nodes: CourseNodeTree[]): number {
   );
 }
 
-export default function LearnClient({ course, initialNodeId }: Props) {
+export default function LearnClient({ course, initialNodeId, initialTab }: Props) {
   const router = useRouter();
   const isEnrolled = course.isEnrolled === true;
   const flat = useMemo(() => flattenTree(course, isEnrolled), [course, isEnrolled]);
@@ -59,17 +62,31 @@ export default function LearnClient({ course, initialNodeId }: Props) {
   const [activeNodeId, setActiveNodeId] = useState<number | null>(initialActive?.node.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [theater, setTheater] = useState(false);
-  // Chuyển đổi cấp cao giữa cây nội dung và bài kiểm tra.
-  const [mode, setMode] = useState<'content' | 'tests'>('content');
+  // Chuyển đổi cấp cao giữa cây nội dung và bài kiểm tra. Đồng bộ ?tab= trên URL để
+  // reload / chia sẻ link giữ nguyên tab đang xem (mặc định 'content').
+  const [tab, setTab] = useState<LearnTab>(initialTab);
 
   const active = resolveActiveFile(flat, activeNodeId);
   const prev = active ? prevFile(flat, active.node.id) : null;
   const next = active ? nextFile(flat, active.node.id) : null;
 
+  // Ghi cả tab + item vào URL để đổi cái này không xoá cái kia.
+  function syncUrl(nextTab: LearnTab, nextNodeId: number | null) {
+    const params = new URLSearchParams();
+    params.set('tab', nextTab);
+    if (nextNodeId != null) params.set('item', String(nextNodeId));
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function changeTab(nextTab: LearnTab) {
+    setTab(nextTab);
+    syncUrl(nextTab, activeNodeId);
+  }
+
   function selectNode(nodeId: number) {
     setActiveNodeId(nodeId);
     setSheetOpen(false);
-    router.replace(`?item=${nodeId}`, { scroll: false });
+    syncUrl(tab, nodeId);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   }
 
@@ -111,27 +128,27 @@ export default function LearnClient({ course, initialNodeId }: Props) {
       <div className="bg-muted inline-flex rounded-lg p-1">
         <button
           type="button"
-          onClick={() => setMode('content')}
+          onClick={() => changeTab('content')}
           className={cn(
             'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
-            mode === 'content' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+            tab === 'content' ? 'bg-background shadow-sm' : 'text-muted-foreground',
           )}
         >
           <LayoutList className="size-4" /> Nội dung khóa học
         </button>
         <button
           type="button"
-          onClick={() => setMode('tests')}
+          onClick={() => changeTab('exams')}
           className={cn(
             'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
-            mode === 'tests' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+            tab === 'exams' ? 'bg-background shadow-sm' : 'text-muted-foreground',
           )}
         >
           <ClipboardList className="size-4" /> Bài kiểm tra
         </button>
       </div>
 
-      {mode === 'tests' ? (
+      {tab === 'exams' ? (
         <div className="space-y-4">
           <h1 className="font-paytone text-foreground text-xl tracking-tight md:text-2xl">
             {course.title}
