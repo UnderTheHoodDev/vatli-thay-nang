@@ -8,6 +8,7 @@ import { upsertSubmissionAction } from '@/actions/v1/tests/upsert-submission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
@@ -89,7 +90,21 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   }, [load]);
 
   if (loading) {
-    return <p className="text-muted-foreground py-10 text-center text-sm">Đang tải…</p>;
+    return (
+      <div className="space-y-4" role="status" aria-label="Đang tải bài kiểm tra">
+        <Skeleton className="h-8 w-40" />
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24 rounded-md" />
+          ))}
+        </div>
+        <Skeleton className="h-64 w-full rounded-lg" />
+      </div>
+    );
   }
   if (!test) {
     return (
@@ -115,13 +130,18 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
 
       <div>
         <h2 className="text-lg font-semibold">{test.title}</h2>
-        <p className="text-muted-foreground text-sm">
-          {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)} · thang {test.maxScore}{' '}
-          điểm{' '}
+        <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span>
+            {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)}
+          </span>
+          <span aria-hidden className="text-input-border">
+            ·
+          </span>
+          <span>Thang điểm {test.maxScore}</span>
           <Badge variant={ongoing ? 'default' : ended ? 'secondary' : 'outline'}>
             {scheduled ? 'Sắp diễn ra' : ongoing ? 'Đang mở' : 'Đã kết thúc'}
           </Badge>
-        </p>
+        </div>
       </div>
 
       {scheduled ? (

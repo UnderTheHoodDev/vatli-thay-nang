@@ -250,7 +250,10 @@ function Lightbox({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-background/95 h-[90vh] max-w-[95vw] p-0 sm:max-w-[95vw]">
+      <DialogContent
+        aria-describedby={undefined}
+        className="bg-background/95 h-[90vh] max-w-[95vw] p-0 sm:max-w-[95vw]"
+      >
         <DialogTitle className="sr-only">{file.fileName}</DialogTitle>
         <div className="relative flex h-full items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -6,6 +6,7 @@ import { listTests } from '@/actions/v1/tests/list-tests';
 import EmptyState from '@/components/app/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { handleActionErrors } from '@/lib/actions';
 import type { StudentTestRow, TestPhase } from '@/types/tests';
 import StudentTestDetail from './StudentTestDetail';
@@ -94,7 +95,23 @@ export default function StudentTestsPanel({ courseId }: Props) {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground py-10 text-center text-sm">Đang tải…</p>;
+    return (
+      <ul className="space-y-2" role="status" aria-label="Đang tải danh sách bài kiểm tra">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <li key={i}>
+            <Card>
+              <CardContent className="flex items-center justify-between gap-3 py-4">
+                <div className="min-w-0 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </CardContent>
+            </Card>
+          </li>
+        ))}
+      </ul>
+    );
   }
 
   if (tests.length === 0) {
@@ -130,7 +147,13 @@ export default function StudentTestsPanel({ courseId }: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-sm">
+                  <span
+                    className={
+                      t.myScore !== null
+                        ? 'text-foreground text-sm font-semibold tabular-nums'
+                        : 'text-muted-foreground text-sm'
+                    }
+                  >
                     {myStatusText(t, t.maxScore)}
                   </span>
                   <Badge variant={phase.variant}>{phase.text}</Badge>

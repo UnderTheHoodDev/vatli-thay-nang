@@ -151,7 +151,7 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
         {loading ? (
           <p className="text-muted-foreground py-8 text-center text-sm">Đang tải…</p>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="test-title">Tên bài kiểm tra</Label>
               <Input
@@ -199,7 +199,9 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="test-max">Điểm tối đa</Label>
+              <Label htmlFor="test-max" className="block">
+                Điểm tối đa
+              </Label>
               <Input
                 id="test-max"
                 type="number"

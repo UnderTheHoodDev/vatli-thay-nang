@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Download,
+  Search,
+} from 'lucide-react';
 import { exportSubmissionsAction } from '@/actions/v1/tests/export-submissions';
 import { gradeSubmissionAction } from '@/actions/v1/tests/grade-submission';
 import { listSubmissions } from '@/actions/v1/tests/list-submissions';
@@ -12,6 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -40,11 +54,16 @@ const PHASE: Record<TestPhase, { text: string; variant: 'secondary' | 'default' 
   ENDED: { text: 'Đã kết thúc', variant: 'secondary' },
 };
 
-const STATUS_TEXT: Record<SubmissionRow['status'], string> = {
-  NOT_SUBMITTED: 'Chưa nộp',
-  SUBMITTED: 'Đã nộp',
-  GRADED: 'Đã chấm',
+const STATUS: Record<
+  SubmissionRow['status'],
+  { text: string; variant: 'secondary' | 'warning' | 'success' }
+> = {
+  NOT_SUBMITTED: { text: 'Chưa nộp', variant: 'secondary' },
+  SUBMITTED: { text: 'Đã nộp', variant: 'warning' },
+  GRADED: { text: 'Đã chấm', variant: 'success' },
 };
+
+type StatusFilter = 'ALL' | SubmissionRow['status'];
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '—';
@@ -66,6 +85,8 @@ export default function AdminTestDetailClient({
   const [rows, setRows] = useState(initialRows);
   const [stats, setStats] = useState(initialStats);
   const [exporting, setExporting] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
   // Hàng đợi chấm bài = danh sách studentId ĐÓNG BĂNG lúc mở panel, cùng vị trí hiện tại.
   //
@@ -87,6 +108,16 @@ export default function AdminTestDetailClient({
         .sort((a, b) => Number(a.status === 'GRADED') - Number(b.status === 'GRADED')),
     [rows],
   );
+
+  // Lọc phía client trên danh sách đã tải sẵn — nhanh, không cần gọi lại BE.
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+      if (!q) return true;
+      return (r.fullName ?? '').toLowerCase().includes(q) || r.email.toLowerCase().includes(q);
+    });
+  }, [rows, search, statusFilter]);
 
   const currentRow = useMemo(() => {
     if (!queue) return null;
@@ -135,10 +166,16 @@ export default function AdminTestDetailClient({
             </Link>
           </Button>
           <h1 className="mt-1 truncate text-xl font-semibold">{test.title}</h1>
-          <p className="text-muted-foreground text-sm">
-            {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)} · thang{' '}
-            {test.maxScore} điểm <Badge variant={phase.variant}>{phase.text}</Badge>
-          </p>
+          <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span>
+              {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)}
+            </span>
+            <span aria-hidden className="text-input-border">
+              ·
+            </span>
+            <span>Thang điểm {test.maxScore}</span>
+            <Badge variant={phase.variant}>{phase.text}</Badge>
+          </div>
         </div>
 
         <div className="flex gap-2">
@@ -161,7 +198,7 @@ export default function AdminTestDetailClient({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
           title="Đã nộp / Tham gia"
           value={`${stats.submittedCount} / ${stats.participantCount}`}
@@ -171,8 +208,19 @@ export default function AdminTestDetailClient({
           value={`${stats.gradedCount} / ${stats.submittedCount}`}
         />
         <StatCard
-          title="Điểm TB · Cao · Thấp"
-          value={stats.avg === null ? '—' : `${stats.avg} · ${stats.max} · ${stats.min}`}
+          title="Điểm trung bình"
+          value={stats.avg === null ? '—' : String(stats.avg)}
+          suffix={stats.avg === null ? undefined : `/ ${test.maxScore}`}
+        />
+        <StatCard
+          title="Điểm cao nhất"
+          value={stats.max === null ? '—' : String(stats.max)}
+          suffix={stats.max === null ? undefined : `/ ${test.maxScore}`}
+        />
+        <StatCard
+          title="Điểm thấp nhất"
+          value={stats.min === null ? '—' : String(stats.min)}
+          suffix={stats.min === null ? undefined : `/ ${test.maxScore}`}
         />
       </div>
 
@@ -186,8 +234,31 @@ export default function AdminTestDetailClient({
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="gap-3">
           <CardTitle>Bài nộp</CardTitle>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Tìm theo họ tên hoặc email…"
+                aria-label="Tìm theo họ tên hoặc email"
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger aria-label="Lọc theo trạng thái" className="sm:w-44">
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
+                <SelectItem value="NOT_SUBMITTED">Chưa nộp</SelectItem>
+                <SelectItem value="SUBMITTED">Đã nộp</SelectItem>
+                <SelectItem value="GRADED">Đã chấm</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="pb-6">
           <div className="overflow-x-auto">
@@ -203,8 +274,18 @@ export default function AdminTestDetailClient({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((r) => (
-                  <TableRow key={r.studentId}>
+                {filteredRows.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-muted-foreground py-8 text-center text-sm"
+                    >
+                      {rows.length === 0 ? 'Chưa có học sinh nào' : 'Không có kết quả phù hợp'}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {filteredRows.map((r) => (
+                  <TableRow key={r.studentId} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">
                       {r.fullName ?? '—'}
                       {r.leftCourse && (
@@ -214,7 +295,9 @@ export default function AdminTestDetailClient({
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
-                    <TableCell>{STATUS_TEXT[r.status]}</TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatDateTime(r.submittedAt)}
                       {/* Chỉ suy ra "đã sửa" khi bài CHƯA chấm: updatedAt của bài nộp bị
@@ -241,7 +324,7 @@ export default function AdminTestDetailClient({
                       {r.status !== 'NOT_SUBMITTED' && (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           className="cursor-pointer"
                           onClick={() =>
                             setQueue({
@@ -250,7 +333,8 @@ export default function AdminTestDetailClient({
                             })
                           }
                         >
-                          Xem &amp; chấm
+                          <ClipboardCheck />
+                          {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
                         </Button>
                       )}
                     </TableCell>
@@ -282,12 +366,17 @@ export default function AdminTestDetailClient({
   );
 }
 
-function StatCard({ title, value }: { title: string; value: string }) {
+function StatCard({ title, value, suffix }: { title: string; value: string; suffix?: string }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <p className="text-muted-foreground text-sm">{title}</p>
-        <p className="mt-1 text-2xl font-semibold">{value}</p>
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{title}</p>
+        <p className="mt-1.5 text-2xl font-bold tabular-nums">
+          {value}
+          {suffix && (
+            <span className="text-muted-foreground ml-1 text-base font-medium">{suffix}</span>
+          )}
+        </p>
       </CardContent>
     </Card>
   );
@@ -360,15 +449,25 @@ function GradingDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
-      <DialogContent size="full">
+      <DialogContent size="full" aria-describedby={undefined}>
         <div className="flex h-full min-h-0 flex-col">
           <DialogHeader className="border-divider shrink-0 border-b px-4 py-3">
-            <DialogTitle className="pr-8">
-              {row.fullName ?? row.email}
-              <span className="text-muted-foreground ml-2 text-sm font-normal">
-                · Đã chấm {gradedCount}/{submittedCount} bài
+            <div className="flex items-center justify-between gap-3 pr-8">
+              <div className="min-w-0">
+                <DialogTitle className="flex items-center gap-2">
+                  <span className="truncate">{row.fullName ?? row.email}</span>
+                  <Badge variant={STATUS[row.status].variant} className="shrink-0">
+                    {STATUS[row.status].text}
+                  </Badge>
+                </DialogTitle>
+                {row.fullName && (
+                  <p className="text-muted-foreground truncate text-sm">{row.email}</p>
+                )}
+              </div>
+              <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                Đã chấm {gradedCount}/{submittedCount}
               </span>
-            </DialogTitle>
+            </div>
           </DialogHeader>
 
           <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 lg:grid-cols-[1fr_320px]">

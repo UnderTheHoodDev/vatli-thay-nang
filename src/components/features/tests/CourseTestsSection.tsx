@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
 import { deleteTestAction } from '@/actions/v1/tests/delete-test';
 import { listTests } from '@/actions/v1/tests/list-tests';
@@ -63,6 +64,7 @@ function formatRange(start: string, end: string): string {
  * dòng và đang có PR khác sửa — chỉ phải thêm đúng một dòng.
  */
 export default function CourseTestsSection({ courseId }: Props) {
+  const router = useRouter();
   const [tests, setTests] = useState<AdminTestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -160,11 +162,19 @@ export default function CourseTestsSection({ courseId }: Props) {
                 {tests.map((t) => {
                   const phase = PHASE_LABEL[t.phase];
                   return (
-                    <TableRow key={t.id}>
+                    <TableRow
+                      key={t.id}
+                      onClick={() => router.push(`/admin/courses/${courseId}/tests/${t.id}`)}
+                      className="group hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
                       <TableCell className="font-medium">
+                        {/* Link thật trên tiêu đề để bàn phím / mở tab mới vẫn dùng được;
+                            bấm chỗ khác trên hàng chỉ là lối tắt cho chuột. stopPropagation
+                            để không điều hướng hai lần. */}
                         <Link
                           href={`/admin/courses/${courseId}/tests/${t.id}`}
-                          className="hover:text-purple hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                          className="group-hover:text-purple focus-visible:ring-purple/40 rounded-sm outline-none hover:underline focus-visible:ring-2"
                         >
                           {t.title}
                         </Link>
@@ -180,12 +190,11 @@ export default function CourseTestsSection({ courseId }: Props) {
                       </TableCell>
                       <TableCell className="text-center">{t.maxScore}</TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button asChild size="sm" variant="ghost" className="cursor-pointer">
-                            <Link href={`/admin/courses/${courseId}/tests/${t.id}`}>
-                              Xem chi tiết
-                            </Link>
-                          </Button>
+                        {/* Nút thao tác không được kích hoạt điều hướng của cả hàng. */}
+                        <div
+                          className="flex justify-end gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Button
                             size="icon"
                             variant="ghost"

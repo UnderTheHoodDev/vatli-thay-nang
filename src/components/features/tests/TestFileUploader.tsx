@@ -206,7 +206,7 @@ export default function TestFileUploader({
               }}
               onDragEnd={() => setDragIndex(null)}
               className={cn(
-                'border-divider flex items-center gap-2 rounded-md border px-3 py-2 text-sm',
+                'border-divider flex min-w-0 items-center gap-2 rounded-md border px-3 py-2 text-sm',
                 dragIndex === i && 'opacity-50',
               )}
             >
