@@ -60,6 +60,7 @@ import { reorderCourseNodesAction } from '@/actions/v1/course-nodes/reorder-cour
 import { moveCourseNodeAction } from '@/actions/v1/course-nodes/move-course-node';
 import { deleteCourseNodeAction } from '@/actions/v1/course-nodes/delete-course-node';
 import { getCourseVideoStatusAction } from '@/actions/v1/courses/get-video-status';
+import CourseTestsSection from '@/components/features/tests/CourseTestsSection';
 import NodeFormModal, { type NodeFormMode } from './NodeFormModal';
 import NodeContentViewer from './NodeContentViewer';
 import { useCourseFileUpload } from './useCourseFileUpload';
@@ -485,6 +486,8 @@ export default function CourseStructureTab({ course }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <CourseTestsSection courseId={course.id} />
 
       {modal && (
         <NodeFormModal

@@ -16,7 +16,8 @@ export interface ThumbnailValue {
 interface Props {
   value: ThumbnailValue | null;
   onChange: (value: ThumbnailValue | null) => void;
-  folder?: StorageFolder;
+  /** Không nhận 'test-submissions': folder đó bắt buộc kèm testId (xem IGetUploadUrlPayload). */
+  folder?: Exclude<StorageFolder, 'test-submissions'>;
   disabled?: boolean;
 }
 

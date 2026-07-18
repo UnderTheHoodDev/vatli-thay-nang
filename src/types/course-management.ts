@@ -2,7 +2,12 @@ export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type CourseNodeType = 'FOLDER' | 'FILE';
 export type CourseFileKind = 'VIDEO' | 'DOCUMENT';
 export type CourseEnrollmentStatus = 'ACTIVE' | 'REVOKED';
-export type StorageFolder = 'course-thumbnails' | 'lesson-documents' | 'lesson-videos';
+export type StorageFolder =
+  | 'course-thumbnails'
+  | 'lesson-documents'
+  | 'lesson-videos'
+  | 'test-attachments'
+  | 'test-submissions';
 export type BunnyVideoStatus = 'UPLOADING' | 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
 
 export interface CourseCategoryRow {

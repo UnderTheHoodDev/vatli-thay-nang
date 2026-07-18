@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ChevronsRight,
   CircleDollarSign,
+  ClipboardList,
   FileText,
   GraduationCap,
   LayoutList,
@@ -22,6 +23,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils';
 import NodeContentViewer from '@/components/features/courses/NodeContentViewer';
 import CourseContentSidebar from '@/components/features/courses/CourseContentSidebar';
+import StudentTestsPanel from '@/components/features/tests/StudentTestsPanel';
 import {
   flattenTree,
   nextFile,
@@ -31,9 +33,12 @@ import {
 } from '@/lib/course-navigation';
 import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
+type LearnTab = 'content' | 'exams';
+
 interface Props {
   course: CourseDetail;
   initialNodeId: number | null;
+  initialTab: LearnTab;
 }
 
 function formatVnd(v: number | null | undefined): string {
@@ -48,7 +53,7 @@ function countFiles(nodes: CourseNodeTree[]): number {
   );
 }
 
-export default function LearnClient({ course, initialNodeId }: Props) {
+export default function LearnClient({ course, initialNodeId, initialTab }: Props) {
   const router = useRouter();
   const isEnrolled = course.isEnrolled === true;
   const flat = useMemo(() => flattenTree(course, isEnrolled), [course, isEnrolled]);
@@ -57,15 +62,31 @@ export default function LearnClient({ course, initialNodeId }: Props) {
   const [activeNodeId, setActiveNodeId] = useState<number | null>(initialActive?.node.id ?? null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [theater, setTheater] = useState(false);
+  // Chuyển đổi cấp cao giữa cây nội dung và bài kiểm tra. Đồng bộ ?tab= trên URL để
+  // reload / chia sẻ link giữ nguyên tab đang xem (mặc định 'content').
+  const [tab, setTab] = useState<LearnTab>(initialTab);
 
   const active = resolveActiveFile(flat, activeNodeId);
   const prev = active ? prevFile(flat, active.node.id) : null;
   const next = active ? nextFile(flat, active.node.id) : null;
 
+  // Ghi cả tab + item vào URL để đổi cái này không xoá cái kia.
+  function syncUrl(nextTab: LearnTab, nextNodeId: number | null) {
+    const params = new URLSearchParams();
+    params.set('tab', nextTab);
+    if (nextNodeId != null) params.set('item', String(nextNodeId));
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function changeTab(nextTab: LearnTab) {
+    setTab(nextTab);
+    syncUrl(nextTab, activeNodeId);
+  }
+
   function selectNode(nodeId: number) {
     setActiveNodeId(nodeId);
     setSheetOpen(false);
-    router.replace(`?item=${nodeId}`, { scroll: false });
+    syncUrl(tab, nodeId);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   }
 
@@ -103,77 +124,121 @@ export default function LearnClient({ course, initialNodeId }: Props) {
         </Button>
       </div>
 
-      <div
-        className={cn(
-          'grid grid-cols-1 gap-4',
-          !theater && 'lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px]',
-        )}
-      >
-        <div className="min-w-0 space-y-5">
-          <div className="space-y-1">
-            <h1 className="font-paytone text-foreground text-xl tracking-tight md:text-2xl">
-              {course.title}
-            </h1>
-            {active && (
-              <p className="text-muted-foreground flex flex-wrap items-center gap-x-1 gap-y-0.5 text-sm">
-                {active.pathTitles.map((p, i) => (
-                  <span key={i} className="inline-flex items-center gap-1">
-                    <span className="truncate">{p}</span>
-                    <ChevronsRight className="text-muted-foreground/60 size-3 shrink-0" />
-                  </span>
-                ))}
-                <span className="text-foreground font-medium">{active.node.title}</span>
-              </p>
+      {/* Segmented control: nội dung khóa học ↔ bài kiểm tra */}
+      <div className="bg-muted inline-flex rounded-lg p-1">
+        <button
+          type="button"
+          onClick={() => changeTab('content')}
+          className={cn(
+            'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
+            tab === 'content' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+          )}
+        >
+          <LayoutList className="size-4" /> Nội dung khóa học
+        </button>
+        <button
+          type="button"
+          onClick={() => changeTab('exams')}
+          className={cn(
+            'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
+            tab === 'exams' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+          )}
+        >
+          <ClipboardList className="size-4" /> Bài kiểm tra
+        </button>
+      </div>
+
+      {tab === 'exams' ? (
+        <div className="space-y-4">
+          <h1 className="font-paytone text-foreground text-xl tracking-tight md:text-2xl">
+            {course.title}
+          </h1>
+          {isEnrolled ? (
+            <StudentTestsPanel courseId={course.id} />
+          ) : (
+            <Card>
+              <CardContent className="text-muted-foreground flex flex-col items-center gap-2 py-12 text-sm">
+                <Lock className="size-8" />
+                Bạn cần ghi danh khóa học để tham gia bài kiểm tra.
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <>
+          <div
+            className={cn(
+              'grid grid-cols-1 gap-4',
+              !theater && 'lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px]',
+            )}
+          >
+            <div className="min-w-0 space-y-5">
+              <div className="space-y-1">
+                <h1 className="font-paytone text-foreground text-xl tracking-tight md:text-2xl">
+                  {course.title}
+                </h1>
+                {active && (
+                  <p className="text-muted-foreground flex flex-wrap items-center gap-x-1 gap-y-0.5 text-sm">
+                    {active.pathTitles.map((p, i) => (
+                      <span key={i} className="inline-flex items-center gap-1">
+                        <span className="truncate">{p}</span>
+                        <ChevronsRight className="text-muted-foreground/60 size-3 shrink-0" />
+                      </span>
+                    ))}
+                    <span className="text-foreground font-medium">{active.node.title}</span>
+                  </p>
+                )}
+              </div>
+
+              <ContentArea active={active} />
+
+              {active && (prev || next) && (
+                <div className="flex items-stretch justify-between gap-2">
+                  <NavButton dir="prev" target={prev} onSelect={selectNode} />
+                  <NavButton dir="next" target={next} onSelect={selectNode} />
+                </div>
+              )}
+
+              <CourseOverview course={course} />
+            </div>
+
+            {!theater && (
+              <aside className="hidden lg:sticky lg:top-[72px] lg:block lg:h-[calc(100dvh-88px)] lg:overflow-hidden">
+                {sidebar}
+              </aside>
             )}
           </div>
 
-          <ContentArea active={active} />
-
-          {active && (prev || next) && (
-            <div className="flex items-stretch justify-between gap-2">
-              <NavButton dir="prev" target={prev} onSelect={selectNode} />
-              <NavButton dir="next" target={next} onSelect={selectNode} />
-            </div>
-          )}
-
-          <CourseOverview course={course} />
-        </div>
-
-        {!theater && (
-          <aside className="hidden lg:sticky lg:top-[72px] lg:block lg:h-[calc(100dvh-88px)] lg:overflow-hidden">
-            {sidebar}
-          </aside>
-        )}
-      </div>
-
-      <div className="border-divider bg-background/95 fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t px-3 py-2 backdrop-blur lg:hidden">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 cursor-pointer"
-          disabled={!prev}
-          onClick={() => prev && selectNode(prev.node.id)}
-        >
-          <ChevronLeft /> Trước
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="cursor-pointer"
-          onClick={() => setSheetOpen(true)}
-        >
-          <LayoutList /> Nội dung
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 cursor-pointer"
-          disabled={!next}
-          onClick={() => next && selectNode(next.node.id)}
-        >
-          Tiếp <ChevronRight />
-        </Button>
-      </div>
+          <div className="border-divider bg-background/95 fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t px-3 py-2 backdrop-blur lg:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 cursor-pointer"
+              disabled={!prev}
+              onClick={() => prev && selectNode(prev.node.id)}
+            >
+              <ChevronLeft /> Trước
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="cursor-pointer"
+              onClick={() => setSheetOpen(true)}
+            >
+              <LayoutList /> Nội dung
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 cursor-pointer"
+              disabled={!next}
+              onClick={() => next && selectNode(next.node.id)}
+            >
+              Tiếp <ChevronRight />
+            </Button>
+          </div>
+        </>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="flex h-full w-[88vw] max-w-sm flex-col p-0">
