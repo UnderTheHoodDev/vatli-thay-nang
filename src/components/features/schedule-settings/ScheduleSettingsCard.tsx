@@ -55,9 +55,7 @@ export default function ScheduleSettingsCard({ settings }: Props) {
   const yearFromNum = Number(yearFrom);
   const yearToNum = Number(yearTo);
   const yearFromError =
-    submitted && (!yearFrom.trim() || Number.isNaN(yearFromNum))
-      ? 'Vui lòng nhập năm bắt đầu'
-      : '';
+    submitted && (!yearFrom.trim() || Number.isNaN(yearFromNum)) ? 'Vui lòng nhập năm bắt đầu' : '';
   const yearToError =
     submitted && (!yearTo.trim() || Number.isNaN(yearToNum))
       ? 'Vui lòng nhập năm kết thúc'
@@ -134,7 +132,9 @@ export default function ScheduleSettingsCard({ settings }: Props) {
           <div>
             <p className="text-muted-foreground text-sm">Năm học hiện tại</p>
             <p className="text-foreground text-2xl font-semibold">
-              {settings ? `${settings.academicYearFrom}-${settings.academicYearTo}` : 'Chưa cấu hình'}
+              {settings
+                ? `${settings.academicYearFrom}-${settings.academicYearTo}`
+                : 'Chưa cấu hình'}
             </p>
           </div>
         </CardContent>

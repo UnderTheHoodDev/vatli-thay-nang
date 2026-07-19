@@ -596,8 +596,7 @@ function BulkAttendanceDialog({
                 <SelectContent>
                   {sortedSessions.map((s, idx) => (
                     <SelectItem key={s.id} value={String(s.id)}>
-                      Phiên #{sortedSessions.length - idx} —{' '}
-                      {formatDateTimeShort(s.openedAt)}
+                      Phiên #{sortedSessions.length - idx} — {formatDateTimeShort(s.openedAt)}
                     </SelectItem>
                   ))}
                 </SelectContent>

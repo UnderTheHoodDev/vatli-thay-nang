@@ -402,8 +402,9 @@ function SubmitTab({
       <CardContent className="space-y-4 py-6">
         {mySubmission && (
           <p className="bg-muted rounded-md p-3 text-sm">
-            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong> — bạn có thể cập
-            nhật đến <strong>{formatDateTimeShort(endTime)}</strong>. Bài nộp mới sẽ thay thế bài cũ.
+            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong> — bạn có thể
+            cập nhật đến <strong>{formatDateTimeShort(endTime)}</strong>. Bài nộp mới sẽ thay thế
+            bài cũ.
           </p>
         )}
 
