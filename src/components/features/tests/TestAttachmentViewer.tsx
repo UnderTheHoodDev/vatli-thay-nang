@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -130,7 +130,7 @@ export default function TestAttachmentViewer({ files, emptyHint }: Props) {
                   {/* next/image cần khai remotePatterns cho host R2 — repo chưa có, và
                       không component nào khác dùng. Dùng img thẳng như DocumentViewer. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={f.fileUrl} alt="" className="size-full object-cover" />
+                  <img src={f.fileUrl} alt="" loading="lazy" className="size-full object-cover" />
                   <span className="bg-background/80 absolute right-0 bottom-0 px-1 text-[10px]">
                     {i + 1}
                   </span>
@@ -148,7 +148,12 @@ export default function TestAttachmentViewer({ files, emptyHint }: Props) {
                 className="border-divider block w-full cursor-zoom-in overflow-hidden rounded-lg border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.fileUrl} alt={f.fileName} className="h-auto w-full" />
+                <img
+                  src={f.fileUrl}
+                  alt={f.fileName}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  className="h-auto w-full"
+                />
               </button>
             ))}
           </div>
@@ -195,7 +200,12 @@ export default function TestAttachmentViewer({ files, emptyHint }: Props) {
                   className="mt-3 block w-full cursor-zoom-in"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={f.fileUrl} alt={f.fileName} className="h-auto w-full rounded" />
+                  <img
+                    src={f.fileUrl}
+                    alt={f.fileName}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    className="h-auto w-full rounded"
+                  />
                 </button>
               )}
 
@@ -242,6 +252,18 @@ function Lightbox({
   onClose: () => void;
   onChange: (i: number) => void;
 }) {
+  // Duyệt ảnh bằng mũi tên bàn phím — Escape đã có sẵn từ Dialog (radix đóng khi nhấn
+  // Escape). Đặt TRƯỚC early-return để không phá thứ tự hook giữa các lần render.
+  useEffect(() => {
+    if (index === null) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'ArrowLeft' && index! > 0) onChange(index! - 1);
+      if (e.key === 'ArrowRight' && index! < items.length - 1) onChange(index! + 1);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [index, items.length, onChange]);
+
   // items đổi (đổi bài, xoá file) khi lightbox đang mở → index cũ có thể trỏ ra ngoài.
   if (index === null || index < 0 || index >= items.length) return null;
   const file = items[index];

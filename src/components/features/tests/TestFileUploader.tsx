@@ -62,6 +62,7 @@ export default function TestFileUploader({
 }: Props) {
   const [uploading, setUploading] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropActive, setDropActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Danh sách mới nhất, để callback bất đồng bộ không nối vào state đã cũ.
@@ -180,16 +181,34 @@ export default function TestFileUploader({
         onChange={(e) => void handlePick(e.target.files)}
       />
 
-      <Button
-        type="button"
-        variant="outline"
-        disabled={disabled || busy || value.length >= maxFiles}
-        onClick={() => inputRef.current?.click()}
-        className="w-full cursor-pointer"
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (!disabled && !busy && value.length < maxFiles) setDropActive(true);
+        }}
+        onDragLeave={() => setDropActive(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDropActive(false);
+          if (disabled || busy) return;
+          void handlePick(e.dataTransfer.files);
+        }}
+        className={cn(
+          'rounded-md border-2 border-dashed transition-colors',
+          dropActive ? 'border-purple bg-purple/5' : 'border-transparent',
+        )}
       >
-        {busy ? <Loader2 className="animate-spin" /> : <Upload />}
-        {busy ? `Đang tải lên (${uploading})…` : 'Chọn tệp (ảnh, PDF)'}
-      </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled || busy || value.length >= maxFiles}
+          onClick={() => inputRef.current?.click()}
+          className="w-full cursor-pointer"
+        >
+          {busy ? <Loader2 className="animate-spin" /> : <Upload />}
+          {busy ? `Đang tải lên (${uploading})…` : 'Chọn hoặc kéo thả tệp vào đây'}
+        </Button>
+      </div>
 
       {value.length > 0 && (
         <ul className="space-y-1">
