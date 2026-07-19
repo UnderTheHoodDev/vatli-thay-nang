@@ -27,6 +27,35 @@ interface Props {
   settings: IScheduleSettings | null;
 }
 
+function ImagePreviewDialog({
+  imageUrl,
+  onClose,
+}: {
+  imageUrl: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={!!imageUrl} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="bg-background/95 h-[90vh] max-w-[95vw] p-0 sm:max-w-[95vw]"
+      >
+        <DialogTitle className="sr-only">Lịch học các lớp</DialogTitle>
+        {imageUrl && (
+          <div className="flex h-full items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt="Lịch học các lớp"
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function toThumbnail(settings: IScheduleSettings | null): ThumbnailValue | null {
   if (!settings) return null;
   return { url: settings.imageUrl, storageKey: settings.imageStorageKey };
@@ -35,6 +64,7 @@ function toThumbnail(settings: IScheduleSettings | null): ThumbnailValue | null 
 export default function ScheduleSettingsCard({ settings }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [yearFrom, setYearFrom] = useState(String(settings?.academicYearFrom ?? ''));
   const [yearTo, setYearTo] = useState(String(settings?.academicYearTo ?? ''));
   const [image, setImage] = useState<ThumbnailValue | null>(toThumbnail(settings));
@@ -112,12 +142,19 @@ export default function ScheduleSettingsCard({ settings }: Props) {
         </CardHeader>
         <CardContent className="flex flex-col items-start gap-4 pb-6 sm:flex-row sm:items-center">
           {settings?.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.imageUrl}
-              alt="Lịch học các lớp"
-              className="border-divider h-32 w-32 rounded-lg border object-cover"
-            />
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="border-divider h-32 w-32 shrink-0 cursor-pointer overflow-hidden rounded-lg border transition-opacity hover:opacity-80"
+              title="Xem ảnh đầy đủ"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={settings.imageUrl}
+                alt="Lịch học các lớp"
+                className="h-full w-full object-cover"
+              />
+            </button>
           ) : (
             <div className="text-muted-foreground flex h-32 w-32 items-center justify-center rounded-lg border border-dashed text-center text-xs">
               Chưa có ảnh
@@ -211,6 +248,11 @@ export default function ScheduleSettingsCard({ settings }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ImagePreviewDialog
+        imageUrl={previewOpen ? (settings?.imageUrl ?? null) : null}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }
