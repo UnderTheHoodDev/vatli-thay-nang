@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import axios from 'axios';
 import { ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ImagePreviewDialog } from '@/components/ui/custom';
 import { handleActionErrors } from '@/lib/actions';
 import { getUploadUrlAction } from '@/actions/v1/storage/get-upload-url';
 import type { StorageFolder } from '@/types/course-management';
@@ -29,6 +30,7 @@ export default function ThumbnailUploader({
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -70,8 +72,19 @@ export default function ThumbnailUploader({
       />
       {value?.url ? (
         <div className="border-divider relative inline-block overflow-hidden rounded-lg border">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value.url} alt="thumbnail" className="h-40 w-64 object-cover" />
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="block cursor-pointer"
+            title="Xem ảnh đầy đủ"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={value.url}
+              alt="thumbnail"
+              className="h-40 w-64 object-cover transition-opacity hover:opacity-80"
+            />
+          </button>
           <div className="bg-background/80 absolute top-2 right-2 flex gap-1 rounded-md p-1 backdrop-blur">
             <Button
               type="button"
@@ -96,6 +109,11 @@ export default function ThumbnailUploader({
               <Trash2 />
             </Button>
           </div>
+          <ImagePreviewDialog
+            imageUrl={previewOpen ? (value.url ?? null) : null}
+            alt="Ảnh xem trước"
+            onClose={() => setPreviewOpen(false)}
+          />
         </div>
       ) : (
         <Button

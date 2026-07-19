@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -16,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ActionButton } from '@/components/ui/custom';
+import { ActionButton, ImagePreviewDialog } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
 import { updateScheduleSettingsAction } from '@/actions/v1/schedule-settings/update-schedule-settings';
 import ThumbnailUploader, {
@@ -26,38 +25,6 @@ import type { IScheduleSettings } from '@/types/actions/schedule-settings';
 
 interface Props {
   settings: IScheduleSettings | null;
-}
-
-function ImagePreviewDialog({
-  imageUrl,
-  onClose,
-}: {
-  imageUrl: string | null;
-  onClose: () => void;
-}) {
-  return (
-    <Dialog open={!!imageUrl} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        aria-describedby={undefined}
-        showCloseButton={false}
-        className="w-auto max-w-[90vw] gap-0 border-0 bg-transparent p-0 shadow-none"
-      >
-        <DialogTitle className="sr-only">Lịch học các lớp</DialogTitle>
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt="Lịch học các lớp"
-            className="max-h-[70vh] max-w-[70vw] rounded-lg object-contain shadow-lg"
-          />
-        )}
-        <DialogClose className="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-4 -right-4 flex size-10 cursor-pointer items-center justify-center rounded-full shadow-lg transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none">
-          <X className="size-5" />
-          <span className="sr-only">Đóng</span>
-        </DialogClose>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 function toThumbnail(settings: IScheduleSettings | null): ThumbnailValue | null {
@@ -255,6 +222,7 @@ export default function ScheduleSettingsCard({ settings }: Props) {
 
       <ImagePreviewDialog
         imageUrl={previewOpen ? (settings?.imageUrl ?? null) : null}
+        alt="Lịch học các lớp"
         onClose={() => setPreviewOpen(false)}
       />
     </>
