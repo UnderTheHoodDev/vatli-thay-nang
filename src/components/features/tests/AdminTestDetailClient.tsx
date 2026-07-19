@@ -537,6 +537,16 @@ function GradingDialog({
                 {row.fullName && (
                   <p className="text-muted-foreground truncate text-sm">{row.email}</p>
                 )}
+                {row.submittedAt && (
+                  <p className="text-muted-foreground truncate text-sm">
+                    Nộp lúc {formatDateTime(row.submittedAt)}
+                    {row.status === 'SUBMITTED' &&
+                      row.updatedAt &&
+                      row.updatedAt !== row.submittedAt && (
+                        <span className="ml-1 text-xs">(đã sửa)</span>
+                      )}
+                  </p>
+                )}
               </div>
               <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
                 Đã chấm {gradedCount}/{submittedCount}
