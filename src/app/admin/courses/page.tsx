@@ -1,5 +1,6 @@
 import { listCourses } from '@/actions/v1/courses/list-courses';
 import { listCourseCategories } from '@/actions/v1/course-categories/list-course-categories';
+import { getScheduleSettings } from '@/actions/v1/schedule-settings/get-schedule-settings';
 import { ALL_VALUE } from '@/lib/constants';
 import type { CourseStatus } from '@/types/course-management';
 import CoursesPageClient, { type UrlState } from './CoursesPageClient';
@@ -33,7 +34,10 @@ export default async function CoursesPage({ searchParams }: Props) {
     pageSize: urlState.pageSize,
   };
 
-  const categoriesRes = await listCourseCategories({ pageSize: 200 });
+  const [categoriesRes, scheduleSettings] = await Promise.all([
+    listCourseCategories({ pageSize: 200 }),
+    getScheduleSettings(),
+  ]);
   const coursesPromise = listCourses(apiParams);
 
   return (
@@ -41,6 +45,7 @@ export default async function CoursesPage({ searchParams }: Props) {
       urlState={urlState}
       coursesPromise={coursesPromise}
       categories={categoriesRes.data}
+      scheduleSettings={scheduleSettings}
     />
   );
 }

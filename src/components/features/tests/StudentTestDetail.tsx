@@ -8,10 +8,12 @@ import { upsertSubmissionAction } from '@/actions/v1/tests/upsert-submission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
 import type {
   MySubmission,
   ParticipantsResult,
@@ -28,13 +30,19 @@ interface Props {
   onBack: () => void;
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+type ScoreTier = 'low' | 'mid' | 'high';
+
+const SCORE_TIER_CLASS: Record<ScoreTier, string> = {
+  low: 'bg-red-500',
+  mid: 'bg-yellow-500',
+  high: 'bg-green-500',
+};
+
+function scoreTier(score: number, maxScore: number): ScoreTier {
+  const ratio = maxScore > 0 ? score / maxScore : 0;
+  if (ratio >= 0.8) return 'high';
+  if (ratio >= 0.5) return 'mid';
+  return 'low';
 }
 
 /** Màn chi tiết một bài kiểm tra phía học sinh. Gate theo phase chỉ để ẩn UI — BE mới chốt. */
@@ -132,7 +140,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
         <h2 className="text-lg font-semibold">{test.title}</h2>
         <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <span>
-            {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)}
+            {formatDateTimeShort(test.startTime)} → {formatDateTimeShort(test.endTime)}
           </span>
           <span aria-hidden className="text-input-border">
             ·
@@ -150,7 +158,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             <Lock className="mx-auto size-8" />
             <p>
               Chưa tới giờ làm bài. Đề mở lúc{' '}
-              <strong className="text-foreground">{formatDateTime(test.startTime)}</strong>.
+              <strong className="text-foreground">{formatDateTimeShort(test.startTime)}</strong>.
             </p>
           </CardContent>
         </Card>
@@ -167,12 +175,19 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             </TabsTrigger>
             <TabsTrigger value="submit" disabled={uploading} className="cursor-pointer">
               Nộp bài
+              {/* Chấm nhỏ báo đã nộp — quét nhanh không cần mở tab. */}
+              {test.mySubmissionStatus !== 'NOT_SUBMITTED' && (
+                <span className="inline-block size-1.5 rounded-full bg-green-500" aria-hidden />
+              )}
             </TabsTrigger>
             <TabsTrigger value="stats" disabled={uploading} className="cursor-pointer">
               Thống kê
             </TabsTrigger>
             <TabsTrigger value="result" disabled={uploading} className="cursor-pointer">
               Kết quả
+              {hasResult && (
+                <span className="bg-purple inline-block size-1.5 rounded-full" aria-hidden />
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -208,12 +223,20 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             {hasResult ? (
               <div className="space-y-4">
                 <Card>
-                  <CardContent className="space-y-2 py-6">
+                  <CardContent className="space-y-3 py-6">
                     <p className="text-muted-foreground text-sm">Điểm của bạn</p>
                     <p className="text-3xl font-semibold">
                       {test.myScore}
                       <span className="text-muted-foreground text-lg"> / {test.maxScore}</span>
                     </p>
+                    {test.myScore !== null && (
+                      <Progress
+                        value={(test.myScore / test.maxScore) * 100}
+                        indicatorClassName={
+                          SCORE_TIER_CLASS[scoreTier(test.myScore, test.maxScore)]
+                        }
+                      />
+                    )}
                   </CardContent>
                 </Card>
 
@@ -379,8 +402,8 @@ function SubmitTab({
       <CardContent className="space-y-4 py-6">
         {mySubmission && (
           <p className="bg-muted rounded-md p-3 text-sm">
-            Đã nộp lúc <strong>{formatDateTime(mySubmission.updatedAt)}</strong> — bạn có thể cập
-            nhật đến <strong>{formatDateTime(endTime)}</strong>. Bài nộp mới sẽ thay thế bài cũ.
+            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong> — bạn có thể cập
+            nhật đến <strong>{formatDateTimeShort(endTime)}</strong>. Bài nộp mới sẽ thay thế bài cũ.
           </p>
         )}
 

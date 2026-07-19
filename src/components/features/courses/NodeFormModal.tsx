@@ -122,7 +122,7 @@ export default function NodeFormModal({
       return null;
     }
     await axios.put(res.data.url, f, {
-      headers: { 'Content-Type': f.type || 'application/octet-stream' },
+      headers: { 'Content-Type': res.data.contentType },
     });
     return {
       url: res.data.publicUrl,

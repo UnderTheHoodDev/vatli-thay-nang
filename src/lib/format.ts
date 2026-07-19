@@ -1,5 +1,8 @@
+const VN_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+
 export function formatDateTime(iso: string | Date): string {
   return new Date(iso).toLocaleString('vi-VN', {
+    timeZone: VN_TIME_ZONE,
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -10,6 +13,7 @@ export function formatDateTime(iso: string | Date): string {
 
 export function formatDate(iso: string | Date): string {
   return new Date(iso).toLocaleDateString('vi-VN', {
+    timeZone: VN_TIME_ZONE,
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -18,6 +22,7 @@ export function formatDate(iso: string | Date): string {
 
 export function formatDateTimeShort(iso: string | Date): string {
   return new Date(iso).toLocaleString('vi-VN', {
+    timeZone: VN_TIME_ZONE,
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',

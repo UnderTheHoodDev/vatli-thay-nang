@@ -7,7 +7,8 @@ export type StorageFolder =
   | 'lesson-documents'
   | 'lesson-videos'
   | 'test-attachments'
-  | 'test-submissions';
+  | 'test-submissions'
+  | 'schedule-images';
 export type BunnyVideoStatus = 'UPLOADING' | 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
 
 export interface CourseCategoryRow {

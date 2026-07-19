@@ -116,7 +116,7 @@ export function useCourseFileUpload(courseId: number) {
               nodeId: res.data.id,
               courseId,
               putUrl: presign.data.url,
-              contentType,
+              contentType: presign.data.contentType,
             });
             created++;
           }

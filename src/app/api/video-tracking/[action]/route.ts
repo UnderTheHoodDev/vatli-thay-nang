@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const API =
   process.env.NEXT_PUBLIC_API_URL ??
   process.env.NEXT_PUBLIC_API_ENDPOINT ??
-  'http://localhost:8082';
+  'http://localhost:5432';
 
 const POST_ACTIONS = new Set(['start', 'heartbeat', 'end']);
 

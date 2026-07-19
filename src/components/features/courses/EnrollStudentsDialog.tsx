@@ -44,19 +44,23 @@ export default function EnrollStudentsDialog({ courseId }: Props) {
   const [loading, startListTransition] = useTransition();
   const [submitting, startSubmitTransition] = useTransition();
 
-  const fetchPage = useCallback((nextPage: number, email: string, fullName: string) => {
-    startListTransition(async () => {
-      const res = await listUsers({
-        role: 'STUDENT',
-        email: email || undefined,
-        fullName: fullName || undefined,
-        page: nextPage,
-        pageSize: MODAL_PAGE_SIZE,
+  const fetchPage = useCallback(
+    (nextPage: number, email: string, fullName: string) => {
+      startListTransition(async () => {
+        const res = await listUsers({
+          role: 'STUDENT',
+          notInCourseId: courseId,
+          email: email || undefined,
+          fullName: fullName || undefined,
+          page: nextPage,
+          pageSize: MODAL_PAGE_SIZE,
+        });
+        setRows(res.data);
+        setTotal(res.meta.total);
       });
-      setRows(res.data);
-      setTotal(res.meta.total);
-    });
-  }, []);
+    },
+    [courseId],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -115,7 +119,10 @@ export default function EnrollStudentsDialog({ courseId }: Props) {
       <DialogContent className="sm:max-w-3xl lg:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Ghi danh học sinh vào khóa học</DialogTitle>
-          <DialogDescription>Chọn học sinh để ghi danh vào khóa học này.</DialogDescription>
+          <DialogDescription>
+            Chọn học sinh để ghi danh vào khóa học này. Học sinh đã ghi danh hoặc bị vô hiệu hóa sẽ
+            không hiển thị.
+          </DialogDescription>
         </DialogHeader>
 
         <form

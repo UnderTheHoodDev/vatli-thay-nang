@@ -11,6 +11,7 @@ export interface IListUsersParams {
   status?: UserStatus;
   classId?: number;
   notInClassId?: number;
+  notInCourseId?: number;
   page?: number;
   pageSize?: number;
 }

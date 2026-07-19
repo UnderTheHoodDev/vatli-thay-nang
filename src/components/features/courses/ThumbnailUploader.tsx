@@ -47,7 +47,7 @@ export default function ThumbnailUploader({
         return;
       }
       await axios.put(res.data.url, file, {
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        headers: { 'Content-Type': res.data.contentType },
       });
       onChange({ url: res.data.publicUrl, storageKey: res.data.storageKey });
     } catch {

@@ -3,12 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Download,
   Search,
+  Sparkles,
+  Target,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import { exportSubmissionsAction } from '@/actions/v1/tests/export-submissions';
 import { gradeSubmissionAction } from '@/actions/v1/tests/grade-submission';
@@ -36,6 +42,8 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { SubmissionRow, TestDetail, TestPhase, TestStats } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
 import TestAttachmentViewer from './TestAttachmentViewer';
@@ -66,13 +74,7 @@ const STATUS: Record<
 type StatusFilter = 'ALL' | SubmissionRow['status'];
 
 function formatDateTime(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return iso ? formatDateTimeShort(iso) : '—';
 }
 
 export default function AdminTestDetailClient({
@@ -154,6 +156,9 @@ export default function AdminTestDetailClient({
   }
 
   const phase = PHASE[test.phase];
+  // Bài đã nộp nhưng chưa chấm — dùng để tô điểm thẻ số + gợi ý "chấm tiếp" và làm nổi
+  // bật hàng cần xử lý trong bảng, thay vì bắt admin tự dò cột trạng thái.
+  const pendingGradeCount = Math.max(stats.submittedCount - stats.gradedCount, 0);
 
   return (
     <div className="space-y-4">
@@ -202,25 +207,35 @@ export default function AdminTestDetailClient({
         <StatCard
           title="Đã nộp / Tham gia"
           value={`${stats.submittedCount} / ${stats.participantCount}`}
+          icon={Users}
+          accent="purple"
         />
         <StatCard
           title="Đã chấm / Đã nộp"
           value={`${stats.gradedCount} / ${stats.submittedCount}`}
+          icon={ClipboardCheck}
+          accent={pendingGradeCount > 0 ? 'amber' : 'green'}
         />
         <StatCard
           title="Điểm trung bình"
           value={stats.avg === null ? '—' : String(stats.avg)}
           suffix={stats.avg === null ? undefined : `/ ${test.maxScore}`}
+          icon={Target}
+          accent="neutral"
         />
         <StatCard
           title="Điểm cao nhất"
           value={stats.max === null ? '—' : String(stats.max)}
           suffix={stats.max === null ? undefined : `/ ${test.maxScore}`}
+          icon={ArrowUp}
+          accent="neutral"
         />
         <StatCard
           title="Điểm thấp nhất"
           value={stats.min === null ? '—' : String(stats.min)}
           suffix={stats.min === null ? undefined : `/ ${test.maxScore}`}
+          icon={ArrowDown}
+          accent="neutral"
         />
       </div>
 
@@ -228,14 +243,29 @@ export default function AdminTestDetailClient({
         <CardHeader>
           <CardTitle>Phổ điểm</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ScoreDistributionChart distribution={stats.distribution} maxScore={test.maxScore} />
+        <CardContent className="pb-6">
+          <ScoreDistributionChart
+            distribution={stats.distribution}
+            maxScore={test.maxScore}
+            avgScore={stats.avg}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="gap-3">
-          <CardTitle>Bài nộp</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Bài nộp</CardTitle>
+            {pendingGradeCount > 0 && (
+              <Button
+                size="sm"
+                className="cursor-pointer"
+                onClick={() => setQueue({ ids: gradable.map((g) => g.studentId), pos: 0 })}
+              >
+                <Sparkles /> Chấm bài tiếp theo ({pendingGradeCount})
+              </Button>
+            )}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -284,62 +314,75 @@ export default function AdminTestDetailClient({
                     </TableCell>
                   </TableRow>
                 )}
-                {filteredRows.map((r) => (
-                  <TableRow key={r.studentId} className="hover:bg-muted/40 transition-colors">
-                    <TableCell className="font-medium">
-                      {r.fullName ?? '—'}
-                      {r.leftCourse && (
-                        <Badge variant="outline" className="ml-2">
-                          Đã rời khóa
-                        </Badge>
+                {filteredRows.map((r) => {
+                  const needsGrade = r.status === 'SUBMITTED';
+                  return (
+                    <TableRow
+                      key={r.studentId}
+                      className={cn(
+                        'hover:bg-muted/40 border-l-2 border-l-transparent transition-colors',
+                        // Bài đã nộp chờ chấm là việc admin cần làm — kẻ viền trái để mắt
+                        // rơi ngay vào hàng đó thay vì lướt hết cột trạng thái.
+                        needsGrade && 'border-l-yellow-400 bg-yellow-50/60',
                       )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDateTime(r.submittedAt)}
-                      {/* Chỉ suy ra "đã sửa" khi bài CHƯA chấm: updatedAt của bài nộp bị
+                    >
+                      <TableCell className="font-medium">
+                        {r.fullName ?? '—'}
+                        {r.leftCourse && (
+                          <Badge variant="outline" className="ml-2">
+                            Đã rời khóa
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {formatDateTime(r.submittedAt)}
+                        {/* Chỉ suy ra "đã sửa" khi bài CHƯA chấm: updatedAt của bài nộp bị
                           chạm mỗi lần ghi, kể cả lúc admin chấm điểm — bài đã chấm thì
                           updatedAt là thời điểm chấm, so với submittedAt sẽ luôn lệch và
                           báo "đã sửa" cho một học sinh không hề sửa gì. */}
-                      {r.status === 'SUBMITTED' &&
-                        r.submittedAt &&
-                        r.updatedAt &&
-                        r.updatedAt !== r.submittedAt && (
-                          <span className="ml-1 text-xs">(đã sửa)</span>
+                        {r.status === 'SUBMITTED' &&
+                          r.submittedAt &&
+                          r.updatedAt &&
+                          r.updatedAt !== r.submittedAt && (
+                            <span className="ml-1 text-xs">(đã sửa)</span>
+                          )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {r.score === null ? (
+                          <span className="text-muted-foreground">Chưa chấm</span>
+                        ) : (
+                          <strong>
+                            {r.score}/{test.maxScore}
+                          </strong>
                         )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {r.score === null ? (
-                        <span className="text-muted-foreground">Chưa chấm</span>
-                      ) : (
-                        <strong>
-                          {r.score}/{test.maxScore}
-                        </strong>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {r.status !== 'NOT_SUBMITTED' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="cursor-pointer"
-                          onClick={() =>
-                            setQueue({
-                              ids: gradable.map((g) => g.studentId),
-                              pos: gradable.findIndex((g) => g.studentId === r.studentId),
-                            })
-                          }
-                        >
-                          <ClipboardCheck />
-                          {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {r.status !== 'NOT_SUBMITTED' && (
+                          <Button
+                            size="sm"
+                            // Bài chờ chấm dùng nút primary để nổi bật việc cần làm; bài đã
+                            // chấm rồi chỉ là xem lại nên giữ outline cho nhẹ mắt.
+                            variant={needsGrade ? 'default' : 'outline'}
+                            className="cursor-pointer"
+                            onClick={() =>
+                              setQueue({
+                                ids: gradable.map((g) => g.studentId),
+                                pos: gradable.findIndex((g) => g.studentId === r.studentId),
+                              })
+                            }
+                          >
+                            <ClipboardCheck />
+                            {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -366,17 +409,48 @@ export default function AdminTestDetailClient({
   );
 }
 
-function StatCard({ title, value, suffix }: { title: string; value: string; suffix?: string }) {
+const STAT_ACCENT: Record<'purple' | 'amber' | 'green' | 'neutral', string> = {
+  purple: 'bg-purple/10 text-purple',
+  amber: 'bg-yellow-100 text-yellow-700',
+  green: 'bg-green-100 text-green-700',
+  neutral: 'bg-muted text-muted-foreground',
+};
+
+function StatCard({
+  title,
+  value,
+  suffix,
+  icon: Icon,
+  accent,
+}: {
+  title: string;
+  value: string;
+  suffix?: string;
+  icon: LucideIcon;
+  accent: keyof typeof STAT_ACCENT;
+}) {
   return (
     <Card>
-      <CardContent className="pt-6">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{title}</p>
-        <p className="mt-1.5 text-2xl font-bold tabular-nums">
-          {value}
-          {suffix && (
-            <span className="text-muted-foreground ml-1 text-base font-medium">{suffix}</span>
+      <CardContent className="flex items-start justify-between gap-3 py-6">
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            {title}
+          </p>
+          <p className="mt-1.5 truncate text-2xl font-bold tabular-nums">
+            {value}
+            {suffix && (
+              <span className="text-muted-foreground ml-1 text-base font-medium">{suffix}</span>
+            )}
+          </p>
+        </div>
+        <span
+          className={cn(
+            'flex size-9 shrink-0 items-center justify-center rounded-full',
+            STAT_ACCENT[accent],
           )}
-        </p>
+        >
+          <Icon className="size-4.5" />
+        </span>
       </CardContent>
     </Card>
   );
