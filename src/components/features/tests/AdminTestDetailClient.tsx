@@ -1,10 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +16,7 @@ import {
 } from 'lucide-react';
 import { exportSubmissionsAction } from '@/actions/v1/tests/export-submissions';
 import { gradeSubmissionAction } from '@/actions/v1/tests/grade-submission';
-import { listSubmissions } from '@/actions/v1/tests/list-submissions';
+import { listSubmissions, type ListSubmissionsResponse } from '@/actions/v1/tests/list-submissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,16 +42,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
 import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { SubmissionRow, TestDetail, TestPhase, TestStats } from '@/types/tests';
+import type { SubmissionRow, TestDetail, TestPhase } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
 import TestAttachmentViewer from './TestAttachmentViewer';
 
 interface Props {
   courseId: number;
   test: TestDetail;
-  initialRows: SubmissionRow[];
-  initialStats: TestStats;
-  errors: string[];
+  submissionsPromise: Promise<ListSubmissionsResponse>;
 }
 
 const PHASE: Record<TestPhase, { text: string; variant: 'secondary' | 'default' | 'outline' }> = {
@@ -77,16 +73,77 @@ function formatDateTime(iso: string | null): string {
   return iso ? formatDateTimeFull(iso) : '—';
 }
 
-export default function AdminTestDetailClient({
-  courseId,
-  test,
-  initialRows,
-  initialStats,
-  errors,
-}: Props) {
-  const [rows, setRows] = useState(initialRows);
-  const [stats, setStats] = useState(initialStats);
+/**
+ * Tiêu đề + nút xuất file: chỉ cần `test` (đã có ngay, không phải chờ danh sách bài
+ * nộp) nên render eager ở page.tsx, tách khỏi phần Suspense cho bảng/thống kê.
+ */
+export function TestHeaderBar({ test }: { test: TestDetail }) {
   const [exporting, setExporting] = useState(false);
+  const phase = PHASE[test.phase];
+
+  async function handleExport(format: 'csv' | 'xlsx') {
+    setExporting(true);
+    try {
+      const res = await exportSubmissionsAction(test.id, format);
+      if (!res.blob) return handleActionErrors(res.errors);
+      const url = URL.createObjectURL(res.blob);
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="truncate text-xl font-semibold">{test.title}</h1>
+        <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span>
+            {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)}
+          </span>
+          <span aria-hidden className="text-input-border">
+            ·
+          </span>
+          <span>Thang điểm {test.maxScore}</span>
+          <Badge variant={phase.variant}>{phase.text}</Badge>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          disabled={exporting}
+          onClick={() => void handleExport('csv')}
+          className="cursor-pointer"
+        >
+          <Download /> CSV
+        </Button>
+        <Button
+          variant="outline"
+          disabled={exporting}
+          onClick={() => void handleExport('xlsx')}
+          className="cursor-pointer"
+        >
+          <Download /> Excel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminTestDetailClient({ courseId, test, submissionsPromise }: Props) {
+  const submissions = use(submissionsPromise);
+  const [rows, setRows] = useState(submissions.data);
+  const [stats, setStats] = useState(submissions.stats);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
@@ -98,8 +155,8 @@ export default function AdminTestDetailClient({
   const [queue, setQueue] = useState<{ ids: number[]; pos: number } | null>(null);
 
   useEffect(() => {
-    if (errors.length) handleActionErrors(errors);
-  }, [errors]);
+    if (submissions.errors.length) handleActionErrors(submissions.errors);
+  }, [submissions.errors]);
 
   // Chỉ chấm được bài đã nộp. Bài CHƯA chấm lên trước để admin chấm lần lượt không
   // phải tự dò.
@@ -134,75 +191,12 @@ export default function AdminTestDetailClient({
     setStats(res.stats);
   }, [test.id]);
 
-  async function handleExport(format: 'csv' | 'xlsx') {
-    setExporting(true);
-    try {
-      const res = await exportSubmissionsAction(test.id, format);
-      if (!res.blob) return handleActionErrors(res.errors);
-      const url = URL.createObjectURL(res.blob);
-      try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = res.filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  const phase = PHASE[test.phase];
   // Bài đã nộp nhưng chưa chấm — dùng để tô điểm thẻ số + gợi ý "chấm tiếp" và làm nổi
   // bật hàng cần xử lý trong bảng, thay vì bắt admin tự dò cột trạng thái.
   const pendingGradeCount = Math.max(stats.submittedCount - stats.gradedCount, 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 cursor-pointer">
-            {/* tab=structure = tab "Nội dung", nơi có section bài kiểm tra */}
-            <Link href={`/admin/courses/${courseId}?tab=structure`}>
-              <ArrowLeft /> Nội dung khóa học
-            </Link>
-          </Button>
-          <h1 className="mt-1 truncate text-xl font-semibold">{test.title}</h1>
-          <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-            <span>
-              {formatDateTime(test.startTime)} → {formatDateTime(test.endTime)}
-            </span>
-            <span aria-hidden className="text-input-border">
-              ·
-            </span>
-            <span>Thang điểm {test.maxScore}</span>
-            <Badge variant={phase.variant}>{phase.text}</Badge>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            disabled={exporting}
-            onClick={() => void handleExport('csv')}
-            className="cursor-pointer"
-          >
-            <Download /> CSV
-          </Button>
-          <Button
-            variant="outline"
-            disabled={exporting}
-            onClick={() => void handleExport('xlsx')}
-            className="cursor-pointer"
-          >
-            <Download /> Excel
-          </Button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
           title="Đã nộp / Tham gia"
