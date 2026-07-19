@@ -15,7 +15,8 @@ export function ImagePreviewDialog({ imageUrl, alt, onClose }: ImagePreviewDialo
       <DialogContent
         aria-describedby={undefined}
         showCloseButton={false}
-        className="w-auto max-w-[90vw] gap-0 border-0 bg-transparent p-0 shadow-none"
+        size="auto"
+        className="gap-0 border-0 bg-transparent p-0 shadow-none"
       >
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         {imageUrl && (

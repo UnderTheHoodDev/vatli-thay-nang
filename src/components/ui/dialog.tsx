@@ -31,6 +31,10 @@ const dialogSizes = {
   lg: 'w-full max-w-[calc(100%-2rem)] gap-4 p-6 max-h-[90dvh] overflow-y-auto sm:max-w-3xl',
   // Gần full màn hình: tự lo scroll bên trong (nơi gọi dựng flex header + body cuộn).
   full: 'w-[96vw] max-w-[96vw] h-[92dvh] max-h-[92dvh] gap-0 p-0 overflow-hidden sm:max-w-[96vw]',
+  // Không ép width theo breakpoint — dùng khi nội dung tự quyết định kích thước (lightbox ảnh…).
+  // Các size khác cắm sẵn `sm:max-w-*`; class đó không cùng nhóm với `max-w-[...]` không-prefix
+  // trong tailwind-merge nên sẽ không bị dedupe nếu override qua className, gây sai kích thước.
+  auto: 'w-auto max-w-[90vw]',
 } as const;
 
 export const DialogContent = React.forwardRef<
