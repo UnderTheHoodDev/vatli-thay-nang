@@ -490,8 +490,7 @@ function StatsTab({
               // BE giấu phổ điểm khi lớp quá ít bài đã chấm: biểu đồ "ẩn danh" của lớp
               // vài người thì nhìn là biết điểm của nhau.
               <p className="text-muted-foreground py-8 text-center text-sm">
-                Chưa đủ dữ liệu để hiển thị phổ điểm (cần ít nhất{' '}
-                {participants.minGradedForDistribution} bài đã chấm).
+                Chưa đủ dữ liệu để hiển thị phổ điểm
               </p>
             )}
           </CardContent>
@@ -514,9 +513,6 @@ function StatsTab({
               </li>
             ))}
           </ul>
-          <p className="text-muted-foreground mt-3 text-xs">
-            Chỉ hiển thị trạng thái nộp — điểm của từng bạn được giữ kín.
-          </p>
         </CardContent>
       </Card>
     </div>
