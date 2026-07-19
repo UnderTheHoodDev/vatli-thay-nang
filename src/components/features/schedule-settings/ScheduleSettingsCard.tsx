@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -38,19 +39,22 @@ function ImagePreviewDialog({
     <Dialog open={!!imageUrl} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         aria-describedby={undefined}
-        className="bg-background/95 h-[90vh] max-w-[95vw] p-0 sm:max-w-[95vw]"
+        showCloseButton={false}
+        className="w-auto max-w-[90vw] gap-0 border-0 bg-transparent p-0 shadow-none"
       >
         <DialogTitle className="sr-only">Lịch học các lớp</DialogTitle>
         {imageUrl && (
-          <div className="flex h-full items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt="Lịch học các lớp"
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt="Lịch học các lớp"
+            className="max-h-[70vh] max-w-[70vw] rounded-lg object-contain shadow-lg"
+          />
         )}
+        <DialogClose className="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-4 -right-4 flex size-10 cursor-pointer items-center justify-center rounded-full shadow-lg transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none">
+          <X className="size-5" />
+          <span className="sr-only">Đóng</span>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );
