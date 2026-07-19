@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { buildOfficeEmbedUrl, mapToViewer, type ViewerKind } from '@/lib/document-viewer';
 import { cn } from '@/lib/utils';
 import type { TestFile } from '@/types/tests';
@@ -252,6 +252,7 @@ function Lightbox({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         aria-describedby={undefined}
+        showCloseButton={false}
         className="bg-background/95 h-[90vh] max-w-[95vw] p-0 sm:max-w-[95vw]"
       >
         <DialogTitle className="sr-only">{file.fileName}</DialogTitle>
@@ -262,6 +263,11 @@ function Lightbox({
             alt={file.fileName}
             className="max-h-full max-w-full object-contain"
           />
+
+          <DialogClose className="bg-background text-foreground hover:bg-accent focus:ring-ring absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full border shadow-md transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none">
+            <X className="size-3.5" />
+            <span className="sr-only">Đóng</span>
+          </DialogClose>
 
           {hasPrev && (
             <Button
