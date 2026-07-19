@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
 import type { TestFilePayload } from '@/types/tests';
@@ -149,7 +150,22 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
         </DialogHeader>
 
         {loading ? (
-          <p className="text-muted-foreground py-8 text-center text-sm">Đang tải…</p>
+          <div className="space-y-4" role="status" aria-label="Đang tải bài kiểm tra">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-24 w-full" />
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
             <div className="space-y-2">

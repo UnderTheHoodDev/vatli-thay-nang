@@ -35,6 +35,7 @@ import ClassSessionFormModal from '@/components/features/class-sessions/ClassSes
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
+import { formatDateTime } from '@/lib/format';
 import type { ClassRow } from '@/types/class-management';
 import type { ListAllClassSessionsResponse } from '@/actions/v1/class-sessions/list-all-class-sessions';
 
@@ -60,16 +61,6 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   if (state.page !== 1) sp.set('page', String(state.page));
   if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
   return sp;
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28', 'w-24', 'w-32'];
@@ -178,10 +169,10 @@ function SessionsTableSection({
                 </TableCell>
                 <TableCell className="text-foreground font-medium">{row.title}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {formatDate(row.startTime)}
+                  {formatDateTime(row.startTime)}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {formatDate(row.endTime)}
+                  {formatDateTime(row.endTime)}
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>

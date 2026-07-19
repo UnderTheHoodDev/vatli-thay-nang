@@ -4,7 +4,20 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { ASSETS } from '@/constants/assets';
 
-export default function Schedule() {
+const DEFAULT_ACADEMIC_YEAR_FROM = 2025;
+const DEFAULT_ACADEMIC_YEAR_TO = 2026;
+
+interface Props {
+  academicYearFrom?: number;
+  academicYearTo?: number;
+  imageUrl?: string;
+}
+
+export default function Schedule({
+  academicYearFrom = DEFAULT_ACADEMIC_YEAR_FROM,
+  academicYearTo = DEFAULT_ACADEMIC_YEAR_TO,
+  imageUrl = ASSETS.scheduleImage,
+}: Props) {
   return (
     <section id="schedule" className="relative overflow-hidden bg-white py-20">
       {/* Line 1 — purple loopy line, behind the TEXT (left side) */}
@@ -62,7 +75,7 @@ export default function Schedule() {
             transition={{ duration: 0.4, ease: 'easeOut', delay: 0.25 }}
             whileHover={{ scale: 1.05 }}
           >
-            2025-2026
+            {academicYearFrom}-{academicYearTo}
           </motion.div>
         </motion.div>
 
@@ -74,11 +87,11 @@ export default function Schedule() {
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.65, ease: 'easeOut', delay: 0.1 }}
         >
-          <Image
-            src={ASSETS.scheduleImage}
+          {/* Ảnh do admin upload — URL ngoài domain nên không qua next/image (xem ThumbnailUploader). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
             alt="Lịch học các lớp"
-            width={560}
-            height={560}
             className="max-h-[560px] max-w-full rounded-[20px] object-contain"
           />
         </motion.div>

@@ -1,12 +1,5 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { getTest } from '@/actions/v1/tests/get-test';
-import { listSubmissions } from '@/actions/v1/tests/list-submissions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -15,75 +8,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import AdminTestDetailClient, {
-  TestHeaderBar,
-} from '@/components/features/tests/AdminTestDetailClient';
 
-interface Props {
-  params: Promise<{ id: string; testId: string }>;
-}
-
-export default async function AdminTestDetailPage({ params }: Props) {
-  const { id, testId } = await params;
-  const courseId = Number(id);
-  const tid = Number(testId);
-  if (!Number.isInteger(courseId) || !Number.isInteger(tid)) notFound();
-
-  // getTest là 1 dòng, rẻ — chờ luôn để quyết định notFound()/lỗi trước khi bắt đầu
-  // stream response (đổi status sau khi đã stream là không được). listSubmissions thì
-  // nặng hơn (gom hết trang + tính thống kê) nên KHÔNG await ở đây — AdminTestDetailClient
-  // nhận promise này và tự unwrap bằng use(), phần khung (tiêu đề, nút xuất file) hiện
-  // ngay trong lúc đó.
-  const testRes = await getTest(tid);
-
-  if (!testRes.data) {
-    // Chỉ 404 mới là "không tồn tại". 403/500 mà cũng hiện 404 thì admin tưởng bài đã bị
-    // xoá, trong khi thật ra là hết quyền hoặc BE lỗi.
-    if (testRes.status === 404) notFound();
-
-    return (
-      <div className="space-y-4">
-        <BackLink courseId={courseId} />
-        <Card>
-          <CardContent className="text-muted-foreground py-10 text-center text-sm">
-            {testRes.errors[0] ?? 'Không mở được bài kiểm tra'}
-          </CardContent>
-        </Card>
+export default function AdminTestDetailLoading() {
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 space-y-1.5">
+          <Skeleton className="h-8 w-44" />
+          <Skeleton className="h-7 w-64 max-w-full" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-20" />
+          <Skeleton className="h-9 w-20" />
+        </div>
       </div>
-    );
-  }
 
-  const submissionsPromise = listSubmissions(tid);
-
-  return (
-    <div className="space-y-4">
-      <BackLink courseId={courseId} />
-      <TestHeaderBar test={testRes.data} />
-      <Suspense fallback={<SubmissionsSkeleton />}>
-        <AdminTestDetailClient
-          courseId={courseId}
-          test={testRes.data}
-          submissionsPromise={submissionsPromise}
-        />
-      </Suspense>
-    </div>
-  );
-}
-
-function BackLink({ courseId }: { courseId: number }) {
-  return (
-    <Button asChild variant="ghost" size="sm" className="-ml-2 cursor-pointer">
-      {/* tab=structure = tab "Nội dung", nơi có section bài kiểm tra */}
-      <Link href={`/admin/courses/${courseId}?tab=structure`}>
-        <ArrowLeft /> Nội dung khóa học
-      </Link>
-    </Button>
-  );
-}
-
-function SubmissionsSkeleton() {
-  return (
-    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i}>

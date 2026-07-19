@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionResult } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
 import { manualAttendanceAction } from '@/actions/v1/attendance/manual-attendance';
 import type {
   AttendanceSessionListRow,
@@ -197,13 +198,7 @@ function ManualForm({
                 <SelectContent>
                   {sortedSessions.map((s, idx) => (
                     <SelectItem key={s.id} value={String(s.id)}>
-                      Phiên #{sortedSessions.length - idx} —{' '}
-                      {new Date(s.openedAt).toLocaleString('vi-VN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      Phiên #{sortedSessions.length - idx} — {formatDateTimeShort(s.openedAt)}
                     </SelectItem>
                   ))}
                 </SelectContent>

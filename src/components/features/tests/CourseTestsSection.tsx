@@ -20,6 +20,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -29,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
+import { formatDateTime } from '@/lib/format';
 import type { AdminTestRow, TestPhase } from '@/types/tests';
 import TestFormModal from './TestFormModal';
 
@@ -46,15 +49,7 @@ const PHASE_LABEL: Record<
 };
 
 function formatRange(start: string, end: string): string {
-  const f = (iso: string) =>
-    new Date(iso).toLocaleString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  return `${f(start)} → ${f(end)}`;
+  return `${formatDateTime(start)} → ${formatDateTime(end)}`;
 }
 
 /**
@@ -127,7 +122,18 @@ export default function CourseTestsSection({ courseId }: Props) {
 
       <CardContent className="pb-6">
         {loading ? (
-          <p className="text-muted-foreground py-6 text-center text-sm">Đang tải…</p>
+          <div className="space-y-2" role="status" aria-label="Đang tải danh sách bài kiểm tra">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 py-2">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
         ) : tests.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
@@ -186,7 +192,19 @@ export default function CourseTestsSection({ courseId }: Props) {
                         <Badge variant={phase.variant}>{phase.text}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        {t.submissionCount} / {t.participantCount}
+                        <div className="mx-auto w-24 space-y-1">
+                          <span className="block text-xs tabular-nums">
+                            {t.submissionCount} / {t.participantCount}
+                          </span>
+                          <Progress
+                            value={
+                              t.participantCount > 0
+                                ? (t.submissionCount / t.participantCount) * 100
+                                : 0
+                            }
+                            className="h-1.5"
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">{t.maxScore}</TableCell>
                       <TableCell>

@@ -43,10 +43,12 @@ import ManualAttendanceDialog, {
 } from '@/components/features/class-sessions/ManualAttendanceDialog';
 import { manualAttendanceAction } from '@/actions/v1/attendance/manual-attendance';
 import { handleActionResult } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
 import type { AttendanceSummary, AttendanceSummaryStudent } from '@/types/actions/attendance';
 
 function formatHm(iso: string): string {
   return new Date(iso).toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -594,13 +596,7 @@ function BulkAttendanceDialog({
                 <SelectContent>
                   {sortedSessions.map((s, idx) => (
                     <SelectItem key={s.id} value={String(s.id)}>
-                      Phiên #{sortedSessions.length - idx} —{' '}
-                      {new Date(s.openedAt).toLocaleString('vi-VN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      Phiên #{sortedSessions.length - idx} — {formatDateTimeShort(s.openedAt)}
                     </SelectItem>
                   ))}
                 </SelectContent>

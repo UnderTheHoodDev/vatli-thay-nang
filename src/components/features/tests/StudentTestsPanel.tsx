@@ -1,13 +1,15 @@
 'use client';
 
 import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { ClipboardList } from 'lucide-react';
+import { CheckCircle2, Circle, ClipboardList, Clock } from 'lucide-react';
 import { listTests } from '@/actions/v1/tests/list-tests';
 import EmptyState from '@/components/app/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { handleActionErrors } from '@/lib/actions';
+import { formatDateTimeShort } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { StudentTestRow, TestPhase } from '@/types/tests';
 import StudentTestDetail from './StudentTestDetail';
 
@@ -22,14 +24,7 @@ const PHASE: Record<TestPhase, { text: string; variant: 'secondary' | 'default' 
 };
 
 function formatRange(start: string, end: string): string {
-  const f = (iso: string) =>
-    new Date(iso).toLocaleString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  return `${f(start)} → ${f(end)}`;
+  return `${formatDateTimeShort(start)} → ${formatDateTimeShort(end)}`;
 }
 
 /** Trạng thái bài của chính mình. Điểm chỉ lộ khi bài đã kết thúc VÀ đã chấm (BE chốt). */
@@ -37,6 +32,35 @@ function myStatusText(t: StudentTestRow, maxScore: number): string {
   if (t.myScore !== null) return `${t.myScore}/${maxScore} điểm`;
   if (t.mySubmissionStatus === 'NOT_SUBMITTED') return 'Chưa nộp';
   return 'Đã nộp';
+}
+
+/** Chỉ báo hạn nộp khi còn dưới 24 giờ — sớm hơn thì hiện ra chỉ gây nhiễu, không giúp
+ * học sinh quyết định gì cả (khác gì hiện ngày kết thúc đã có sẵn ở dòng trên). */
+function CountdownBadge({ endTime }: { endTime: string }) {
+  const [label, setLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    function tick() {
+      const totalMinutes = Math.floor((new Date(endTime).getTime() - Date.now()) / 60_000);
+      if (totalMinutes <= 0 || totalMinutes >= 24 * 60) {
+        setLabel(null);
+        return;
+      }
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      setLabel(hours > 0 ? `Còn ${hours} giờ ${minutes} phút` : `Còn ${minutes} phút`);
+    }
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, [endTime]);
+
+  if (!label) return null;
+  return (
+    <Badge variant="warning" className="gap-1">
+      <Clock className="size-3" /> {label}
+    </Badge>
+  );
 }
 
 export default function StudentTestsPanel({ courseId }: Props) {
@@ -128,6 +152,7 @@ export default function StudentTestsPanel({ courseId }: Props) {
     <ul className="space-y-2">
       {tests.map((t) => {
         const phase = PHASE[t.phase];
+        const submitted = t.mySubmissionStatus !== 'NOT_SUBMITTED';
         return (
           <li key={t.id}>
             <Card
@@ -137,7 +162,12 @@ export default function StudentTestsPanel({ courseId }: Props) {
               onClick={() => openTest(t.id)}
               onKeyDown={(e) => handleCardKeyDown(e, t.id)}
               onKeyUp={(e) => handleCardKeyUp(e, t.id)}
-              className="hover:border-purple focus-visible:ring-ring/50 cursor-pointer transition outline-none focus-visible:ring-[3px]"
+              className={cn(
+                'hover:border-purple focus-visible:ring-ring/50 cursor-pointer border-l-4 transition outline-none focus-visible:ring-[3px]',
+                // Bài đang mở là việc cần làm ngay — viền trái nổi bật để mắt rơi đúng chỗ
+                // giữa một danh sách nhiều bài đã kết thúc/sắp diễn ra.
+                t.phase === 'ONGOING' ? 'border-l-purple' : 'border-l-transparent',
+              )}
             >
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                 <div className="min-w-0">
@@ -147,13 +177,20 @@ export default function StudentTestsPanel({ courseId }: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {t.phase === 'ONGOING' && <CountdownBadge endTime={t.endTime} />}
                   <span
-                    className={
+                    className={cn(
+                      'flex items-center gap-1 text-sm',
                       t.myScore !== null
-                        ? 'text-foreground text-sm font-semibold tabular-nums'
-                        : 'text-muted-foreground text-sm'
-                    }
+                        ? 'text-foreground font-semibold tabular-nums'
+                        : 'text-muted-foreground',
+                    )}
                   >
+                    {submitted ? (
+                      <CheckCircle2 className="size-3.5 text-green-600" />
+                    ) : (
+                      <Circle className="text-muted-foreground/50 size-3.5" />
+                    )}
                     {myStatusText(t, t.maxScore)}
                   </span>
                   <Badge variant={phase.variant}>{phase.text}</Badge>

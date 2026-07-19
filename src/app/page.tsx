@@ -7,11 +7,13 @@ import Contact from '@/components/features/home/Contact';
 import Footer from '@/components/features/home/Footer';
 import { getCurrentSession } from '@/lib/server/session';
 import { listPublicCourses } from '@/actions/v1/courses/list-public-courses';
+import { getScheduleSettings } from '@/actions/v1/schedule-settings/get-schedule-settings';
 
 export default async function Home() {
-  const [session, { courses, upcoming }] = await Promise.all([
+  const [session, { courses, upcoming }, scheduleSettings] = await Promise.all([
     getCurrentSession(),
     listPublicCourses(12),
+    getScheduleSettings(),
   ]);
   return (
     <>
@@ -19,7 +21,11 @@ export default async function Home() {
       <Hero />
       <Teacher />
       <Courses courses={courses} upcoming={upcoming} />
-      <Schedule />
+      <Schedule
+        academicYearFrom={scheduleSettings?.academicYearFrom}
+        academicYearTo={scheduleSettings?.academicYearTo}
+        imageUrl={scheduleSettings?.imageUrl}
+      />
       <Contact />
       <Footer />
     </>

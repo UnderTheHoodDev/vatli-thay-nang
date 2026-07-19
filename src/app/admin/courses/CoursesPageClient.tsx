@@ -49,6 +49,8 @@ import type { CourseCategoryRow, CourseRow } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
 import type { ListCoursesResponse } from '@/actions/v1/courses/list-courses';
+import ScheduleSettingsCard from '@/components/features/schedule-settings/ScheduleSettingsCard';
+import type { IScheduleSettings } from '@/types/actions/schedule-settings';
 
 export interface UrlState {
   title: string;
@@ -63,6 +65,7 @@ interface Props {
   urlState: UrlState;
   coursesPromise: Promise<ListCoursesResponse>;
   categories: CourseCategoryRow[];
+  scheduleSettings: IScheduleSettings | null;
 }
 
 function buildUrlParams(state: UrlState): URLSearchParams {
@@ -282,7 +285,12 @@ function CoursesPaginationSection({
   return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
 }
 
-export default function CoursesPageClient({ urlState, coursesPromise, categories }: Props) {
+export default function CoursesPageClient({
+  urlState,
+  coursesPromise,
+  categories,
+  scheduleSettings,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
@@ -354,6 +362,8 @@ export default function CoursesPageClient({ urlState, coursesPromise, categories
       <Suspense fallback={<StatsGridSkeleton count={4} className={STATS_GRID} />}>
         <CoursesStatsSection promise={coursesPromise} />
       </Suspense>
+
+      <ScheduleSettingsCard settings={scheduleSettings} />
 
       <Card>
         <CardHeader>
