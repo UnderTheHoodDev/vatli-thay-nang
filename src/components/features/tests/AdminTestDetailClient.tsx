@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
-import { formatDateTimeShort } from '@/lib/format';
+import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { SubmissionRow, TestDetail, TestPhase, TestStats } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
@@ -74,7 +74,7 @@ const STATUS: Record<
 type StatusFilter = 'ALL' | SubmissionRow['status'];
 
 function formatDateTime(iso: string | null): string {
-  return iso ? formatDateTimeShort(iso) : '—';
+  return iso ? formatDateTimeFull(iso) : '—';
 }
 
 export default function AdminTestDetailClient({
