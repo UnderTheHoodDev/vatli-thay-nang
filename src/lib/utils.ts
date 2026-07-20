@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatDate as formatDateVN } from './format';
 
 /**
  * Merge Tailwind CSS classes with clsx
@@ -12,11 +13,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * @deprecated Dùng `formatDate` từ `@/lib/format`. Giữ lại ở đây chỉ để không phải
+ * sửa placeholder ('-') tại 5 chỗ gọi sẵn có.
+ *
+ * Bản cũ tự dựng chuỗi bằng getDate/getMonth/getFullYear — tức là theo giờ của máy
+ * đang render. Trên Vercel (UTC) và trình duyệt VN (UTC+7), cùng một mốc thời gian
+ * cho ra hai ngày khác nhau → React #418. Nay ủy quyền cho bản đã ghim Asia/Ho_Chi_Minh.
+ */
 export function formatDate(value: string | null | undefined): string {
-  if (!value) return '-';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '-';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${d.getFullYear()}`;
+  return formatDateVN(value, '-');
 }

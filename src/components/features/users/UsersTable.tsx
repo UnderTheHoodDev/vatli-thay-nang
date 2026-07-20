@@ -5,6 +5,7 @@ import { Mail, Power, ShieldOff, Users as UsersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { handleActionResult } from '@/lib/actions';
+import { formatDate } from '@/lib/format';
 import {
   Table,
   TableBody,
@@ -33,13 +34,10 @@ const SKELETON_COLUMNS = [
   'w-32',
 ];
 
+// Bảng này được stream qua Suspense — vẫn là SSR, nên ngày sinh dựng theo giờ máy sẽ
+// lệch 1 ngày giữa server (UTC) và trình duyệt VN (UTC+7). Dùng helper đã ghim múi giờ.
 function formatBirthday(value: string | null): string {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${d.getFullYear()}`;
+  return formatDate(value, '—');
 }
 
 function genderBadge(g: Gender | null) {
