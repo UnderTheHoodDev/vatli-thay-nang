@@ -11,10 +11,7 @@ export function formatDateTime(iso: string | Date): string {
   });
 }
 
-export function formatDate(
-  iso: string | Date | null | undefined,
-  fallback = '—',
-): string {
+export function formatDate(iso: string | Date | null | undefined, fallback = '—'): string {
   if (iso === null || iso === undefined || iso === '') return fallback;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return fallback;
