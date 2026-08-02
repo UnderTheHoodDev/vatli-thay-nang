@@ -29,13 +29,6 @@ export interface IOpenAttendancePayload {
   durationMinutes: number;
 }
 
-export interface IOpenAttendanceResult {
-  id: number;
-  openedAt: string;
-  closedAt: string;
-  durationMinutes: number;
-}
-
 export interface AttendanceSummaryStudentLog {
   attendanceSessionId: number;
   checkedAt: string;
@@ -89,18 +82,20 @@ export interface AttendanceLogListRow {
   };
 }
 
-export interface IListAttendanceLogsParams {
-  attendanceSessionId?: number;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface IListAttendanceLogsResult {
-  data: AttendanceLogListRow[];
-  meta: ListMeta;
-}
-
 export interface MyAttendanceLog {
   attendanceSessionId: number;
   checkedAt: string;
+}
+
+export interface ClassAttendanceCounts {
+  totalSessions: number;
+  present: number;
+  leaveFull: number;
+  leaveEarly: number;
+  totalLeave: number;
+  absentNoCheckin: number;
+}
+
+export interface ClassAttendanceStudentRow extends ClassAttendanceCounts {
+  studentId: number;
 }

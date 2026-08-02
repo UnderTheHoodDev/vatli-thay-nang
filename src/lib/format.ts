@@ -64,3 +64,55 @@ export function firstOfMonthISO(): string {
 export function todayISO(): string {
   return vnDateISO(new Date());
 }
+
+export function formatBytes(n?: number | null): string {
+  if (!n || n <= 0) return '';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let v = n;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+}
+
+export function formatVnd(v: number | null | undefined): string {
+  if (!v || v <= 0) return 'Miễn phí';
+  return `${v.toLocaleString('vi-VN')} đ`;
+}
+
+/**
+ * Số tiền VND cho bảng/biểu mẫu quản trị.
+ *
+ * Khác `formatVnd` (dùng cho giá khoá học, coi 0 là "Miễn phí"): ở bảng học phí
+ * `0 đ` là một giá trị có nghĩa — "chưa đóng đồng nào" — không được nuốt mất.
+ */
+export function formatAmountVnd(v: number | null | undefined): string {
+  const n = typeof v === 'number' && Number.isFinite(v) ? Math.trunc(v) : 0;
+  return `${n.toLocaleString('vi-VN')} đ`;
+}
+
+/**
+ * ISO datetime → value cho <input type="date"> theo giờ VN.
+ *
+ * KHÔNG dùng `iso.slice(0, 10)` hay `toISOString()`: mốc 01/03 00:00 giờ VN là
+ * `2025-02-28T17:00:00Z`, cắt chuỗi UTC ra 28/02 — lệch 1 ngày, và lệch KHÁC NHAU
+ * giữa SSR (Vercel chạy UTC) với trình duyệt (UTC+7) → React #418 (xem doc ở vnDateISO).
+ */
+export function toDateInputValue(iso: string | Date | null | undefined): string {
+  if (iso === null || iso === undefined || iso === '') return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return vnDateISO(d);
+}
+
+/**
+ * Năm/tháng hiện tại theo giờ VN.
+ * Chỉ gọi ở RSC (`page.tsx`) rồi truyền xuống props — gọi trong client component
+ * sẽ cho kết quả khác server ở ranh giới tháng.
+ */
+export function vnCurrentYearMonth(): { year: number; month: number } {
+  const [y, m] = vnDateISO(new Date()).split('-');
+  return { year: Number(y), month: Number(m) };
+}

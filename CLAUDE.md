@@ -60,7 +60,7 @@ All write paths are server actions under `src/actions/v1/<domain>/<verb>.ts` (`'
 - `api` — for any action that needs the logged-in user. Request interceptor reads `session_id` from cookies and injects it as `X-Session-Id` for the backend; also forwards a sanitized `X-Frontend-Path` header (with `tk`/`token`/`session_id` query params redacted) on POST/PUT/PATCH/DELETE.
 - `apiClient` — unauthenticated, used at login and other pre-session endpoints.
 
-Base URL: `NEXT_PUBLIC_API_URL` (falls back to `NEXT_PUBLIC_API_ENDPOINT`, then `http://localhost:5432`). `src/lib/axios/server.ts` just re-exports for legacy import paths.
+Base URL: `NEXT_PUBLIC_API_URL` (falls back to `NEXT_PUBLIC_API_ENDPOINT`, then `http://localhost:5432`).
 
 ## Data layer (no DB)
 
@@ -93,7 +93,7 @@ shadcn/ui (`components.json`, style **new-york**, base color **slate**, lucide i
 
 - Toasts: `sonner`, mounted in root layout. Top loader: `nextjs-toploader` (purple `#723bcf`).
 - `src/lib/utils.ts` → `cn()` (clsx + tailwind-merge).
-- `src/lib/bunny_net/` — Bunny.net storage SDK wrapper (uploads).
+- File/video uploads go through the backend's presigned-URL flow (`actions/v1/storage/get-upload-url.ts`, `actions/v1/bunny/get-tus-upload.ts`) — no direct Bunny SDK usage on the frontend.
 - Assets: `src/constants/assets.ts` (`ASSETS` const). Some files in `public/assets/` have Vietnamese-named originals plus ASCII-safe copies (e.g. `anh-ao-den.png`); prefer ASCII paths.
 - `next.config.ts` sets `Referrer-Policy: no-referrer` on `/auth/activation` so activation tokens in URLs don't leak via Referer.
 
@@ -102,7 +102,6 @@ shadcn/ui (`components.json`, style **new-york**, base color **slate**, lucide i
 See `.env.example`:
 
 - `NEXT_PUBLIC_API_URL` — backend base URL
-- `BUNNY_STORAGE_API_KEY` / `BUNNY_STORAGE_ZONE_NAME` / `BUNNY_STORAGE_ZONE_REGION`
 
 ## Deploy
 

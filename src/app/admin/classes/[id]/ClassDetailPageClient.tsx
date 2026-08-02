@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Info, Users as UsersIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Users as UsersIcon, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
+import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRow, ClassStudentListRow } from '@/types/actions/class-management';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
@@ -28,6 +29,7 @@ interface Props {
   classDetail: ClassDetail;
   urlState: ClassDetailUrlState;
   students: ClassStudentListRow[];
+  studentsAttendanceStats: ClassAttendanceStudentRow[];
   studentsMeta: ListMeta;
   studentsErrors: string[];
   sessions: ClassSessionListRow[];
@@ -57,6 +59,7 @@ export default function ClassDetailPageClient({
   classDetail,
   urlState,
   students,
+  studentsAttendanceStats,
   studentsMeta,
   studentsErrors,
   sessions,
@@ -117,21 +120,28 @@ export default function ClassDetailPageClient({
             <ArrowLeft /> Danh sách lớp học
           </Link>
         </Button>
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-paytone text-foreground text-2xl tracking-tight">
-              {classDetail.name}
-            </h1>
-            {statusBadge(classDetail.status)}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-paytone text-foreground text-2xl tracking-tight">
+                {classDetail.name}
+              </h1>
+              {statusBadge(classDetail.status)}
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Mã lớp:{' '}
+              <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                {classDetail.code}
+              </code>
+              <span className="mx-2">·</span>
+              <span>{classDetail.studentCount ?? 0} học sinh</span>
+            </p>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Mã lớp:{' '}
-            <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-              {classDetail.code}
-            </code>
-            <span className="mx-2">·</span>
-            <span>{classDetail.studentCount ?? 0} học sinh</span>
-          </p>
+          <Button asChild variant="outline" size="sm" className="cursor-pointer">
+            <Link href={`/admin/tuition/${classDetail.id}`}>
+              <Wallet /> Học phí lớp
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -155,6 +165,7 @@ export default function ClassDetailPageClient({
             classId={classDetail.id}
             search={studentsSearch}
             rows={students}
+            attendanceStats={studentsAttendanceStats}
             meta={studentsMeta}
             loading={isPending}
             onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
@@ -165,6 +176,7 @@ export default function ClassDetailPageClient({
         <TabsContent value="sessions">
           <ClassSessionsTab
             classId={classDetail.id}
+            defaultSessionFee={classDetail.defaultSessionFee}
             rows={sessions}
             meta={sessionsMeta}
             loading={isPending}

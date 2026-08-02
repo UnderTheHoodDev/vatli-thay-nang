@@ -34,7 +34,3 @@ export interface IUpdateLeaveRequestPayload {
   reason?: string;
   leaveType?: LeaveType;
 }
-
-export interface IAcknowledgeLeaveRequestPayload {
-  status: 'ACKNOWLEDGED';
-}

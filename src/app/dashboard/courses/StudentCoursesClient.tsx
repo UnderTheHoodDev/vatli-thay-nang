@@ -11,6 +11,7 @@ import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
 import PageHeader from '@/components/app/PageHeader';
 import { handleActionErrors } from '@/lib/actions';
+import { formatVnd } from '@/lib/format';
 import type { ListCoursesResponse } from '@/actions/v1/courses/list-courses';
 
 export interface UrlState {
@@ -21,11 +22,6 @@ export interface UrlState {
 interface Props {
   urlState: UrlState;
   coursesPromise: Promise<ListCoursesResponse>;
-}
-
-function formatVnd(v: number | null | undefined): string {
-  if (!v || v <= 0) return 'Miễn phí';
-  return `${v.toLocaleString('vi-VN')} đ`;
 }
 
 function CoursesGridFallback() {

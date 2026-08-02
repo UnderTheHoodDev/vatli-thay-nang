@@ -1,9 +1,18 @@
 'use client';
 
-import { Calendar, FileText, Hash, Tag, Users as UsersIcon, Activity } from 'lucide-react';
+import {
+  Activity,
+  Calendar,
+  CircleDollarSign,
+  FileText,
+  Hash,
+  Tag,
+  Users as UsersIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
+import { formatAmountVnd } from '@/lib/format';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 function statusBadge(s: ClassStatus) {
@@ -34,6 +43,15 @@ export default function ClassInfoTab({ classDetail }: Props) {
     { label: 'Trạng thái', value: statusBadge(classDetail.status), icon: Activity },
     { label: 'Số học sinh', value: classDetail.studentCount ?? 0, icon: UsersIcon },
     { label: 'Ngày tạo', value: formatDate(classDetail.createdAt), icon: Calendar },
+    ...(classDetail.defaultSessionFee !== undefined
+      ? [
+          {
+            label: 'Học phí mặc định / buổi',
+            value: formatAmountVnd(classDetail.defaultSessionFee),
+            icon: CircleDollarSign,
+          },
+        ]
+      : []),
   ];
 
   return (

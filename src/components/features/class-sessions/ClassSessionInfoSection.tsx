@@ -1,8 +1,8 @@
 'use client';
 
-import { Calendar, Clock, FileText, Link as LinkIcon, Tag } from 'lucide-react';
+import { Calendar, CircleDollarSign, Clock, FileText, Link as LinkIcon, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDateTime } from '@/lib/format';
+import { formatAmountVnd, formatDateTime } from '@/lib/format';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
 
 interface Props {
@@ -42,6 +42,15 @@ export default function ClassSessionInfoSection({ classSession }: Props) {
         <span className="text-muted-foreground italic">Không có</span>
       ),
     },
+    ...(classSession.tuitionFee !== undefined
+      ? [
+          {
+            label: 'Học phí buổi',
+            value: formatAmountVnd(classSession.tuitionFee),
+            icon: CircleDollarSign,
+          },
+        ]
+      : []),
   ];
 
   return (

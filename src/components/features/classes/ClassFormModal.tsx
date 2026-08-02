@@ -25,6 +25,7 @@ import { ActionButton } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
 import { createClassAction } from '@/actions/v1/classes/create-class';
 import { updateClassAction } from '@/actions/v1/classes/update-class';
+import { parseIntAmount } from '@/lib/tuition';
 import type { ClassRow, ClassStatus } from '@/types/class-management';
 
 interface Props {
@@ -42,16 +43,25 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
   const [code, setCode] = useState(initialData?.code ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
   const [status, setStatus] = useState<ClassStatus>(initialData?.status ?? 'ACTIVE');
+  const [defaultSessionFee, setDefaultSessionFee] = useState(
+    String(initialData?.defaultSessionFee ?? 0),
+  );
   const [submitted, setSubmitted] = useState(false);
 
   const nameError = submitted && !name.trim() ? 'Vui lòng nhập tên lớp' : '';
   const codeError = submitted && !code.trim() ? 'Vui lòng nhập mã lớp' : '';
+  const feeError =
+    submitted && parseIntAmount(defaultSessionFee) === null
+      ? 'Học phí phải là số nguyên không âm'
+      : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     if (!name.trim()) return;
     if (!code.trim()) return;
+    const fee = parseIntAmount(defaultSessionFee);
+    if (fee === null) return;
 
     setLoading(true);
     try {
@@ -60,6 +70,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           name: name.trim(),
           code: code.trim(),
           description: description.trim() || undefined,
+          defaultSessionFee: fee,
         });
         handleActionResult(
           result.errors,
@@ -75,6 +86,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           code: code.trim(),
           description: description.trim() || undefined,
           status,
+          defaultSessionFee: fee,
         });
         handleActionResult(
           result.errors,
@@ -140,6 +152,26 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="class-default-fee">Học phí mặc định / buổi (VNĐ)</Label>
+            <Input
+              id="class-default-fee"
+              type="number"
+              min={0}
+              step={1000}
+              inputMode="numeric"
+              value={defaultSessionFee}
+              onChange={(e) => setDefaultSessionFee(e.target.value)}
+              aria-invalid={!!feeError}
+            />
+            {feeError ? (
+              <p className="text-destructive text-xs">{feeError}</p>
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                Điền sẵn vào mỗi buổi học mới của lớp. Sửa được ở từng buổi.
+              </p>
+            )}
           </div>
           {mode === 'edit' && (
             <div className="space-y-1.5">

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AttendanceStatsInline from '@/components/features/classes/AttendanceStatsInline';
+import MyAttendanceSummaryCard from '@/components/features/classes/MyAttendanceSummaryCard';
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessio
 import { formatDateTime } from '@/lib/format';
 import { handleActionErrors } from '@/lib/actions';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import type { ClassAttendanceCounts } from '@/types/actions/attendance';
 import type { ListMeta } from '@/types/auth';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
 import type { ClassDetail } from '@/types/class-management';
@@ -43,6 +45,7 @@ interface Props {
   errors: string[];
   page: number;
   pageSize: number;
+  attendanceSummary: ClassAttendanceCounts | null;
 }
 
 export default function StudentClassDetailClient({
@@ -52,6 +55,7 @@ export default function StudentClassDetailClient({
   errors,
   page,
   pageSize,
+  attendanceSummary,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -118,6 +122,8 @@ export default function StudentClassDetailClient({
           size="md"
         />
       </div>
+
+      {attendanceSummary && <MyAttendanceSummaryCard stats={attendanceSummary} />}
 
       <Card className="gap-0">
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">

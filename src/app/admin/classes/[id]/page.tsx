@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { listAttendanceSummary } from '@/actions/v1/attendance/list-attendance-summary';
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listClassStudents } from '@/actions/v1/classes/list-class-students';
 import { listClassSessions } from '@/actions/v1/class-sessions/list-class-sessions';
@@ -32,40 +33,41 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  const classDetail = await getClass(classId);
-  if (!classDetail) notFound();
-
-  const studentsRes =
+  // Không cái nào phụ thuộc kết quả của cái khác (chỉ cần classId từ params) —
+  // gộp một lượt thay vì 3 round-trip nối tiếp.
+  const [classDetail, studentsRes, attendanceSummaryRes, sessionsRes] = await Promise.all([
+    getClass(classId),
     urlState.tab === 'students'
-      ? await listClassStudents(classId, {
+      ? listClassStudents(classId, {
           email: urlState.email || undefined,
           fullName: urlState.fullName || undefined,
           page: urlState.page,
           pageSize: urlState.pageSize,
         })
-      : {
+      : Promise.resolve({
           data: [],
           meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
           errors: [],
-        };
-
-  const sessionsRes =
+        }),
+    urlState.tab === 'students'
+      ? listAttendanceSummary(classId)
+      : Promise.resolve({ data: [], errors: [] }),
     urlState.tab === 'sessions'
-      ? await listClassSessions(classId, {
-          page: urlState.page,
-          pageSize: urlState.pageSize,
-        })
-      : {
+      ? listClassSessions(classId, { page: urlState.page, pageSize: urlState.pageSize })
+      : Promise.resolve({
           data: [],
           meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
           errors: [],
-        };
+        }),
+  ]);
+  if (!classDetail) notFound();
 
   return (
     <ClassDetailPageClient
       classDetail={classDetail}
       urlState={urlState}
       students={studentsRes.data}
+      studentsAttendanceStats={attendanceSummaryRes.data}
       studentsMeta={studentsRes.meta}
       studentsErrors={studentsRes.errors}
       sessions={sessionsRes.data}

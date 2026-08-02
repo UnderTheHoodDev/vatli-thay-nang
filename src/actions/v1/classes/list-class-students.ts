@@ -11,8 +11,11 @@ import type {
 export interface ListClassStudentsResponse {
   data: IListClassStudentsResult['data'];
   meta: IListClassStudentsResult['meta'];
+  stats: IListClassStudentsResult['stats'];
   errors: string[];
 }
+
+const EMPTY_STATS: IListClassStudentsResult['stats'] = { total: 0, studying: 0, left: 0 };
 
 export async function listClassStudents(
   classId: number,
@@ -26,7 +29,7 @@ export async function listClassStudents(
       params: cleaned,
     });
     const result = res.data as IListClassStudentsResult;
-    return { data: result.data, meta: result.meta, errors: [] };
+    return { data: result.data, meta: result.meta, stats: result.stats, errors: [] };
   } catch (error) {
     const emptyMeta = {
       total: 0,
@@ -37,12 +40,14 @@ export async function listClassStudents(
       return {
         data: [],
         meta: emptyMeta,
+        stats: EMPTY_STATS,
         errors: extractErrors(error.response.data),
       };
     }
     return {
       data: [],
       meta: emptyMeta,
+      stats: EMPTY_STATS,
       errors: ['Lấy danh sách học sinh trong lớp thất bại'],
     };
   }

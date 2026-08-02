@@ -1,6 +1,5 @@
 import type {
   AdminTestRow,
-  ExportFormat,
   PageMeta,
   StudentTestRow,
   SubmissionFilterStatus,
@@ -8,11 +7,6 @@ import type {
   TestFilePayload,
   TestStats,
 } from '@/types/tests';
-
-export interface IListTestsParams {
-  page?: number;
-  pageSize?: number;
-}
 
 export interface IListTestsResult<T = AdminTestRow | StudentTestRow> {
   data: T[];
@@ -54,8 +48,4 @@ export interface IListSubmissionsResult {
   data: SubmissionRow[];
   meta: PageMeta;
   stats: TestStats;
-}
-
-export interface IExportSubmissionsParams {
-  format: ExportFormat;
 }

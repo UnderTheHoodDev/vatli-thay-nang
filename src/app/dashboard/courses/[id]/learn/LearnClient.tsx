@@ -31,6 +31,7 @@ import {
   resolveActiveFile,
   type FlatFile,
 } from '@/lib/course-navigation';
+import { formatVnd } from '@/lib/format';
 import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
 type LearnTab = 'content' | 'exams';
@@ -39,11 +40,6 @@ interface Props {
   course: CourseDetail;
   initialNodeId: number | null;
   initialTab: LearnTab;
-}
-
-function formatVnd(v: number | null | undefined): string {
-  if (!v || v <= 0) return 'Miễn phí';
-  return `${v.toLocaleString('vi-VN')} đ`;
 }
 
 function countFiles(nodes: CourseNodeTree[]): number {
