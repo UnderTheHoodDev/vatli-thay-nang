@@ -77,6 +77,18 @@ export interface IUpdateTuitionPayload {
   clearOverride?: boolean;
 }
 
+export interface IBulkUpdateTuitionItem extends IUpdateTuitionPayload {
+  id: number;
+}
+
+export interface IBulkUpdateTuitionParams {
+  items: IBulkUpdateTuitionItem[];
+}
+
+export interface IBulkUpdateTuitionResult {
+  updated: number;
+}
+
 export interface IListTuitionOverviewParams {
   year: number;
   month: number;
@@ -101,6 +113,48 @@ export interface TuitionOverviewStats {
   month: number;
   receivedThisMonth: number;
   receivedToDate: number;
+}
+
+// Chỉ dùng để kẹp UI (xem TuitionMonthRangeFilter) — chặn thật nằm ở BE
+// (vltn-backend/src/tuition/tuition.service.ts). Đổi giá trị thì sửa cả 2 nơi.
+export const MAX_CHART_MONTHS = 16;
+
+export interface IListTuitionOverviewChartParams {
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+  /** Lọc theo 1 lớp — không lọc thì tính toàn bộ hệ thống. */
+  classId?: number;
+}
+
+export interface TuitionChartMonthRow {
+  year: number;
+  month: number;
+  studentCount: number;
+  paidCount: number;
+  partialCount: number;
+  unpaidCount: number;
+  nothingDueCount: number;
+  amountDueTotal: number;
+  amountPaidTotal: number;
+}
+
+export interface TuitionChartStats {
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+  totalDue: number;
+  totalPaid: number;
+  totalRemaining: number;
+  /** % đã thu / phải thu trong cả khoảng, làm tròn. */
+  collectionRate: number;
+}
+
+export interface IListTuitionOverviewChartResult {
+  data: TuitionChartMonthRow[];
+  stats: TuitionChartStats;
 }
 
 export interface IListTuitionOverviewResult {

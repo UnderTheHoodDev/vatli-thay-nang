@@ -21,7 +21,7 @@ function readUrlState(sp: Record<string, string | undefined>): ClassDetailUrlSta
     email: sp.email ?? '',
     fullName: sp.fullName ?? '',
     page: Number(sp.page) || 1,
-    pageSize: Number(sp.pageSize) || 20,
+    pageSize: Number(sp.pageSize) || 50,
   };
 }
 

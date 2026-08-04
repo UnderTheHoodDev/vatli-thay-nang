@@ -94,6 +94,34 @@ export function formatAmountVnd(v: number | null | undefined): string {
 }
 
 /**
+ * Số tiền VND rút gọn cho trục chart ("1.2tr", "850k") — `formatAmountVnd` đầy
+ * đủ quá dài để làm tick label, đặc biệt khi có nhiều tháng trên trục X.
+ */
+export function formatCompactVnd(v: number | null | undefined): string {
+  const n = typeof v === 'number' && Number.isFinite(v) ? Math.trunc(v) : 0;
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}tr`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+  return String(n);
+}
+
+/** Nhãn tháng ngắn cho trục chart/badge, ví dụ (2026, 7) -> "07/26". */
+export function shortMonthLabel(year: number, month: number): string {
+  return `${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
+}
+
+/** (year, month) lùi/tiến `delta` tháng — dùng chung cho MonthPicker và mặc định khoảng chart. */
+export function shiftMonth(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
+  const zeroBased = year * 12 + (month - 1) + delta;
+  return { year: Math.floor(zeroBased / 12), month: (zeroBased % 12) + 1 };
+}
+
+/**
  * ISO datetime → value cho <input type="date"> theo giờ VN.
  *
  * KHÔNG dùng `iso.slice(0, 10)` hay `toISOString()`: mốc 01/03 00:00 giờ VN là

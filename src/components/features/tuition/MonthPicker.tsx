@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { shiftMonth } from '@/lib/format';
 
 interface Props {
   year: number;
@@ -28,11 +29,6 @@ function yearOptions(currentYear: number, year: number): number[] {
   return Array.from(set).sort((a, b) => b - a);
 }
 
-function shift(year: number, month: number, delta: number): [number, number] {
-  const zeroBased = year * 12 + (month - 1) + delta;
-  return [Math.floor(zeroBased / 12), (zeroBased % 12) + 1];
-}
-
 export default function MonthPicker({ year, month, currentYear, disabled, onChange }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -44,7 +40,10 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
         title="Tháng trước"
         aria-label="Tháng trước"
         className="cursor-pointer"
-        onClick={() => onChange(...shift(year, month, -1))}
+        onClick={() => {
+          const s = shiftMonth(year, month, -1);
+          onChange(s.year, s.month);
+        }}
       >
         <ChevronLeft />
       </Button>
@@ -54,7 +53,7 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
         disabled={disabled}
         onValueChange={(v) => onChange(year, Number(v))}
       >
-        <SelectTrigger className="w-32 cursor-pointer" aria-label="Tháng">
+        <SelectTrigger className="w-28 cursor-pointer sm:w-32" aria-label="Tháng">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -71,7 +70,7 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
         disabled={disabled}
         onValueChange={(v) => onChange(Number(v), month)}
       >
-        <SelectTrigger className="w-28 cursor-pointer" aria-label="Năm">
+        <SelectTrigger className="w-24 cursor-pointer sm:w-28" aria-label="Năm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -91,7 +90,10 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
         title="Tháng sau"
         aria-label="Tháng sau"
         className="cursor-pointer"
-        onClick={() => onChange(...shift(year, month, 1))}
+        onClick={() => {
+          const s = shiftMonth(year, month, 1);
+          onChange(s.year, s.month);
+        }}
       >
         <ChevronRight />
       </Button>

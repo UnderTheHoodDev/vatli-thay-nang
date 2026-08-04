@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,10 +23,12 @@ import {
 } from '@/components/ui/table';
 import { ActionButton } from '@/components/ui/custom';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
+import { downloadBlob } from '@/lib/download';
 import { formatAmountVnd, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { importTuitionPreviewAction } from '@/actions/v1/tuition/import-tuition-preview';
 import { importTuitionConfirmAction } from '@/actions/v1/tuition/import-tuition-confirm';
+import { exportTuitionAction } from '@/actions/v1/tuition/export-tuition';
 import type { TuitionImportPreviewRow } from '@/types/actions/tuition';
 
 interface Props {
@@ -45,11 +47,27 @@ export default function TuitionImportDialog({ classId, year, month }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<TuitionImportPreviewRow[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const validRows = useMemo(() => rows?.filter(isRowValid) ?? [], [rows]);
 
   function reset() {
     setFile(null);
     setRows(null);
+  }
+
+  async function handleDownloadTemplate() {
+    setDownloadingTemplate(true);
+    try {
+      const res = await exportTuitionAction({ classId, mode: 'month', year, month });
+      if (res.errors.length) {
+        handleActionErrors(res.errors);
+        return;
+      }
+      if (!res.blob) return;
+      downloadBlob(res.blob, res.filename);
+    } finally {
+      setDownloadingTemplate(false);
+    }
   }
 
   async function handlePreview() {
@@ -129,7 +147,26 @@ export default function TuitionImportDialog({ classId, year, month }: Props) {
         </DialogHeader>
 
         {!rows ? (
-          <div className="py-2">
+          <div className="space-y-3 py-2">
+            <div className="border-input-border flex items-center justify-between gap-3 rounded-md border border-dashed p-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium">Chưa có file mẫu?</p>
+                <p className="text-muted-foreground text-xs">
+                  Tải bảng học phí tháng {month}/{year} hiện tại, chỉnh sửa rồi nhập lại.
+                </p>
+              </div>
+              <ActionButton
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadTemplate}
+                isLoading={downloadingTemplate}
+                loadingText="Đang tải..."
+                className="shrink-0 cursor-pointer"
+              >
+                <Download className="size-4" /> Tải mẫu
+              </ActionButton>
+            </div>
             <input
               type="file"
               accept=".xlsx"

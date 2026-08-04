@@ -38,7 +38,7 @@ interface Props {
 }
 
 const DEFAULT_TAB: ClassDetailTab = 'info';
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 50;
 
 function buildUrlParams(state: ClassDetailUrlState): URLSearchParams {
   const sp = new URLSearchParams();

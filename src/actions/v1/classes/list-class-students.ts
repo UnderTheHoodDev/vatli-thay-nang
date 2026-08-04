@@ -34,7 +34,7 @@ export async function listClassStudents(
     const emptyMeta = {
       total: 0,
       page: params.page ?? 1,
-      pageSize: params.pageSize ?? 20,
+      pageSize: params.pageSize ?? 50,
     };
     if (error instanceof AxiosError && error.response?.data) {
       return {

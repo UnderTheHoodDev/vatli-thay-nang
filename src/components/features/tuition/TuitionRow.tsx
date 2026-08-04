@@ -9,11 +9,10 @@ import TuitionStatusBadge from './TuitionStatusBadge';
 import { useTuitionDrafts, type TuitionDraft } from './TuitionDraftsProvider';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
 import { updateTuitionAction } from '@/actions/v1/tuition/update-tuition';
-import { deriveTuitionStatus, parseIntAmount } from '@/lib/tuition';
-import { toDateInputValue, todayISO } from '@/lib/format';
+import { computeTuitionDiff, deriveTuitionStatus, parseIntAmount, tuitionBaseDraft } from '@/lib/tuition';
+import { todayISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { TuitionListRow } from '@/types/actions/tuition';
-import type { IUpdateTuitionPayload } from '@/types/actions/tuition';
 
 interface Props {
   index: number;
@@ -23,22 +22,13 @@ interface Props {
   onSaved: (rowId: number) => void;
 }
 
-function baseDraft(row: TuitionListRow): TuitionDraft {
-  return {
-    amountDue: String(row.amountDue),
-    amountPaid: String(row.amountPaid),
-    paidDate: toDateInputValue(row.paidDate),
-    note: row.note ?? '',
-  };
-}
-
 const CELL_INPUT = 'h-8 px-2 text-sm';
 
 export default function TuitionRow({ index, classId, row, onSaved }: Props) {
   const { drafts, patch, discard } = useTuitionDrafts();
   const [saving, setSaving] = useState(false);
 
-  const base = baseDraft(row);
+  const base = tuitionBaseDraft(row);
   const draft = drafts.get(row.id);
   const value = draft ?? base;
   const dirty = draft !== undefined;
@@ -62,20 +52,13 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
 
   async function save() {
     if (saving || !dirty) return;
-    if (dueInvalid || paidInvalid) {
+    if (due === null || paid === null) {
       handleActionErrors(['Số tiền phải là số nguyên không âm']);
       return;
     }
 
-    // Chỉ gửi field thực sự đổi. Gửi thừa `amountDue` sẽ bật nhầm isDueOverridden
-    // ở BE -> dòng đó vĩnh viễn không được "Tính lại" cập nhật nữa.
-    const payload: IUpdateTuitionPayload = {};
-    if (value.amountDue !== base.amountDue) payload.amountDue = due ?? undefined;
-    if (value.amountPaid !== base.amountPaid) payload.amountPaid = paid ?? undefined;
-    if (value.paidDate !== base.paidDate) payload.paidDate = value.paidDate || null;
-    if (value.note !== base.note) payload.note = value.note.trim() || null;
-
-    if (Object.keys(payload).length === 0) {
+    const payload = computeTuitionDiff(base, value, due, paid);
+    if (!payload) {
       discard(row.id); // gõ rồi gõ lại như cũ
       return;
     }

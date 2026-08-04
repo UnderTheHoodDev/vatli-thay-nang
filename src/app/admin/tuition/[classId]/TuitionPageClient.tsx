@@ -25,6 +25,7 @@ import MonthPicker from '@/components/features/tuition/MonthPicker';
 import RecomputeTuitionButton from '@/components/features/tuition/RecomputeTuitionButton';
 import TuitionExportDialog from '@/components/features/tuition/TuitionExportDialog';
 import TuitionImportDialog from '@/components/features/tuition/TuitionImportDialog';
+import TuitionSaveAllButton from '@/components/features/tuition/TuitionSaveAllButton';
 import TuitionTable, { TuitionTableFallback } from '@/components/features/tuition/TuitionTable';
 import TuitionDraftsProvider, {
   useTuitionDrafts,
@@ -160,7 +161,9 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
     (year: number, month: number) => {
       guarded(() => {
         discardAll();
-        startTransition(() => router.push(`${pathname}?${buildUrlParams({ year, month })}`));
+        startTransition(() =>
+          router.push(`${pathname}?${buildUrlParams({ year, month })}`, { scroll: false }),
+        );
       });
     },
     [guarded, discardAll, router, pathname, startTransition],
@@ -178,6 +181,13 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
     [discard, router, startTransition],
   );
 
+  const handleAllSaved = useCallback(() => {
+    startTransition(() => {
+      discardAll();
+      router.refresh();
+    });
+  }, [discardAll, router, startTransition]);
+
   const monthLabel = `Tháng ${urlState.month}/${urlState.year}`;
 
   return (
@@ -189,8 +199,8 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
           size="sm"
           className="text-muted-foreground hover:text-foreground w-fit cursor-pointer pl-1"
         >
-          <Link href={`/admin/classes/${classDetail.id}`}>
-            <ArrowLeft /> Chi tiết lớp
+          <Link href="/admin/tuition">
+            <ArrowLeft /> Danh sách học phí
           </Link>
         </Button>
         <div className="space-y-1">
@@ -254,10 +264,19 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
             </div>
           </div>
           {dirtyCount > 0 && (
-            <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
-              <TriangleAlert className="size-3.5" />
-              {dirtyCount} dòng chưa lưu. Đổi tháng hoặc tính lại sẽ mất các thay đổi này.
-            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="flex items-center gap-1.5 text-xs text-amber-700">
+                <TriangleAlert className="size-3.5" />
+                {dirtyCount} dòng chưa lưu. Đổi tháng hoặc tính lại sẽ mất các thay đổi này.
+              </p>
+              <Suspense fallback={null}>
+                <TuitionSaveAllButton
+                  classId={classDetail.id}
+                  promise={tuitionPromise}
+                  onSaved={handleAllSaved}
+                />
+              </Suspense>
+            </div>
           )}
         </CardContent>
       </Card>
