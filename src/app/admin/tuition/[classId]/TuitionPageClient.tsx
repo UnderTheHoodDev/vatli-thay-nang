@@ -89,7 +89,7 @@ function TuitionStatsSection({ promise }: { promise: Promise<ListTuitionResponse
         label="Chưa đóng"
         value={stats.unpaidCount}
         icon={TriangleAlert}
-        tone={stats.unpaidCount > 0 ? 'destructive' : 'muted'}
+        tone="destructive"
         hint={`${stats.paidCount}/${stats.studentCount} đã đóng đủ`}
       />
     </div>
@@ -263,8 +263,19 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <CardTitle>Bảng học phí {monthLabel}</CardTitle>
+            <Suspense fallback={<Skeleton className="mt-1 h-4 w-40" />}>
+              <TuitionResultSummary promise={tuitionPromise} />
+            </Suspense>
+          </div>
           {dirtyCount > 0 && (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <p className="flex items-center gap-1.5 text-xs text-amber-700">
                 <TriangleAlert className="size-3.5" />
                 {dirtyCount} dòng chưa lưu. Đổi tháng hoặc tính lại sẽ mất các thay đổi này.
@@ -278,15 +289,6 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
               </Suspense>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card className="gap-0 pb-0">
-        <CardHeader className="pb-4">
-          <CardTitle>Bảng học phí {monthLabel}</CardTitle>
-          <Suspense fallback={<Skeleton className="mt-1 h-4 w-40" />}>
-            <TuitionResultSummary promise={tuitionPromise} />
-          </Suspense>
         </CardHeader>
         <CardContent className="px-3 pb-4">
           <Suspense fallback={<TuitionTableFallback />}>
