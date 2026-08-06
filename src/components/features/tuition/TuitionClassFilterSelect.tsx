@@ -36,7 +36,7 @@ export default function TuitionClassFilterSelect({ classes, value, disabled, onC
           className="border-input-border hover:text-foreground w-full cursor-pointer justify-between bg-white font-normal hover:bg-white sm:w-72"
         >
           {selected ? (
-            <span className="flex min-w-0 items-center gap-2 truncate">
+            <span className="flex min-w-0 items-baseline gap-2">
               <span className="font-mono text-xs">{selected.code}</span>
               <span className="truncate">{selected.name}</span>
             </span>
@@ -77,8 +77,10 @@ export default function TuitionClassFilterSelect({ classes, value, disabled, onC
                       value === c.id ? 'opacity-100' : 'opacity-0',
                     )}
                   />
-                  <span className="font-mono text-xs">{c.code}</span>
-                  <span className="text-muted-foreground ml-2 truncate">{c.name}</span>
+                  <span className="flex min-w-0 items-baseline gap-2">
+                    <span className="font-mono text-xs">{c.code}</span>
+                    <span className="text-muted-foreground truncate">{c.name}</span>
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
