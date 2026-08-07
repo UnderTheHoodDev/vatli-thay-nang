@@ -10,6 +10,7 @@ import {
   School,
   Trash2,
   Users as UsersIcon,
+  Wallet,
   X,
   CheckCircle2,
   Lock,
@@ -227,6 +228,15 @@ function ClassesTableSection({
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Học phí"
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/admin/tuition/${row.id}`)}
+                  >
+                    <Wallet />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon-sm"

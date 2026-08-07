@@ -22,6 +22,7 @@ import {
 import { handleActionResult } from '@/lib/actions';
 import { createClassSessionAction } from '@/actions/v1/class-sessions/create-class-session';
 import { updateClassSessionAction } from '@/actions/v1/class-sessions/update-class-session';
+import { parseIntAmount } from '@/lib/tuition';
 import type { ClassSessionListRow } from '@/types/actions/class-management';
 import type { ClassRow } from '@/types/class-management';
 
@@ -39,6 +40,8 @@ interface Props {
   classId?: number;
   /** Truyền vào khi modal mở ở nơi không gắn với 1 lớp cố định (VD: trang danh sách buổi học) — hiện thêm dropdown chọn lớp. */
   classes?: ClassRow[];
+  /** Học phí mặc định của lớp — dùng để điền sẵn khi tạo buổi (chỉ cần khi `classId` cố định). */
+  defaultSessionFee?: number;
   initialData?: ClassSessionListRow;
 }
 
@@ -48,6 +51,7 @@ export default function ClassSessionFormModal({
   mode,
   classId,
   classes,
+  defaultSessionFee,
   initialData,
 }: Props) {
   const router = useRouter();
@@ -64,6 +68,11 @@ export default function ClassSessionFormModal({
     initialData?.endTime ? toLocalDatetimeValue(initialData.endTime) : '',
   );
   const [meetingUrl, setMeetingUrl] = useState(initialData?.meetingUrl ?? '');
+  const [tuitionFee, setTuitionFee] = useState(
+    String(initialData?.tuitionFee ?? defaultSessionFee ?? 0),
+  );
+  // Sau khi admin tự gõ, đổi lớp (dropdown) không được ghi đè số họ vừa nhập.
+  const [feeTouched, setFeeTouched] = useState(false);
 
   const nowValue = toLocalDatetimeValue(new Date().toISOString());
 
@@ -83,6 +92,8 @@ export default function ClassSessionFormModal({
         : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
           ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
           : '';
+  const feeError =
+    submitted && parseIntAmount(tuitionFee) === null ? 'Học phí phải là số nguyên không âm' : '';
 
   const handleSubmit = async () => {
     setSubmitted(true);
@@ -92,6 +103,8 @@ export default function ClassSessionFormModal({
     if (new Date(startTime) < now) return;
     if (new Date(endTime) < now) return;
     if (new Date(endTime) <= new Date(startTime)) return;
+    const fee = parseIntAmount(tuitionFee);
+    if (fee === null) return;
 
     const effectiveClassId = selectedClassId ?? classId;
     if (!effectiveClassId) return;
@@ -105,6 +118,7 @@ export default function ClassSessionFormModal({
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
           meetingUrl: meetingUrl.trim() || undefined,
+          tuitionFee: fee,
         });
         handleActionResult(
           result.errors,
@@ -121,6 +135,7 @@ export default function ClassSessionFormModal({
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
           meetingUrl: meetingUrl.trim() || undefined,
+          tuitionFee: fee,
         });
         handleActionResult(
           result.errors,
@@ -151,7 +166,14 @@ export default function ClassSessionFormModal({
               </Label>
               <Select
                 value={selectedClassId ? String(selectedClassId) : ''}
-                onValueChange={(v) => setSelectedClassId(Number(v))}
+                onValueChange={(v) => {
+                  const id = Number(v);
+                  setSelectedClassId(id);
+                  if (!feeTouched && mode === 'create') {
+                    const picked = classes.find((c) => c.id === id);
+                    setTuitionFee(String(picked?.defaultSessionFee ?? 0));
+                  }
+                }}
               >
                 <SelectTrigger className="w-full cursor-pointer">
                   <SelectValue placeholder="Chọn lớp" />
@@ -231,6 +253,24 @@ export default function ClassSessionFormModal({
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="session-fee">Học phí buổi (VNĐ)</Label>
+            <Input
+              id="session-fee"
+              type="number"
+              min={0}
+              step={1000}
+              inputMode="numeric"
+              value={tuitionFee}
+              onChange={(e) => {
+                setFeeTouched(true);
+                setTuitionFee(e.target.value);
+              }}
+              aria-invalid={!!feeError}
+            />
+            {feeError && <p className="mt-1 text-xs text-red-500">{feeError}</p>}
           </div>
         </div>
 

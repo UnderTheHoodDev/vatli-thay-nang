@@ -1,5 +1,5 @@
 import type { ListMeta } from '@/types/auth';
-import type { ClassRow, ClassStatus } from '@/types/class-management';
+import type { ClassRow, ClassStatus, ClassStudentStatus } from '@/types/class-management';
 
 export interface IListClassesParams {
   name?: string;
@@ -28,6 +28,7 @@ export interface ICreateClassPayload {
   name: string;
   code: string;
   description?: string;
+  defaultSessionFee?: number;
 }
 
 export interface IUpdateClassPayload {
@@ -35,18 +36,32 @@ export interface IUpdateClassPayload {
   code?: string;
   description?: string;
   status?: ClassStatus;
+  defaultSessionFee?: number;
 }
 
 export interface ClassStudentListRow {
+  /** id của bản ghi ClassStudent — KHÔNG phải userId. Các API vòng đời dùng studentId. */
+  id: number;
   studentId: number;
   email: string;
   fullName: string | null;
+  /** null → hiển thị theo `createdAt` (PHASE-1 §III.1). */
+  enrollmentDate: string | null;
+  leftAt: string | null;
+  status: ClassStudentStatus;
   createdAt: string;
+}
+
+export interface ClassStudentListStats {
+  total: number;
+  studying: number;
+  left: number;
 }
 
 export interface IListClassStudentsParams {
   email?: string;
   fullName?: string;
+  status?: ClassStudentStatus;
   page?: number;
   pageSize?: number;
 }
@@ -54,6 +69,16 @@ export interface IListClassStudentsParams {
 export interface IListClassStudentsResult {
   data: ClassStudentListRow[];
   meta: ListMeta;
+  stats: ClassStudentListStats;
+}
+
+export interface IUpdateEnrollmentDatePayload {
+  /** YYYY-MM-DD, BE quy chiếu theo Asia/Ho_Chi_Minh. null = xoá, quay về createdAt. */
+  enrollmentDate: string | null;
+}
+
+export interface ILeaveClassStudentPayload {
+  leftAt: string;
 }
 
 export interface ClassSessionListRow {
@@ -67,6 +92,8 @@ export interface ClassSessionListRow {
   attendedCount?: number;
   totalStudents?: number;
   activeAttendanceSession?: { id: number; closedAt: string } | null;
+  /** Học phí của buổi (VNĐ). Chỉ trả cho ADMIN. */
+  tuitionFee?: number;
   // STUDENT only (list() student branch).
   myStatus?: 'ATTENDED' | 'ON_LEAVE' | 'NOT_ATTENDED';
   hasActiveAttendance?: boolean;
@@ -109,6 +136,8 @@ export interface ClassSessionDetail {
   endTime: string;
   meetingUrl: string | null;
   activeAttendanceSession: { id: number; closedAt: string } | null;
+  /** Học phí của buổi (VNĐ). Chỉ trả cho ADMIN. */
+  tuitionFee?: number;
 }
 
 export interface ICreateClassSessionPayload {
@@ -117,6 +146,7 @@ export interface ICreateClassSessionPayload {
   startTime: string;
   endTime: string;
   meetingUrl?: string;
+  tuitionFee?: number;
 }
 
 export interface IUpdateClassSessionPayload {
@@ -125,4 +155,5 @@ export interface IUpdateClassSessionPayload {
   startTime?: string;
   endTime?: string;
   meetingUrl?: string;
+  tuitionFee?: number;
 }

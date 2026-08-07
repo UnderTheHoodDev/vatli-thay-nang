@@ -125,13 +125,6 @@ export interface CourseStudentStatsDetail {
   files: CourseStudentStatsFile[];
 }
 
-export interface VideoProgressInfo {
-  totalWatchedSec: number;
-  lastPositionSec: number;
-  viewCount: number;
-  lastViewedAt: string | null;
-}
-
 export interface CourseDetail extends CourseRow {
   thumbnailStorageKey?: string | null;
   instructorBio: string | null;

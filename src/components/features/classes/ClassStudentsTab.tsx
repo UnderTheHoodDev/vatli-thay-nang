@@ -13,6 +13,7 @@ import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import ClassStudentsSearchForm, { type ClassStudentSearchValues } from './ClassStudentsSearchForm';
 import ClassStudentsTable from './ClassStudentsTable';
 import AddStudentsDialog from './AddStudentsDialog';
+import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
 import type { ListMeta } from '@/types/auth';
 import type { ClassStudentListRow } from '@/types/actions/class-management';
 
@@ -20,6 +21,7 @@ interface Props {
   classId: number;
   search: ClassStudentSearchValues;
   rows: ClassStudentListRow[];
+  attendanceStats: ClassAttendanceStudentRow[];
   meta: ListMeta;
   loading?: boolean;
   onSearchChange: (next: ClassStudentSearchValues) => void;
@@ -31,6 +33,7 @@ export default function ClassStudentsTab({
   classId,
   search,
   rows,
+  attendanceStats,
   meta,
   loading,
   onSearchChange,
@@ -83,7 +86,12 @@ export default function ClassStudentsTab({
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <ClassStudentsTable classId={classId} rows={rows} loading={loading} />
+          <ClassStudentsTable
+            classId={classId}
+            rows={rows}
+            attendanceStats={attendanceStats}
+            loading={loading}
+          />
         </CardContent>
         {totalPages > 1 && (
           <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">

@@ -24,6 +24,7 @@ import { getBunnyTusUploadAction } from '@/actions/v1/bunny/get-tus-upload';
 import { getUploadUrlAction } from '@/actions/v1/storage/get-upload-url';
 import { useUploadManager } from './UploadManagerProvider';
 import { detectFileKind } from '@/lib/file-kind';
+import { formatBytes } from '@/lib/format';
 import { COURSE_FILE_KIND_LABEL } from '@/types/course-management';
 import type { CourseFileKind, CourseNodeTree } from '@/types/course-management';
 
@@ -54,18 +55,6 @@ const MAX_DOC_SIZE = 100 * 1024 * 1024; // 100MB
 function stripExt(name: string): string {
   const idx = name.lastIndexOf('.');
   return idx > 0 ? name.slice(0, idx) : name;
-}
-
-function formatBytes(n?: number): string {
-  if (!n || n <= 0) return '';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let v = n;
-  let i = 0;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
 export default function NodeFormModal({

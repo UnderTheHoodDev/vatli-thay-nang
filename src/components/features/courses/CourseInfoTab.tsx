@@ -20,13 +20,9 @@ import CourseStatusBadge from './CourseStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
+import { formatVnd } from '@/lib/format';
 import CourseFormModal from './CourseFormModal';
 import type { CourseCategoryRow, CourseDetail } from '@/types/course-management';
-
-function formatVnd(v: number | null | undefined): string {
-  if (!v || v <= 0) return 'Miễn phí';
-  return `${v.toLocaleString('vi-VN')} đ`;
-}
 
 interface Props {
   course: CourseDetail;

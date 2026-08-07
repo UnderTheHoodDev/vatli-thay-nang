@@ -6,6 +6,7 @@ import { getUploadUrlAction } from '@/actions/v1/storage/get-upload-url';
 import { Button } from '@/components/ui/button';
 import { handleActionErrors } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import { formatBytes } from '@/lib/format';
 import type { IGetUploadUrlPayload } from '@/types/actions/course-management';
 import type { StorageFolder } from '@/types/course-management';
 import type { TestFilePayload } from '@/types/tests';
@@ -31,18 +32,6 @@ const ACCEPT: Record<Props['folder'], string> = {
   'test-attachments': 'image/*,application/pdf',
   'test-submissions': 'image/*,application/pdf,text/plain',
 };
-
-function formatBytes(n?: number): string {
-  if (!n || n <= 0) return '';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let v = n;
-  let i = 0;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
-}
 
 /** BE từ chối svg và octet-stream ở DTO → chỉ gửi mimeType khi chắc chắn hợp lệ. */
 function safeMimeType(file: File): string | undefined {

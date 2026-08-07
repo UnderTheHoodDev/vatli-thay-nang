@@ -1,5 +1,6 @@
 export type ClassStatus = 'ACTIVE' | 'CLOSED';
 export type ClassSessionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+export type ClassStudentStatus = 'STUDYING' | 'LEFT';
 export type LeaveRequestStatus = 'SUBMITTED' | 'ACKNOWLEDGED';
 export type LeaveType = 'FULL_SESSION' | 'EARLY_LEAVE';
 export type AttendanceSessionStatus = 'ACTIVE' | 'CLOSED';
@@ -10,6 +11,11 @@ export type ManualEditAction =
   | 'ADD_NOTE'
   | 'ACKNOWLEDGE_LEAVE';
 
+export const CLASS_STUDENT_STATUS_LABEL: Record<ClassStudentStatus, string> = {
+  STUDYING: 'Đang học',
+  LEFT: 'Đã nghỉ',
+};
+
 export interface ClassRow {
   id: number;
   name: string;
@@ -19,6 +25,8 @@ export interface ClassRow {
   studentCount?: number;
   sessionCount?: number;
   createdAt?: string;
+  /** Học phí mặc định / buổi (VND, số nguyên). Chỉ trả cho ADMIN. */
+  defaultSessionFee?: number;
   // STUDENT only.
   attendedCount?: number;
   leaveCount?: number;
@@ -28,73 +36,4 @@ export interface ClassRow {
 
 export interface ClassDetail extends ClassRow {
   createdAt: string;
-}
-
-export interface ClassStudentRow {
-  id: number;
-  classId: number;
-  studentId: number;
-  createdAt: string;
-}
-
-export interface ClassSessionRow {
-  id: number;
-  classId: number;
-  title: string;
-  description: string | null;
-  startTime: string;
-  endTime: string;
-  meetingUrl: string | null;
-  createdById: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeaveRequestRow {
-  id: number;
-  classSessionId: number;
-  studentId: number;
-  reason: string;
-  status: LeaveRequestStatus;
-  submittedAt: string;
-  reviewedById: number | null;
-  reviewedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AttendanceSessionRow {
-  id: number;
-  classSessionId: number;
-  openedById: number;
-  durationMinutes: number;
-  openedAt: string;
-  closedAt: string;
-  status: AttendanceSessionStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AttendanceLogRow {
-  id: number;
-  attendanceSessionId: number;
-  classSessionId: number;
-  studentId: number;
-  checkedAt: string;
-  source: AttendanceSource;
-  note: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AttendanceManualEditLogRow {
-  id: number;
-  classSessionId: number;
-  studentId: number;
-  action: ManualEditAction;
-  previousValue: string | null;
-  newValue: string | null;
-  note: string | null;
-  editedBy: number;
-  editedAt: string;
 }

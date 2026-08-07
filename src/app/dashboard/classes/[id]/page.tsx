@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getMyAttendanceSummary } from '@/actions/v1/attendance/get-my-attendance-summary';
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listClassSessions } from '@/actions/v1/class-sessions/list-class-sessions';
 import StudentClassDetailClient from './StudentClassDetailClient';
@@ -17,9 +18,10 @@ export default async function StudentClassDetailPage({ params, searchParams }: P
   const page = Number(sp.page) || 1;
   const pageSize = Number(sp.pageSize) || 20;
 
-  const [classRow, sessionsRes] = await Promise.all([
+  const [classRow, sessionsRes, attendanceSummaryRes] = await Promise.all([
     getClass(classId),
     listClassSessions(classId, { page, pageSize }),
+    getMyAttendanceSummary(classId),
   ]);
 
   if (!classRow) notFound();
@@ -32,6 +34,7 @@ export default async function StudentClassDetailPage({ params, searchParams }: P
       errors={sessionsRes.errors}
       page={page}
       pageSize={pageSize}
+      attendanceSummary={attendanceSummaryRes.data}
     />
   );
 }
