@@ -127,8 +127,9 @@ export default function TuitionExportDialog({ classId, year, month }: Props) {
           </DialogDescription>
         </DialogHeader>
         <p className="text-muted-foreground -mt-2 text-xs">
-          Cột buổi: <span className="font-medium">✓</span> có điểm danh, trống — chưa điểm danh
-          (kể cả nghỉ phép — vẫn tính tiền, ghi chú thêm ở cột &quot;Ghi chú&quot; nếu cần).
+          Cột buổi: <span className="font-medium">x</span>{' '}
+          có điểm danh, trống — chưa điểm danh (kể cả nghỉ phép — vẫn tính tiền, ghi chú thêm ở cột
+          &quot;Ghi chú&quot; nếu cần).
         </p>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
