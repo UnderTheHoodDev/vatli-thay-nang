@@ -12,6 +12,7 @@ import {
   GraduationCap,
   BookOpen,
   Wallet,
+  CircleHelp,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -46,6 +47,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Khóa học', href: '/admin/courses', icon: BookOpen, section: 'Quản lý' },
   { label: 'Danh mục', href: '/admin/courses/categories', icon: GraduationCap, section: 'Quản lý' },
   { label: 'Thông tin cá nhân', href: '/admin/profile', icon: UserRound, section: 'Tài khoản' },
+  { label: 'Trợ giúp', href: '/admin/help', icon: CircleHelp, section: 'Tài khoản' },
 ];
 
 export const DASHBOARD_NAV: NavItem[] = [
