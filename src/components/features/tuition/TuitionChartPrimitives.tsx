@@ -12,7 +12,11 @@ export function ChartEmptyState({ message }: { message: string }) {
 }
 
 /** Dòng chú giải màu (chấm + nhãn) — dùng chung cho 2 chart xu hướng học phí. */
-export function ChartLegend({ items }: { items: Array<{ key: string; color: string; label: string }> }) {
+export function ChartLegend({
+  items,
+}: {
+  items: Array<{ key: string; color: string; label: string }>;
+}) {
   return (
     <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
       {items.map((item) => (

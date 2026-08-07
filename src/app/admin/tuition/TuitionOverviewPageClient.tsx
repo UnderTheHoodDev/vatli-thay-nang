@@ -175,7 +175,12 @@ function ExcelCardSection({
   const { data: classes } = use(classesPromise);
   const selectedClass = classes.find((c) => c.id === classId);
   return (
-    <TuitionClassExcelCard classId={classId} selectedClass={selectedClass} year={year} month={month} />
+    <TuitionClassExcelCard
+      classId={classId}
+      selectedClass={selectedClass}
+      year={year}
+      month={month}
+    />
   );
 }
 

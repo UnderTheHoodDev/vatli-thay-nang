@@ -30,9 +30,7 @@ function fromIndex(idx: number): MonthValue {
 function clampOtherEnd(movedIdx: number, otherIdx: number): number {
   const span = Math.abs(otherIdx - movedIdx) + 1;
   if (span <= MAX_CHART_MONTHS) return otherIdx;
-  return otherIdx > movedIdx
-    ? movedIdx + MAX_CHART_MONTHS - 1
-    : movedIdx - MAX_CHART_MONTHS + 1;
+  return otherIdx > movedIdx ? movedIdx + MAX_CHART_MONTHS - 1 : movedIdx - MAX_CHART_MONTHS + 1;
 }
 
 /**

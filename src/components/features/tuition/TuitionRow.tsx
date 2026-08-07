@@ -9,7 +9,12 @@ import TuitionStatusBadge from './TuitionStatusBadge';
 import { useTuitionDrafts, type TuitionDraft } from './TuitionDraftsProvider';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
 import { updateTuitionAction } from '@/actions/v1/tuition/update-tuition';
-import { computeTuitionDiff, deriveTuitionStatus, parseIntAmount, tuitionBaseDraft } from '@/lib/tuition';
+import {
+  computeTuitionDiff,
+  deriveTuitionStatus,
+  parseIntAmount,
+  tuitionBaseDraft,
+} from '@/lib/tuition';
 import { todayISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { TuitionListRow } from '@/types/actions/tuition';

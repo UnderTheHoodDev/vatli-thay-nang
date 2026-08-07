@@ -59,7 +59,9 @@ export default function TuitionClassFilterSelect({ classes, value, disabled, onC
                   setOpen(false);
                 }}
               >
-                <Check className={cn('mr-2 size-4 shrink-0', !value ? 'opacity-100' : 'opacity-0')} />
+                <Check
+                  className={cn('mr-2 size-4 shrink-0', !value ? 'opacity-100' : 'opacity-0')}
+                />
                 Tất cả các lớp
               </CommandItem>
               {classes.map((c) => (

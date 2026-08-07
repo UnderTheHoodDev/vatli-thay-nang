@@ -2,7 +2,9 @@ import { listClasses } from '@/actions/v1/classes/list-classes';
 import { listTuitionOverview } from '@/actions/v1/tuition/list-tuition-overview';
 import { listTuitionOverviewChart } from '@/actions/v1/tuition/list-tuition-overview-chart';
 import { shiftMonth, vnCurrentYearMonth } from '@/lib/format';
-import TuitionOverviewPageClient, { type TuitionOverviewUrlState } from './TuitionOverviewPageClient';
+import TuitionOverviewPageClient, {
+  type TuitionOverviewUrlState,
+} from './TuitionOverviewPageClient';
 
 /** Mặc định 12 tháng: 11 tháng trước + tháng hiện tại. */
 const DEFAULT_RANGE_MONTHS = 12;

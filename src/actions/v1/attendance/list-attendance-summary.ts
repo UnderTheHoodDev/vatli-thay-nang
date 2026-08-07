@@ -10,7 +10,9 @@ export interface ListAttendanceSummaryResponse {
   errors: string[];
 }
 
-export async function listAttendanceSummary(classId: number): Promise<ListAttendanceSummaryResponse> {
+export async function listAttendanceSummary(
+  classId: number,
+): Promise<ListAttendanceSummaryResponse> {
   try {
     const res = await api.get('/api/v1/attendance/summary', { params: { classId } });
     const result = res.data as { data: ClassAttendanceStudentRow[] };
