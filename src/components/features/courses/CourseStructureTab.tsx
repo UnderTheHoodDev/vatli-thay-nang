@@ -616,6 +616,7 @@ function NodeRow({
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const isFolder = node.type === 'FOLDER';
+  const isTopFolder = isFolder && depth === 0; // thư mục cấp trên cùng (dưới khóa học)
   const isVideo = node.type === 'FILE' && node.fileKind === 'VIDEO';
   const isDoc = node.type === 'FILE' && node.fileKind === 'DOCUMENT';
   const open = expanded.has(node.id);
@@ -663,7 +664,8 @@ function NodeRow({
         onDrop={isFolder ? (e) => onFileDrop(e, node.id) : undefined}
         className={cn(
           'border-divider bg-card flex items-center gap-2 rounded-md border px-2 py-1.5',
-          isFolder && 'bg-muted/30',
+          isFolder && !isTopFolder && 'bg-muted/30',
+          isTopFolder && 'border-primary/30 bg-primary/5',
           isDragging && 'opacity-50 shadow',
           isDropTarget && 'ring-primary ring-2',
           isFileDropTarget && 'ring-primary bg-primary/10 ring-2',
@@ -700,9 +702,21 @@ function NodeRow({
           </span>
         )}
 
-        {isFolder && <Folder className="text-primary size-4 shrink-0" />}
+        {isFolder &&
+          (isTopFolder ? (
+            <FolderTree className="text-primary size-[1.15rem] shrink-0" />
+          ) : (
+            <Folder className="text-muted-foreground size-4 shrink-0" />
+          ))}
 
-        <span className="text-foreground min-w-0 flex-1 truncate text-sm">{node.title}</span>
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate',
+            isTopFolder ? 'text-foreground text-[0.95rem] font-semibold' : 'text-foreground text-sm',
+          )}
+        >
+          {node.title}
+        </span>
 
         {isFolder ? (
           <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">

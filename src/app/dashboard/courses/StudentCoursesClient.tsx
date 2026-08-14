@@ -118,11 +118,6 @@ function CoursesGridSection({
                   <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs">
                     {row.code}
                   </code>
-                  {row.category?.name && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {row.category.name}
-                    </Badge>
-                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pb-5">

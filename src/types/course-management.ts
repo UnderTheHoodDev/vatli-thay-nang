@@ -11,26 +11,11 @@ export type StorageFolder =
   | 'schedule-images';
 export type BunnyVideoStatus = 'UPLOADING' | 'QUEUED' | 'PROCESSING' | 'FINISHED' | 'ERROR';
 
-export interface CourseCategoryRow {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  order: number;
-  courseCount?: number;
-}
-
 export interface CourseInstructor {
   id: number;
   fullName: string | null;
   email: string;
   avatarUrl?: string | null;
-}
-
-export interface CourseCategoryBrief {
-  id: number;
-  name: string;
-  slug: string;
 }
 
 export interface PublicCourse {
@@ -44,7 +29,6 @@ export interface PublicCourse {
   startDate: string | null;
   endDate: string | null;
   enrollmentDeadline: string | null;
-  category: CourseCategoryBrief;
 }
 
 export interface CourseRow {
@@ -59,7 +43,6 @@ export interface CourseRow {
   startDate: string | null;
   endDate: string | null;
   enrollmentDeadline: string | null;
-  category: CourseCategoryBrief;
   instructor: CourseInstructor;
   enrollmentCount: number;
   isEnrolled?: boolean;

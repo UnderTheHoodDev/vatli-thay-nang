@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowLeft, CalendarDays, FileX2, Radio } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, FileX2, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,6 +122,21 @@ export default function StudentClassDetailClient({
           size="md"
         />
       </div>
+
+      {classRow.activeAttendanceSessionId != null && (
+        <Link
+          href={`/dashboard/classes/${classRow.id}/class-sessions/${classRow.activeAttendanceSessionId}`}
+          className="border-primary/40 bg-primary/5 hover:bg-primary/10 flex items-center justify-between gap-3 rounded-lg border p-4 transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <Radio className="text-primary size-5 animate-pulse" />
+            <span className="text-foreground font-medium">Lớp đang mở điểm danh</span>
+          </span>
+          <span className="bg-primary text-primary-foreground inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium">
+            Điểm danh ngay <ArrowRight className="size-4" />
+          </span>
+        </Link>
+      )}
 
       {attendanceSummary && <MyAttendanceSummaryCard stats={attendanceSummary} />}
 

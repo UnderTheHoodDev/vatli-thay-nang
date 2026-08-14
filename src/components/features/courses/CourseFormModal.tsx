@@ -28,7 +28,7 @@ import { createCourseAction } from '@/actions/v1/courses/create-course';
 import { updateCourseAction } from '@/actions/v1/courses/update-course';
 import { listUsers } from '@/actions/v1/users/list-users';
 import ThumbnailUploader, { type ThumbnailValue } from './ThumbnailUploader';
-import type { CourseCategoryRow, CourseDetail, CourseStatus } from '@/types/course-management';
+import type { CourseDetail, CourseStatus } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import type { UserRow } from '@/types/auth';
 
@@ -36,14 +36,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
-  categories: CourseCategoryRow[];
   initialData?: CourseDetail;
 }
 
 interface FormState {
-  code: string;
   title: string;
-  categoryId: string;
   instructorId: string;
   description: string;
   thumbnail: ThumbnailValue | null;
@@ -59,9 +56,7 @@ interface FormState {
 
 function emptyForm(): FormState {
   return {
-    code: '',
     title: '',
-    categoryId: '',
     instructorId: '',
     description: '',
     thumbnail: null,
@@ -89,9 +84,7 @@ function toDateInput(value: string | null | undefined): string {
 function fromForm(initial: CourseDetail | undefined): FormState {
   if (!initial) return emptyForm();
   return {
-    code: initial.code,
     title: initial.title,
-    categoryId: String(initial.category?.id ?? ''),
     instructorId: String(initial.instructor?.id ?? ''),
     description: initial.description ?? '',
     thumbnail:
@@ -116,7 +109,6 @@ export default function CourseFormModal({
   open,
   onOpenChange,
   mode,
-  categories,
   initialData,
 }: Props) {
   const router = useRouter();
@@ -153,9 +145,7 @@ export default function CourseFormModal({
   }, [open]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const codeError = submitted && !form.code.trim() ? 'Vui lòng nhập mã khóa học' : '';
   const titleError = submitted && !form.title.trim() ? 'Vui lòng nhập tên khóa học' : '';
-  const categoryError = submitted && !form.categoryId ? 'Vui lòng chọn danh mục' : '';
   const instructorError = submitted && !form.instructorId ? 'Vui lòng chọn giảng viên' : '';
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -164,15 +154,13 @@ export default function CourseFormModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    if (!form.code.trim() || !form.title.trim() || !form.categoryId || !form.instructorId) {
+    if (!form.title.trim() || !form.instructorId) {
       setTab('info');
       return;
     }
 
     const basePayload = {
-      code: form.code.trim(),
       title: form.title.trim(),
-      categoryId: Number(form.categoryId),
       instructorId: Number(form.instructorId),
       description: form.description.trim() || undefined,
       thumbnailUrl: form.thumbnail?.url || undefined,
@@ -254,20 +242,6 @@ export default function CourseFormModal({
             <TabsContent value="info" className="space-y-4 pt-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="course-code">
-                    Mã khóa học <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="course-code"
-                    placeholder="VD: VL12-2025"
-                    maxLength={50}
-                    value={form.code}
-                    onChange={(e) => set('code', e.target.value)}
-                    aria-invalid={!!codeError}
-                  />
-                  {codeError && <p className="text-destructive text-xs">{codeError}</p>}
-                </div>
-                <div className="space-y-1.5">
                   <Label htmlFor="course-title">
                     Tên khóa học <span className="text-destructive">*</span>
                   </Label>
@@ -280,27 +254,9 @@ export default function CourseFormModal({
                     aria-invalid={!!titleError}
                   />
                   {titleError && <p className="text-destructive text-xs">{titleError}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>
-                    Danh mục <span className="text-destructive">*</span>
-                  </Label>
-                  <Select value={form.categoryId} onValueChange={(v) => set('categoryId', v)}>
-                    <SelectTrigger className="cursor-pointer" aria-invalid={!!categoryError}>
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {categoryError && <p className="text-destructive text-xs">{categoryError}</p>}
+                  <p className="text-muted-foreground text-xs">
+                    Mã khóa học được tạo tự động từ tên.
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label>

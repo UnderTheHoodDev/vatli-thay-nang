@@ -66,10 +66,10 @@ export default function ClassSessionInfoSection({ classSession }: Props) {
                 <Icon className="size-4" />
               </span>
               <div className="min-w-0 flex-1 space-y-1">
-                <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                <dt className="text-foreground/55 text-[0.8rem] font-medium tracking-wide uppercase">
                   {label}
                 </dt>
-                <dd className="text-foreground text-sm font-medium">{value}</dd>
+                <dd className="text-foreground text-[0.95rem] font-medium">{value}</dd>
               </div>
             </div>
           ))}
@@ -81,10 +81,10 @@ export default function ClassSessionInfoSection({ classSession }: Props) {
               <FileText className="size-4" />
             </span>
             <div className="min-w-0 flex-1 space-y-1">
-              <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              <dt className="text-foreground/55 text-[0.8rem] font-medium tracking-wide uppercase">
                 Mô tả
               </dt>
-              <dd className="text-foreground text-sm">
+              <dd className="text-foreground text-[0.95rem]">
                 {classSession.description ? (
                   <p className="whitespace-pre-wrap">{classSession.description}</p>
                 ) : (

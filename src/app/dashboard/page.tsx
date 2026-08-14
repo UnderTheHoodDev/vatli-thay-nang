@@ -69,13 +69,25 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {classesRes.data.map((row) => (
+            {classesRes.data.map((row) => {
+              const hasActive = row.activeAttendanceSessionId != null;
+              return (
               <Link
                 key={row.id}
-                href={`/dashboard/classes/${row.id}`}
+                href={
+                  hasActive
+                    ? `/dashboard/classes/${row.id}/class-sessions/${row.activeAttendanceSessionId}`
+                    : `/dashboard/classes/${row.id}`
+                }
                 className="group focus-visible:ring-ring rounded-xl focus-visible:ring-2 focus-visible:outline-none"
               >
-                <Card className="hover:border-primary/40 h-full cursor-pointer gap-0 transition hover:shadow-md">
+                <Card
+                  className={
+                    hasActive
+                      ? 'border-primary/40 bg-primary/5 h-full cursor-pointer gap-0 shadow-sm transition hover:shadow-md'
+                      : 'hover:border-primary/40 h-full cursor-pointer gap-0 transition hover:shadow-md'
+                  }
+                >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
@@ -112,14 +124,22 @@ export default async function DashboardPage() {
                       leave={row.leaveCount ?? 0}
                       notAttended={row.notAttendedCount ?? 0}
                     />
-                    <div className="text-primary group-hover:text-primary/80 inline-flex items-center gap-1.5 text-sm font-medium">
-                      Xem buổi học
-                      <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
-                    </div>
+                    {hasActive ? (
+                      <div className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium">
+                        <Radio className="size-4 animate-pulse" /> Điểm danh ngay
+                        <ArrowRight className="size-4" />
+                      </div>
+                    ) : (
+                      <div className="text-primary group-hover:text-primary/80 inline-flex items-center gap-1.5 text-sm font-medium">
+                        Xem buổi học
+                        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

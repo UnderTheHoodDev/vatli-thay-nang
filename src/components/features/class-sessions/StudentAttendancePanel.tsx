@@ -10,6 +10,7 @@ import SubmitLeaveRequestDialog from '@/components/features/leave-requests/Submi
 import { checkAttendanceAction } from '@/actions/v1/attendance/check-attendance';
 import { handleActionResult } from '@/lib/actions';
 import { formatDateTimeShort, formatRemaining } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { MyAttendanceLog } from '@/types/actions/attendance';
 import { getEffectiveStatus } from '@/lib/class-sessions';
 import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
@@ -85,10 +86,16 @@ export default function StudentAttendancePanel({
   };
 
   return (
-    <Card>
+    <Card
+      className={cn(
+        activeAttendanceSession &&
+          !expired &&
+          'border-primary/40 ring-primary/15 shadow-sm ring-1',
+      )}
+    >
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck className="size-5" /> Điểm danh & xin nghỉ
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <ClipboardCheck className="text-primary size-5" /> Điểm danh &amp; xin nghỉ
         </CardTitle>
         <p className="text-muted-foreground text-sm">
           Bấm <span className="font-medium">Điểm danh</span> khi giáo viên mở phiên, hoặc{' '}
@@ -96,6 +103,31 @@ export default function StudentAttendancePanel({
         </p>
       </CardHeader>
       <CardContent className="space-y-4 pb-6">
+        {/* Nút hành động đưa lên đầu cho dễ thấy */}
+        <div className="flex flex-wrap items-center gap-2">
+          {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => setLeaveDialogOpen(true)}
+            >
+              <LogOut className="size-4" />
+              {myLeaveRequest ? 'Sửa đơn nghỉ' : 'Xin nghỉ'}
+            </Button>
+          )}
+
+          {showCheckButton && (
+            <ActionButton
+              onClick={handleCheck}
+              isLoading={checking}
+              loadingText="Đang điểm danh..."
+              className="h-11 px-6 text-base"
+            >
+              <ClipboardCheck className="size-5" /> Điểm danh ngay
+            </ActionButton>
+          )}
+        </div>
+
         {activeAttendanceSession && !expired && (
           <div className="bg-primary/5 border-primary/20 flex flex-col items-start gap-2 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -135,29 +167,6 @@ export default function StudentAttendancePanel({
             )}
           </div>
         )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
-            <Button
-              variant="outline"
-              className="cursor-pointer"
-              onClick={() => setLeaveDialogOpen(true)}
-            >
-              <LogOut className="size-4" />
-              {myLeaveRequest ? 'Sửa đơn nghỉ' : 'Xin nghỉ'}
-            </Button>
-          )}
-
-          {showCheckButton && (
-            <ActionButton
-              onClick={handleCheck}
-              isLoading={checking}
-              loadingText="Đang điểm danh..."
-            >
-              <ClipboardCheck className="size-4" /> Điểm danh
-            </ActionButton>
-          )}
-        </div>
 
         {myAttendance.length > 0 && (
           <div className="space-y-2">

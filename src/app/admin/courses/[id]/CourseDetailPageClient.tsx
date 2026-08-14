@@ -14,7 +14,7 @@ import CourseEnrollmentsTab, {
 } from '@/components/features/courses/CourseEnrollmentsTab';
 import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
-import type { CourseCategoryRow, CourseDetail } from '@/types/course-management';
+import type { CourseDetail } from '@/types/course-management';
 import type { ListCourseEnrollmentsResponse } from '@/actions/v1/courses/list-course-enrollments';
 
 export type CourseDetailTab = 'info' | 'structure' | 'enrollments' | 'stats';
@@ -30,7 +30,6 @@ export interface CourseDetailUrlState {
 interface Props {
   course: CourseDetail;
   urlState: CourseDetailUrlState;
-  categories: CourseCategoryRow[];
   enrollmentsPromise: Promise<ListCourseEnrollmentsResponse>;
 }
 
@@ -87,7 +86,6 @@ function EnrollmentsTabData({
 export default function CourseDetailPageClient({
   course,
   urlState,
-  categories,
   enrollmentsPromise,
 }: Props) {
   const router = useRouter();
@@ -144,9 +142,12 @@ export default function CourseDetailPageClient({
               </code>
             </span>
             <span className="text-muted-foreground/50">·</span>
-            <span>{course.category?.name}</span>
-            <span className="text-muted-foreground/50">·</span>
-            <span>{course.enrollmentCount ?? 0} học sinh</span>
+            <span>
+              <span className="text-foreground font-semibold">
+                {course.enrollmentCount ?? 0}
+              </span>{' '}
+              học sinh
+            </span>
           </div>
         </div>
       </div>
@@ -168,7 +169,7 @@ export default function CourseDetailPageClient({
         </TabsList>
 
         <TabsContent value="info">
-          <CourseInfoTab course={course} categories={categories} />
+          <CourseInfoTab course={course} />
         </TabsContent>
 
         <TabsContent value="structure">

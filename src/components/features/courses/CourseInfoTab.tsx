@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import {
   Activity,
-  BookOpen,
   Calendar,
   CalendarClock,
   CalendarRange,
@@ -22,14 +21,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import { formatVnd } from '@/lib/format';
 import CourseFormModal from './CourseFormModal';
-import type { CourseCategoryRow, CourseDetail } from '@/types/course-management';
+import type { CourseDetail } from '@/types/course-management';
 
 interface Props {
   course: CourseDetail;
-  categories: CourseCategoryRow[];
 }
 
-export default function CourseInfoTab({ course, categories }: Props) {
+export default function CourseInfoTab({ course }: Props) {
   const [editOpen, setEditOpen] = useState(false);
 
   const fields: Array<{
@@ -48,7 +46,6 @@ export default function CourseInfoTab({ course, categories }: Props) {
       ),
     },
     { label: 'Trạng thái', value: <CourseStatusBadge status={course.status} />, icon: Activity },
-    { label: 'Danh mục', value: course.category?.name ?? '—', icon: BookOpen },
     {
       label: 'Giảng viên',
       icon: GraduationCap,
@@ -105,10 +102,10 @@ export default function CourseInfoTab({ course, categories }: Props) {
                   <Icon className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
-                  <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                  <dt className="text-foreground/55 text-[0.8rem] font-medium tracking-wide uppercase">
                     {label}
                   </dt>
-                  <dd className="text-foreground text-sm font-medium">{value}</dd>
+                  <dd className="text-foreground text-[0.95rem] font-medium">{value}</dd>
                 </div>
               </div>
             ))}
@@ -137,10 +134,10 @@ export default function CourseInfoTab({ course, categories }: Props) {
                     <Icon className="size-4" />
                   </span>
                   <div className="min-w-0 flex-1 space-y-1">
-                    <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                    <dt className="text-foreground/55 text-[0.8rem] font-medium tracking-wide uppercase">
                       {label}
                     </dt>
-                    <dd className="text-foreground text-sm">
+                    <dd className="text-foreground text-[0.95rem]">
                       {!value ? (
                         <span className="text-muted-foreground italic">Không có</span>
                       ) : outcomes.length > 1 ? (
@@ -165,7 +162,6 @@ export default function CourseInfoTab({ course, categories }: Props) {
         open={editOpen}
         onOpenChange={setEditOpen}
         mode="edit"
-        categories={categories}
         initialData={course}
       />
     </div>
