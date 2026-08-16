@@ -33,11 +33,11 @@ export default function StatsCard({
       <CardContent className="pt-6 pb-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            <p className="text-foreground/60 text-[0.8rem] font-medium tracking-wide uppercase">
               {label}
             </p>
             <p className="text-foreground truncate text-2xl font-semibold">{value}</p>
-            {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+            {hint && <p className="text-muted-foreground text-[0.8rem]">{hint}</p>}
           </div>
           <span
             className={cn(

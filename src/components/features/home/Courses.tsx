@@ -64,11 +64,6 @@ function OpenCard({ course, index }: { course: PublicCourse; index: number }) {
         </motion.div>
       </div>
       <h3 className="font-paytone mb-1">
-        {course.category?.name && (
-          <span className="font-cabin block text-[0.9rem] font-normal text-[#503c39]">
-            {course.category.name}
-          </span>
-        )}
         <span className="text-pink block text-[1.4rem]">{course.title}</span>
       </h3>
       {course.description && (

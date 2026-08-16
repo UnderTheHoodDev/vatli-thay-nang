@@ -177,8 +177,19 @@ function SessionsTableSection({
                 <TableCell>
                   <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                 </TableCell>
-                <TableCell className="text-center font-medium">
-                  {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                <TableCell className="text-center font-semibold">
+                  <span
+                    className={
+                      (row.totalStudents ?? 0) > 0 &&
+                      (row.attendedCount ?? 0) >= (row.totalStudents ?? 0)
+                        ? 'text-emerald-600'
+                        : (row.attendedCount ?? 0) === 0
+                          ? 'text-muted-foreground'
+                          : 'text-amber-600'
+                    }
+                  >
+                    {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                  </span>
                 </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <AttendanceToggle

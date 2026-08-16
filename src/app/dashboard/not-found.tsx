@@ -20,7 +20,7 @@ export default function DashboardNotFound() {
           </div>
           <Button asChild className="cursor-pointer">
             <Link href="/dashboard">
-              <ArrowLeft /> Quay về Dashboard
+              <ArrowLeft /> Quay về Điểm danh
             </Link>
           </Button>
         </CardContent>

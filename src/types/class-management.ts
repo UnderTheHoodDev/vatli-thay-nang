@@ -32,6 +32,8 @@ export interface ClassRow {
   leaveCount?: number;
   notAttendedCount?: number;
   hasActiveAttendance?: boolean;
+  /** Buổi học đang mở điểm danh (để nút "Điểm danh ngay" deep-link). */
+  activeAttendanceSessionId?: number | null;
 }
 
 export interface ClassDetail extends ClassRow {

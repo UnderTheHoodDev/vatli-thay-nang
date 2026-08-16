@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { getCourse } from '@/actions/v1/courses/get-course';
-import { listCourseCategories } from '@/actions/v1/course-categories/list-course-categories';
 import {
   listCourseEnrollments,
   type ListCourseEnrollmentsResponse,
@@ -44,7 +43,6 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
   const course = await getCourse(courseId);
   if (!course) notFound();
 
-  const categoriesRes = await listCourseCategories({ pageSize: 200 });
   const enrollmentsPromise: Promise<ListCourseEnrollmentsResponse> =
     urlState.tab === 'enrollments'
       ? listCourseEnrollments(courseId, {
@@ -63,7 +61,6 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
     <CourseDetailPageClient
       course={course}
       urlState={urlState}
-      categories={categoriesRes.data}
       enrollmentsPromise={enrollmentsPromise}
     />
   );

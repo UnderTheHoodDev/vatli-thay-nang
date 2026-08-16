@@ -1,7 +1,6 @@
 import type { ListMeta } from '@/types/auth';
 import type {
   BunnyVideoStatus,
-  CourseCategoryRow,
   CourseDetail,
   CourseEnrollmentRow,
   CourseEnrollmentStatus,
@@ -19,35 +18,9 @@ export interface CoursesListStats {
   archived: number;
 }
 
-export interface IListCourseCategoriesParams {
-  name?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface IListCourseCategoriesResult {
-  data: CourseCategoryRow[];
-  meta: ListMeta;
-}
-
-export interface ICreateCourseCategoryPayload {
-  name: string;
-  slug: string;
-  description?: string;
-  order?: number;
-}
-
-export interface IUpdateCourseCategoryPayload {
-  name?: string;
-  slug?: string;
-  description?: string;
-  order?: number;
-}
-
 export interface IListCoursesParams {
   title?: string;
   code?: string;
-  categoryId?: number;
   status?: CourseStatus;
   instructorId?: number;
   page?: number;
@@ -61,9 +34,7 @@ export interface IListCoursesResult {
 }
 
 export interface ICreateCoursePayload {
-  code: string;
   title: string;
-  categoryId: number;
   instructorId: number;
   description?: string;
   thumbnailUrl?: string;
@@ -79,9 +50,7 @@ export interface ICreateCoursePayload {
 }
 
 export interface IUpdateCoursePayload {
-  code?: string;
   title?: string;
-  categoryId?: number;
   instructorId?: number;
   description?: string;
   thumbnailUrl?: string;

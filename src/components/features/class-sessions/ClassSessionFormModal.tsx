@@ -74,24 +74,17 @@ export default function ClassSessionFormModal({
   // Sau khi admin tự gõ, đổi lớp (dropdown) không được ghi đè số họ vừa nhập.
   const [feeTouched, setFeeTouched] = useState(false);
 
-  const nowValue = toLocalDatetimeValue(new Date().toISOString());
 
   const classError = submitted && classes && !selectedClassId ? 'Vui lòng chọn lớp' : '';
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tiêu đề' : '';
   const startTimeError =
-    submitted && !startTime
-      ? 'Vui lòng chọn thời gian bắt đầu'
-      : submitted && startTime && new Date(startTime) < new Date()
-        ? 'Thời gian bắt đầu phải từ thời điểm hiện tại trở đi'
-        : '';
+    submitted && !startTime ? 'Vui lòng chọn thời gian bắt đầu' : '';
   const endTimeError =
     submitted && !endTime
       ? 'Vui lòng chọn thời gian kết thúc'
-      : submitted && endTime && new Date(endTime) < new Date()
-        ? 'Thời gian kết thúc phải từ thời điểm hiện tại trở đi'
-        : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
-          ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
-          : '';
+      : submitted && startTime && endTime && new Date(endTime) <= new Date(startTime)
+        ? 'Thời gian kết thúc phải sau thời gian bắt đầu'
+        : '';
   const feeError =
     submitted && parseIntAmount(tuitionFee) === null ? 'Học phí phải là số nguyên không âm' : '';
 
@@ -99,9 +92,6 @@ export default function ClassSessionFormModal({
     setSubmitted(true);
     if (!title.trim() || !startTime || !endTime) return;
     if (classes && !selectedClassId) return;
-    const now = new Date();
-    if (new Date(startTime) < now) return;
-    if (new Date(endTime) < now) return;
     if (new Date(endTime) <= new Date(startTime)) return;
     const fee = parseIntAmount(tuitionFee);
     if (fee === null) return;
@@ -224,7 +214,6 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-start"
                 type="datetime-local"
-                min={nowValue}
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
               />
@@ -237,7 +226,6 @@ export default function ClassSessionFormModal({
               <Input
                 id="session-end"
                 type="datetime-local"
-                min={nowValue}
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               />

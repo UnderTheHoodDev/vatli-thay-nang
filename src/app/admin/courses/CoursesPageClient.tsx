@@ -45,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { handleActionResult } from '@/lib/actions';
 import { deleteCourseAction } from '@/actions/v1/courses/delete-course';
 import CourseFormModal from '@/components/features/courses/CourseFormModal';
-import type { CourseCategoryRow, CourseRow } from '@/types/course-management';
+import type { CourseRow } from '@/types/course-management';
 import { COURSE_STATUS_OPTIONS } from '@/types/course-management';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
 import type { ListCoursesResponse } from '@/actions/v1/courses/list-courses';
@@ -55,7 +55,6 @@ import type { IScheduleSettings } from '@/types/actions/schedule-settings';
 export interface UrlState {
   title: string;
   code: string;
-  categoryId: string;
   status: string;
   page: number;
   pageSize: number;
@@ -64,7 +63,6 @@ export interface UrlState {
 interface Props {
   urlState: UrlState;
   coursesPromise: Promise<ListCoursesResponse>;
-  categories: CourseCategoryRow[];
   scheduleSettings: IScheduleSettings | null;
 }
 
@@ -72,7 +70,6 @@ function buildUrlParams(state: UrlState): URLSearchParams {
   const sp = new URLSearchParams();
   if (state.title) sp.set('title', state.title);
   if (state.code) sp.set('code', state.code);
-  if (state.categoryId && state.categoryId !== ALL_VALUE) sp.set('categoryId', state.categoryId);
   if (state.status && state.status !== ALL_VALUE) sp.set('status', state.status);
   if (state.page !== 1) sp.set('page', String(state.page));
   if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
@@ -140,7 +137,6 @@ function CoursesTableHead() {
         <TableHead className="w-20">Ảnh</TableHead>
         <TableHead className="min-w-50">Tiêu đề</TableHead>
         <TableHead className="w-24">Mã</TableHead>
-        <TableHead>Danh mục</TableHead>
         <TableHead>Giảng viên</TableHead>
         <TableHead className="w-32">Trạng thái</TableHead>
         <TableHead className="w-24 text-center">Nội dung</TableHead>
@@ -236,9 +232,6 @@ function CoursesTableSection({
                 </code>
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
-                {row.category?.name ?? '—'}
-              </TableCell>
-              <TableCell className="text-muted-foreground text-sm">
                 {row.instructor?.fullName ?? row.instructor?.email ?? '—'}
               </TableCell>
               <TableCell>
@@ -288,7 +281,6 @@ function CoursesPaginationSection({
 export default function CoursesPageClient({
   urlState,
   coursesPromise,
-  categories,
   scheduleSettings,
 }: Props) {
   const router = useRouter();
@@ -300,7 +292,6 @@ export default function CoursesPageClient({
 
   const [searchTitle, setSearchTitle] = useState(urlState.title);
   const [searchCode, setSearchCode] = useState(urlState.code);
-  const [searchCategory, setSearchCategory] = useState(urlState.categoryId);
   const [searchStatus, setSearchStatus] = useState(urlState.status);
 
   const updateUrl = useCallback(
@@ -318,7 +309,6 @@ export default function CoursesPageClient({
     updateUrl({
       title: searchTitle,
       code: searchCode,
-      categoryId: searchCategory,
       status: searchStatus,
       page: 1,
     });
@@ -327,12 +317,10 @@ export default function CoursesPageClient({
   const handleResetFilters = () => {
     setSearchTitle('');
     setSearchCode('');
-    setSearchCategory(ALL_VALUE);
     setSearchStatus(ALL_VALUE);
     updateUrl({
       title: '',
       code: '',
-      categoryId: ALL_VALUE,
       status: ALL_VALUE,
       page: 1,
     });
@@ -390,22 +378,6 @@ export default function CoursesPageClient({
                 onChange={(e) => setSearchCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Danh mục</Label>
-              <Select value={searchCategory} onValueChange={setSearchCategory}>
-                <SelectTrigger className="cursor-pointer">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Trạng thái</Label>
@@ -490,12 +462,7 @@ export default function CoursesPageClient({
         </Suspense>
       </Card>
 
-      <CourseFormModal
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        mode="create"
-        categories={categories}
-      />
+      <CourseFormModal open={createOpen} onOpenChange={setCreateOpen} mode="create" />
 
       <AlertDialog
         open={!!deletingCourse}

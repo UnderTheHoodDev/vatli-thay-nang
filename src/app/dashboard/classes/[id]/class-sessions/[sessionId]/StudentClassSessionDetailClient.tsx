@@ -56,8 +56,6 @@ export default function StudentClassSessionDetailClient({
         </div>
       </div>
 
-      <ClassSessionInfoSection classSession={classSession} />
-
       <StudentAttendancePanel
         classSessionId={classSession.id}
         startTime={classSession.startTime}
@@ -66,6 +64,8 @@ export default function StudentClassSessionDetailClient({
         myAttendance={myAttendance}
         myLeaveRequest={myLeaveRequest}
       />
+
+      <ClassSessionInfoSection classSession={classSession} />
     </div>
   );
 }
