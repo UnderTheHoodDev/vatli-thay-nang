@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,15 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+import ProvinceCombobox from './ProvinceCombobox';
 import { ALL_VALUE, GENDER_OPTIONS, ROLE_OPTIONS, STATUS_OPTIONS } from '@/lib/constants';
 import type { Province } from '@/types/auth';
 
@@ -64,7 +56,6 @@ interface Props {
 export default function UserSearchForm({ provinces, classes, initial, onSearch }: Props) {
   const [values, setValues] = useState<UserSearchValues>(initial);
   const [prevInitial, setPrevInitial] = useState(initial);
-  const [provinceOpen, setProvinceOpen] = useState(false);
 
   if (initial !== prevInitial) {
     setPrevInitial(initial);
@@ -84,11 +75,6 @@ export default function UserSearchForm({ provinces, classes, initial, onSearch }
     setValues(EMPTY_SEARCH);
     onSearch(EMPTY_SEARCH);
   }
-
-  const provinceLabel =
-    values.provinceId === ALL_VALUE
-      ? 'Tất cả'
-      : (provinces.find((p) => String(p.id) === values.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
     <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -128,48 +114,12 @@ export default function UserSearchForm({ provinces, classes, initial, onSearch }
       </div>
       <div className="space-y-1.5">
         <Label>Tỉnh</Label>
-        <Popover open={provinceOpen} onOpenChange={setProvinceOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              type="button"
-              className="border-input-border hover:text-foreground h-10 w-full cursor-pointer justify-between bg-white px-3 font-normal hover:bg-white"
-            >
-              <span className="truncate">{provinceLabel}</span>
-              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
-            <Command>
-              <CommandInput placeholder="Tìm tỉnh..." />
-              <CommandList>
-                <CommandEmpty>Không tìm thấy tỉnh</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => {
-                      update('provinceId', ALL_VALUE);
-                      setProvinceOpen(false);
-                    }}
-                  >
-                    Tất cả
-                  </CommandItem>
-                  {provinces.map((p) => (
-                    <CommandItem
-                      key={p.id}
-                      value={p.name}
-                      onSelect={() => {
-                        update('provinceId', String(p.id));
-                        setProvinceOpen(false);
-                      }}
-                    >
-                      {p.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <ProvinceCombobox
+          value={values.provinceId}
+          onChange={(v) => update('provinceId', v)}
+          provinces={provinces}
+          allOption={{ value: ALL_VALUE, label: 'Tất cả' }}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="schoolName">Trường</Label>

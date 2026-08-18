@@ -11,9 +11,9 @@ interface Props {
 }
 
 const STATS = [
-  { key: 'attended', label: 'Đã điểm danh', icon: CheckCircle2, color: 'text-emerald-600' },
-  { key: 'leave', label: 'Xin nghỉ', icon: LogOut, color: 'text-amber-600' },
-  { key: 'notAttended', label: 'Chưa điểm danh', icon: XCircle, color: 'text-red-500' },
+  { key: 'attended', label: 'Đã điểm danh', icon: CheckCircle2, color: 'text-emerald-500' },
+  { key: 'leave', label: 'Xin nghỉ', icon: LogOut, color: 'text-amber-400' },
+  { key: 'notAttended', label: 'Chưa điểm danh', icon: XCircle, color: 'text-red-400' },
 ] as const;
 
 export default function AttendanceStatsInline({

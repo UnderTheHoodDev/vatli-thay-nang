@@ -83,11 +83,7 @@ function EnrollmentsTabData({
   );
 }
 
-export default function CourseDetailPageClient({
-  course,
-  urlState,
-  enrollmentsPromise,
-}: Props) {
+export default function CourseDetailPageClient({ course, urlState, enrollmentsPromise }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -143,9 +139,7 @@ export default function CourseDetailPageClient({
             </span>
             <span className="text-muted-foreground/50">·</span>
             <span>
-              <span className="text-foreground font-semibold">
-                {course.enrollmentCount ?? 0}
-              </span>{' '}
+              <span className="text-foreground font-semibold">{course.enrollmentCount ?? 0}</span>{' '}
               học sinh
             </span>
           </div>

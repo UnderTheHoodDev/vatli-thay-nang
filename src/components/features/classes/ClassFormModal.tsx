@@ -28,6 +28,45 @@ import { updateClassAction } from '@/actions/v1/classes/update-class';
 import { parseIntAmount } from '@/lib/tuition';
 import type { ClassRow, ClassStatus } from '@/types/class-management';
 
+const MONEY_ERROR = 'Học phí phải là số nguyên không âm';
+
+function MoneyField({
+  id,
+  label,
+  hint,
+  value,
+  onChange,
+  error,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (value: string) => void;
+  error: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type="number"
+        min={0}
+        step={1000}
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-invalid={!!error}
+      />
+      {error ? (
+        <p className="text-destructive text-xs">{error}</p>
+      ) : (
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      )}
+    </div>
+  );
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,25 +82,20 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
   const [code, setCode] = useState(initialData?.code ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
   const [status, setStatus] = useState<ClassStatus>(initialData?.status ?? 'ACTIVE');
-  const [defaultSessionFee, setDefaultSessionFee] = useState(
-    String(initialData?.defaultSessionFee ?? 0),
-  );
+  const [monthlyFee, setMonthlyFee] = useState(String(initialData?.monthlyFee ?? 0));
   const [submitted, setSubmitted] = useState(false);
 
   const nameError = submitted && !name.trim() ? 'Vui lòng nhập tên lớp' : '';
   const codeError = submitted && !code.trim() ? 'Vui lòng nhập mã lớp' : '';
-  const feeError =
-    submitted && parseIntAmount(defaultSessionFee) === null
-      ? 'Học phí phải là số nguyên không âm'
-      : '';
+  const monthlyFeeError = submitted && parseIntAmount(monthlyFee) === null ? MONEY_ERROR : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     if (!name.trim()) return;
     if (!code.trim()) return;
-    const fee = parseIntAmount(defaultSessionFee);
-    if (fee === null) return;
+    const monthly = parseIntAmount(monthlyFee);
+    if (monthly === null) return;
 
     setLoading(true);
     try {
@@ -70,7 +104,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           name: name.trim(),
           code: code.trim(),
           description: description.trim() || undefined,
-          defaultSessionFee: fee,
+          monthlyFee: monthly,
         });
         handleActionResult(
           result.errors,
@@ -86,7 +120,7 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
           code: code.trim(),
           description: description.trim() || undefined,
           status,
-          defaultSessionFee: fee,
+          monthlyFee: monthly,
         });
         handleActionResult(
           result.errors,
@@ -153,26 +187,14 @@ export default function ClassFormModal({ open, onOpenChange, mode, initialData }
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="class-default-fee">Học phí mặc định / buổi (VNĐ)</Label>
-            <Input
-              id="class-default-fee"
-              type="number"
-              min={0}
-              step={1000}
-              inputMode="numeric"
-              value={defaultSessionFee}
-              onChange={(e) => setDefaultSessionFee(e.target.value)}
-              aria-invalid={!!feeError}
-            />
-            {feeError ? (
-              <p className="text-destructive text-xs">{feeError}</p>
-            ) : (
-              <p className="text-muted-foreground text-xs">
-                Điền sẵn vào mỗi buổi học mới của lớp. Sửa được ở từng buổi.
-              </p>
-            )}
-          </div>
+          <MoneyField
+            id="class-monthly-fee"
+            label="Học phí / tháng (VNĐ)"
+            hint="Mức thu 1 tháng cho HS đang theo học (tháng có buổi). Sửa được tay từng dòng ở bảng học phí."
+            value={monthlyFee}
+            onChange={setMonthlyFee}
+            error={monthlyFeeError}
+          />
           {mode === 'edit' && (
             <div className="space-y-1.5">
               <Label>Trạng thái</Label>

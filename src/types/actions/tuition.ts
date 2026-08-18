@@ -7,14 +7,14 @@ export interface TuitionListRow {
   email: string;
   amountDue: number;
   amountPaid: number;
-  /** true = admin đã sửa tay `amountDue`; "Tính lại" sẽ không ghi đè. */
+  /** true = admin đã sửa tay `amountDue`; hệ thống tự đồng bộ sẽ không ghi đè. */
   isDueOverridden: boolean;
   status: TuitionStatus;
   paidDate: string | null;
   note: string | null;
-  /** Số tự tính theo buổi học hiện có — dùng để phát hiện lệch (isOutOfSync). */
+  /** Số tự tính theo học phí/tháng hiện có — dùng để phát hiện lệch (isOutOfSync). */
   computedAmountDue: number;
-  /** Lệch so với số tự tính mà KHÔNG phải do sửa tay — nên bấm "Tính lại". */
+  /** Lệch so với số tự tính mà KHÔNG phải do sửa tay — sẽ tự đồng bộ lại ở lần tải trang kế tiếp. */
   isOutOfSync: boolean;
   /** HS không còn thuộc diện tháng này (đã dời ngày vào học / nghỉ học). */
   outOfScope: boolean;
@@ -57,15 +57,6 @@ export interface IListTuitionResult {
   data: TuitionListRow[];
   meta: TuitionListMeta;
   stats: TuitionListStats;
-}
-
-export type IRecomputeTuitionParams = IListTuitionParams;
-
-export interface IRecomputeTuitionResult {
-  created: number;
-  updated: number;
-  skipped: number;
-  removed: number;
 }
 
 export interface IUpdateTuitionPayload {

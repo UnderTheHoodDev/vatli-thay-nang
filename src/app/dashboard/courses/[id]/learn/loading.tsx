@@ -10,9 +10,9 @@ export default function LearnLoading() {
       </div>
 
       {/* Segmented control: nội dung khóa học ↔ bài kiểm tra */}
-      <div className="bg-muted inline-flex gap-1 rounded-lg p-1">
-        <Skeleton className="h-8 w-40 rounded-md" />
-        <Skeleton className="h-8 w-32 rounded-md" />
+      <div className="bg-muted inline-flex gap-1 rounded-lg p-1.5">
+        <Skeleton className="h-9 w-44 rounded-md" />
+        <Skeleton className="h-9 w-36 rounded-md" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px]">

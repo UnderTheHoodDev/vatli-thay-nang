@@ -50,3 +50,29 @@ export interface BulkJobStatus {
 export interface IActionState {
   errors: string[];
 }
+
+export interface IAdminUpdateUserPayload {
+  fullName?: string;
+  gender?: Gender;
+  birthday?: string | null;
+  provinceId?: number;
+  schoolName?: string;
+  parentPhonenumber?: string;
+  facebookLink?: string;
+}
+
+export interface IBulkDeleteSkippedItem {
+  id: number;
+  reason: 'notFound' | 'hasData';
+}
+
+export interface IBulkDeleteResult {
+  deleted: number;
+  deletedIds: number[];
+  skipped: IBulkDeleteSkippedItem[];
+}
+
+export interface IBulkDeleteActionState {
+  errors: string[];
+  data?: IBulkDeleteResult;
+}

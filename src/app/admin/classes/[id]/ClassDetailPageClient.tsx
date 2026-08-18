@@ -1,20 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, useCallback, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Info, Users as UsersIcon, Wallet } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
+import { useResolved } from '@/lib/actions';
 import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
-import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
-import type { ListMeta } from '@/types/auth';
-import type { ClassSessionListRow, ClassStudentListRow } from '@/types/actions/class-management';
+import type { ListAttendanceSummaryResponse } from '@/actions/v1/attendance/list-attendance-summary';
+import type { ListClassSessionsResponse } from '@/actions/v1/class-sessions/list-class-sessions';
+import type { ListClassStudentsResponse } from '@/actions/v1/classes/list-class-students';
 import type { ClassDetail, ClassStatus } from '@/types/class-management';
 
 export type ClassDetailTab = 'info' | 'students' | 'sessions';
@@ -28,13 +28,9 @@ export interface ClassDetailUrlState extends ClassStudentSearchValues {
 interface Props {
   classDetail: ClassDetail;
   urlState: ClassDetailUrlState;
-  students: ClassStudentListRow[];
-  studentsAttendanceStats: ClassAttendanceStudentRow[];
-  studentsMeta: ListMeta;
-  studentsErrors: string[];
-  sessions: ClassSessionListRow[];
-  sessionsMeta: ListMeta;
-  sessionsErrors: string[];
+  studentsPromise: Promise<ListClassStudentsResponse>;
+  attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
+  sessionsPromise: Promise<ListClassSessionsResponse>;
 }
 
 const DEFAULT_TAB: ClassDetailTab = 'info';
@@ -55,16 +51,80 @@ function statusBadge(s: ClassStatus) {
   return <Badge variant="secondary">Đã đóng</Badge>;
 }
 
+interface StudentsSectionProps {
+  classId: number;
+  search: ClassStudentSearchValues;
+  studentsPromise: Promise<ListClassStudentsResponse>;
+  attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
+  isPending: boolean;
+  onSearchChange: (next: ClassStudentSearchValues) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}
+
+function StudentsSection({
+  classId,
+  search,
+  studentsPromise,
+  attendanceSummaryPromise,
+  isPending,
+  onSearchChange,
+  onPageChange,
+  onPageSizeChange,
+}: StudentsSectionProps) {
+  const { data: rows, meta } = useResolved(studentsPromise);
+  const { data: attendanceStats } = useResolved(attendanceSummaryPromise);
+
+  return (
+    <ClassStudentsTab
+      classId={classId}
+      search={search}
+      rows={rows}
+      attendanceStats={attendanceStats}
+      meta={meta}
+      loading={isPending}
+      onSearchChange={onSearchChange}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+    />
+  );
+}
+
+interface SessionsSectionProps {
+  classId: number;
+  sessionsPromise: Promise<ListClassSessionsResponse>;
+  isPending: boolean;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}
+
+function SessionsSection({
+  classId,
+  sessionsPromise,
+  isPending,
+  onPageChange,
+  onPageSizeChange,
+}: SessionsSectionProps) {
+  const { data: rows, meta } = useResolved(sessionsPromise);
+
+  return (
+    <ClassSessionsTab
+      classId={classId}
+      rows={rows}
+      meta={meta}
+      loading={isPending}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+    />
+  );
+}
+
 export default function ClassDetailPageClient({
   classDetail,
   urlState,
-  students,
-  studentsAttendanceStats,
-  studentsMeta,
-  studentsErrors,
-  sessions,
-  sessionsMeta,
-  sessionsErrors,
+  studentsPromise,
+  attendanceSummaryPromise,
+  sessionsPromise,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -75,14 +135,6 @@ export default function ClassDetailPageClient({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveTab(urlState.tab);
   }, [urlState.tab]);
-
-  useEffect(() => {
-    studentsErrors.forEach((e) => toast.error(e));
-  }, [studentsErrors]);
-
-  useEffect(() => {
-    sessionsErrors.forEach((e) => toast.error(e));
-  }, [sessionsErrors]);
 
   const updateUrl = useCallback(
     (next: Partial<ClassDetailUrlState>) => {
@@ -106,6 +158,16 @@ export default function ClassDetailPageClient({
     email: urlState.email,
     fullName: urlState.fullName,
   };
+
+  const onSearchChange = useCallback(
+    (v: ClassStudentSearchValues) => updateUrl({ ...v, page: 1 }),
+    [updateUrl],
+  );
+  const onPageChange = useCallback((p: number) => updateUrl({ page: p }), [updateUrl]);
+  const onPageSizeChange = useCallback(
+    (s: number) => updateUrl({ pageSize: s, page: 1 }),
+    [updateUrl],
+  );
 
   return (
     <div className="space-y-6">
@@ -161,28 +223,54 @@ export default function ClassDetailPageClient({
           <ClassInfoTab classDetail={classDetail} />
         </TabsContent>
         <TabsContent value="students">
-          <ClassStudentsTab
-            classId={classDetail.id}
-            search={studentsSearch}
-            rows={students}
-            attendanceStats={studentsAttendanceStats}
-            meta={studentsMeta}
-            loading={isPending}
-            onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
-            onPageChange={(p) => updateUrl({ page: p })}
-            onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
-          />
+          <Suspense
+            fallback={
+              <ClassStudentsTab
+                classId={classDetail.id}
+                search={studentsSearch}
+                rows={[]}
+                attendanceStats={[]}
+                meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
+                loading
+                onSearchChange={onSearchChange}
+                onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
+              />
+            }
+          >
+            <StudentsSection
+              classId={classDetail.id}
+              search={studentsSearch}
+              studentsPromise={studentsPromise}
+              attendanceSummaryPromise={attendanceSummaryPromise}
+              isPending={isPending}
+              onSearchChange={onSearchChange}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
+          </Suspense>
         </TabsContent>
         <TabsContent value="sessions">
-          <ClassSessionsTab
-            classId={classDetail.id}
-            defaultSessionFee={classDetail.defaultSessionFee}
-            rows={sessions}
-            meta={sessionsMeta}
-            loading={isPending}
-            onPageChange={(p) => updateUrl({ page: p })}
-            onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
-          />
+          <Suspense
+            fallback={
+              <ClassSessionsTab
+                classId={classDetail.id}
+                rows={[]}
+                meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
+                loading
+                onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
+              />
+            }
+          >
+            <SessionsSection
+              classId={classDetail.id}
+              sessionsPromise={sessionsPromise}
+              isPending={isPending}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

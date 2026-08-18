@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Upload, UserPlus } from 'lucide-react';
 import Papa from 'papaparse';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ import { getBulkJobStatusAction } from '@/actions/v1/users/bulk-job-status';
 import type { BulkJobStatus, BulkSyncRow } from '@/types/actions/users';
 
 export default function CreateUserDialog() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [pending, startTransition] = useTransition();
@@ -56,6 +58,7 @@ export default function CreateUserDialog() {
         toast.success('Tạo user thành công. Mail kích hoạt đã được gửi.');
         setEmail('');
         setOpen(false);
+        router.refresh();
       }
     });
   }
@@ -132,8 +135,12 @@ export default function CreateUserDialog() {
       if (data.status === 'DONE' || data.status === 'FAILED') {
         stopPoll();
         setSyncing(false);
-        if (data.status === 'DONE') toast.success('Đồng bộ CSV hoàn tất');
-        else toast.error('Đồng bộ CSV gặp lỗi');
+        if (data.status === 'DONE') {
+          toast.success('Đồng bộ CSV hoàn tất');
+          router.refresh();
+        } else {
+          toast.error('Đồng bộ CSV gặp lỗi');
+        }
       }
     }, 1500);
   }

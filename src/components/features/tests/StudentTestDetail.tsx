@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Award, BarChart3, FileText, Lock, Upload } from 'lucide-react';
 import { getTest } from '@/actions/v1/tests/get-test';
 import { listParticipants } from '@/actions/v1/tests/list-participants';
 import { upsertSubmissionAction } from '@/actions/v1/tests/upsert-submission';
@@ -171,20 +171,20 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
           */}
           <TabsList>
             <TabsTrigger value="paper" disabled={uploading} className="cursor-pointer">
-              Đề bài
+              <FileText /> Đề bài
             </TabsTrigger>
             <TabsTrigger value="submit" disabled={uploading} className="cursor-pointer">
-              Nộp bài
+              <Upload /> Nộp bài
               {/* Chấm nhỏ báo đã nộp — quét nhanh không cần mở tab. */}
               {test.mySubmissionStatus !== 'NOT_SUBMITTED' && (
                 <span className="inline-block size-1.5 rounded-full bg-green-500" aria-hidden />
               )}
             </TabsTrigger>
             <TabsTrigger value="stats" disabled={uploading} className="cursor-pointer">
-              Thống kê
+              <BarChart3 /> Thống kê
             </TabsTrigger>
             <TabsTrigger value="result" disabled={uploading} className="cursor-pointer">
-              Kết quả
+              <Award /> Kết quả
               {hasResult && (
                 <span className="bg-purple inline-block size-1.5 rounded-full" aria-hidden />
               )}

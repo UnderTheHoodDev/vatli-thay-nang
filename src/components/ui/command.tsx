@@ -41,10 +41,18 @@ CommandInput.displayName = 'CommandInput';
 export const CommandList = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
+>(({ className, onWheel, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
     className={cn('max-h-72 overflow-x-hidden overflow-y-auto', className)}
+    onWheel={(e) => {
+      // Radix Dialog khoá scroll của body (react-remove-scroll) và không nhận
+      // diện nội dung Popover render qua portal là "bên trong" — chuột lăn bị
+      // chặn khi combobox này mở trong 1 Dialog (vd EditUserDialog). Tự cuộn
+      // bằng tay để không phụ thuộc hành vi scroll mặc định của trình duyệt.
+      e.currentTarget.scrollTop += e.deltaY;
+      onWheel?.(e);
+    }}
     {...props}
   />
 ));

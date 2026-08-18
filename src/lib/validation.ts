@@ -7,7 +7,7 @@ export const VALIDATION_MESSAGES = {
   EMAIL_REQUIRED: 'Vui lòng nhập email',
   EMAIL_INVALID: 'Email không hợp lệ',
   PASSWORD_REQUIRED: 'Vui lòng nhập mật khẩu',
-  PASSWORD_INVALID: 'Mật khẩu cần ≥8 ký tự, có 1 chữ hoa và 1 chữ số',
+  PASSWORD_INVALID: 'Mật khẩu cần ít nhất 8 ký tự, có 1 chữ hoa và 1 chữ số',
   PASSWORD_MISMATCH: 'Mật khẩu xác nhận không khớp',
   EMAIL_PASSWORD_REQUIRED: 'Vui lòng nhập email và mật khẩu',
   CURRENT_PASSWORD_REQUIRED: 'Vui lòng nhập mật khẩu hiện tại',
@@ -28,4 +28,23 @@ export function isValidUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function validateProfileContact(values: {
+  fullName: string;
+  parentPhonenumber: string;
+  facebookLink: string;
+}): string | null {
+  if (values.fullName.trim().length > FULL_NAME_MAX_LENGTH) {
+    return VALIDATION_MESSAGES.FULL_NAME_TOO_LONG;
+  }
+  const phone = values.parentPhonenumber.trim();
+  if (phone && !VN_PHONE_REGEX.test(phone)) {
+    return VALIDATION_MESSAGES.PHONE_INVALID;
+  }
+  const facebookLink = values.facebookLink.trim();
+  if (facebookLink && !isValidUrl(facebookLink)) {
+    return VALIDATION_MESSAGES.FACEBOOK_LINK_INVALID;
+  }
+  return null;
 }

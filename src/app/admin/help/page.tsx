@@ -132,16 +132,48 @@ export default function AdminHelpPage() {
           </Step>
           <Step n={4}>
             <p>
-              Ở mỗi dòng trong bảng, nút &quot;Hành động&quot; đổi theo trạng thái hiện tại:{' '}
-              <strong>&quot;Gửi mail kích hoạt&quot;</strong> (chưa kích hoạt) →{' '}
-              <strong>&quot;Vô hiệu hóa&quot;</strong> (đã kích hoạt) →{' '}
-              <strong>&quot;Kích hoạt lại&quot;</strong> (đã vô hiệu hoá).
+              Cột <strong>&quot;Mail kích hoạt&quot;</strong> cho biết đã từng gửi mail kích hoạt
+              cho tài khoản đó chưa và gửi lúc nào. Nút hành động ở cuối dòng đổi theo trạng thái:{' '}
+              <strong>&quot;Gửi mail kích hoạt&quot;</strong> (chưa từng gửi) →{' '}
+              <strong>&quot;Đã gửi&quot;</strong> (vừa gửi, mail còn hiệu lực — nút tạm khoá để
+              tránh gửi chồng làm hỏng link cũ) → tự bật lại thành{' '}
+              <strong>&quot;Gửi lại&quot;</strong> khi link cũ hết hạn. Với tài khoản đã kích hoạt:{' '}
+              <strong>&quot;Vô hiệu hóa&quot;</strong> ↔ <strong>&quot;Kích hoạt lại&quot;</strong>.
             </p>
             <Shot
               src="nguoi-dung/04-hanh-dong-dong-bo.png"
               w={1280}
               h={900}
-              alt="Nút đổi trạng thái tài khoản theo từng dòng"
+              alt="Cột mail kích hoạt và nút đổi trạng thái tài khoản theo từng dòng"
+            />
+          </Step>
+          <Step n={5}>
+            <p>
+              Nút <strong>&quot;Sửa&quot;</strong> mở hộp thoại chỉnh thông tin cá nhân (họ tên,
+              giới tính, ngày sinh, tỉnh, trường, SĐT phụ huynh, Facebook) — email và mật khẩu không
+              đổi được ở đây. Nút <strong>&quot;Xoá&quot;</strong> xoá hẳn tài khoản, nhưng hệ thống
+              sẽ chặn và báo lỗi nếu tài khoản đã có dữ liệu học tập/học phí/giảng dạy — trường hợp
+              đó hãy dùng <strong>&quot;Vô hiệu hóa&quot;</strong> thay vì xoá.
+            </p>
+            <Shot
+              src="nguoi-dung/05-sua-xoa.png"
+              w={1280}
+              h={900}
+              alt="Hộp thoại sửa thông tin và xác nhận xoá tài khoản"
+            />
+          </Step>
+          <Step n={6}>
+            <p>
+              Tick chọn nhiều dòng (hoặc tick ô đầu bảng để chọn tất cả) rồi bấm{' '}
+              <strong>&quot;Xoá đã chọn&quot;</strong> để xoá hàng loạt cùng lúc. Mỗi tài khoản được
+              xét độc lập — dòng nào không xoá được (đã có dữ liệu, hoặc không còn tồn tại) sẽ tự
+              động bị bỏ qua, hệ thống báo rõ số lượng và lý do thay vì chặn luôn cả lượt.
+            </p>
+            <Shot
+              src="nguoi-dung/06-xoa-hang-loat.png"
+              w={1280}
+              h={900}
+              alt="Chọn nhiều dòng và xoá hàng loạt tài khoản"
             />
           </Step>
         </Section>
@@ -168,8 +200,11 @@ export default function AdminHelpPage() {
           <Step n={2}>
             <p>
               Form <strong>&quot;Tạo lớp&quot;</strong>: Tên lớp, Mã lớp (bắt buộc), Mô tả, và{' '}
-              <strong>Học phí mặc định / buổi</strong> — số này tự điền vào MỌI buổi học tạo mới sau
-              này của lớp, vẫn sửa riêng được ở từng buổi nếu buổi đó học phí khác.
+              <strong>Học phí / tháng</strong> — mức thu cố định mỗi tháng cho học sinh đang theo
+              học, tính theo THÁNG chứ không nhân theo số buổi: tháng nào lớp có ít nhất 1 buổi học
+              thì tính đủ một tháng, tháng không có buổi nào thì không tính tiền. Muốn miễn giảm hay
+              có ngoại lệ cho một học sinh cụ thể thì sửa tay trực tiếp ở bảng học phí (mục{' '}
+              <strong>Học phí</strong>).
             </p>
             <Shot src="lop-hoc/02-tao-lop.png" w={1280} h={900} alt="Form tạo lớp" />
           </Step>
@@ -189,8 +224,8 @@ export default function AdminHelpPage() {
           <Step n={4}>
             <p>
               Trang chi tiết lớp có 3 tab: <strong>Thông tin</strong> / <strong>Học sinh</strong> /{' '}
-              <strong>Buổi học</strong>. Tab Thông tin hiển thị tên, mã, trạng thái, học phí mặc
-              định, ngày tạo, mô tả của lớp.
+              <strong>Buổi học</strong>. Tab Thông tin hiển thị tên, mã, trạng thái, học phí theo
+              tháng, ngày tạo, mô tả của lớp.
             </p>
             <Shot src="lop-hoc/04-tab-thong-tin.png" w={1280} h={900} alt="Tab Thông tin của lớp" />
           </Step>
@@ -221,9 +256,9 @@ export default function AdminHelpPage() {
           <Step n={6}>
             <p>
               Tab <strong>Buổi học</strong>: bấm <strong>&quot;Tạo buổi học&quot;</strong> — nhập
-              Tiêu đề, Bắt đầu/Kết thúc (bắt buộc), Mô tả, Link meeting, Học phí buổi (mặc định lấy
-              từ học phí mặc định của lớp). Nút <strong>&quot;Xuất điểm danh&quot;</strong> xuất báo
-              cáo điểm danh của riêng lớp này.
+              Tiêu đề, Bắt đầu/Kết thúc (bắt buộc), Mô tả, Link meeting. Học phí không đặt riêng
+              theo buổi nữa — hễ tháng đó có buổi học là tính đủ học phí theo tháng của lớp. Nút{' '}
+              <strong>&quot;Xuất điểm danh&quot;</strong> xuất báo cáo điểm danh của riêng lớp này.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Shot
@@ -368,10 +403,11 @@ export default function AdminHelpPage() {
           <Step n={3}>
             <p>
               Trang chi tiết 1 lớp có 5 thẻ thống kê của tháng đang xem, đổi tháng bằng bộ lọc phía
-              trên, và 3 nút: <strong>&quot;Xuất Excel&quot;</strong>,{' '}
-              <strong>&quot;Nhập Excel&quot;</strong>, <strong>&quot;Tính lại&quot;</strong> (tính
-              lại học phí phải đóng cho các dòng CHƯA từng sửa tay — không đụng số đã thu, ngày đóng
-              hay ghi chú).
+              trên, và 2 nút: <strong>&quot;Xuất Excel&quot;</strong>,{' '}
+              <strong>&quot;Nhập Excel&quot;</strong>. Học phí phải đóng của các dòng CHƯA từng sửa
+              tay được hệ thống <strong>tự động đồng bộ mỗi khi mở trang</strong> theo học phí/tháng
+              hiện tại của lớp — không cần bấm nút nào; số đã thu, ngày đóng, ghi chú không bị đụng
+              tới.
             </p>
             <Shot
               src="hoc-phi/04-chi-tiet-bo-loc.png"
@@ -385,14 +421,16 @@ export default function AdminHelpPage() {
               Sửa trực tiếp trong bảng: đổi &quot;Đã đóng&quot; / &quot;Ngày đóng&quot; / &quot;Ghi
               chú&quot; ở từng dòng rồi bấm <strong>&quot;Lưu&quot;</strong> riêng dòng đó, hoặc sửa
               nhiều dòng cùng lúc rồi bấm <strong>&quot;Lưu tất cả&quot;</strong> ở góc bảng để lưu
-              một lần. Đổi tháng hoặc bấm &quot;Tính lại&quot; khi còn dòng chưa lưu sẽ mất các thay
-              đổi này — hệ thống cảnh báo trước khi cho phép tiếp tục.
+              một lần. Cột <strong>&quot;Sửa tay lúc&quot;</strong> cho biết dòng nào từng được sửa
+              tay và sửa lúc nào — các dòng này sẽ KHÔNG bị hệ thống tự động ghi đè khi học phí lớp
+              thay đổi. Đổi tháng khi còn dòng chưa lưu sẽ mất các thay đổi này — hệ thống cảnh báo
+              trước khi cho phép tiếp tục.
             </p>
             <Shot
               src="hoc-phi/05-bang-luu-tung-dong.png"
               w={1280}
               h={1000}
-              alt="Sửa và lưu bảng học phí"
+              alt="Sửa và lưu bảng học phí, cột Sửa tay lúc"
             />
           </Step>
           <Step n={5}>

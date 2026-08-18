@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentSession } from '@/lib/server/session';
+import AuthSplitLayout from '@/components/features/auth/AuthSplitLayout';
 import ChangePasswordForm from '@/components/features/auth/ChangePasswordForm';
 
 export default async function ChangePasswordPage() {
@@ -9,5 +10,9 @@ export default async function ChangePasswordPage() {
     redirect(session.role === 'ADMIN' ? '/admin/profile' : '/dashboard/profile');
   }
 
-  return <ChangePasswordForm role={session.role} />;
+  return (
+    <AuthSplitLayout>
+      <ChangePasswordForm role={session.role} />
+    </AuthSplitLayout>
+  );
 }

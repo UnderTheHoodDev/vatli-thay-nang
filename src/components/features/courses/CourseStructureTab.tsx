@@ -712,7 +712,9 @@ function NodeRow({
         <span
           className={cn(
             'min-w-0 flex-1 truncate',
-            isTopFolder ? 'text-foreground text-[0.95rem] font-semibold' : 'text-foreground text-sm',
+            isTopFolder
+              ? 'text-foreground text-[0.95rem] font-semibold'
+              : 'text-foreground text-sm',
           )}
         >
           {node.title}

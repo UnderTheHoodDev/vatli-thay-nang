@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getMyAttendanceSummary } from '@/actions/v1/attendance/get-my-attendance-summary';
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listClassSessions } from '@/actions/v1/class-sessions/list-class-sessions';
+import { getTuitionReminderMonth } from '@/lib/format';
 import StudentClassDetailClient from './StudentClassDetailClient';
 
 interface Props {
@@ -18,23 +19,24 @@ export default async function StudentClassDetailPage({ params, searchParams }: P
   const page = Number(sp.page) || 1;
   const pageSize = Number(sp.pageSize) || 20;
 
-  const [classRow, sessionsRes, attendanceSummaryRes] = await Promise.all([
-    getClass(classId),
-    listClassSessions(classId, { page, pageSize }),
-    getMyAttendanceSummary(classId),
-  ]);
+  // KHÔNG await — truyền thẳng promise xuống để client stream riêng từng phần
+  // (bảng buổi học + thẻ chuyên cần) thay vì chặn cả trang chờ cả 2 xong.
+  // Khởi tạo song song với gate getClass() thay vì chờ nối tiếp.
+  const sessionsPromise = listClassSessions(classId, { page, pageSize });
+  const attendanceSummaryPromise = getMyAttendanceSummary(classId);
+  const tuitionReminder = getTuitionReminderMonth();
 
+  const classRow = await getClass(classId);
   if (!classRow) notFound();
 
   return (
     <StudentClassDetailClient
       classRow={classRow}
-      sessions={sessionsRes.data}
-      meta={sessionsRes.meta}
-      errors={sessionsRes.errors}
+      sessionsPromise={sessionsPromise}
+      attendanceSummaryPromise={attendanceSummaryPromise}
       page={page}
       pageSize={pageSize}
-      attendanceSummary={attendanceSummaryRes.data}
+      tuitionReminder={tuitionReminder}
     />
   );
 }
