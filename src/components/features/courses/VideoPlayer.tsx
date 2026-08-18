@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import 'plyr/dist/plyr.css';
 import { endView, getProgress, heartbeat, startView } from '@/lib/video-tracking-client';
 import { cn } from '@/lib/utils';
 import type { BunnyVideoStatus } from '@/types/course-management';
@@ -24,6 +25,11 @@ interface Props {
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MAX_DELTA_SEC = 60;
+const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+// plyr xuất kiểu CommonJS (`export = Plyr`) nên lấy kiểu instance qua InstanceType.
+type PlyrInstance = InstanceType<typeof import('plyr')>;
+// Giá trị "Auto" trong menu chất lượng (hls.js ABR tự chọn) — 0 không trùng height nào.
+const QUALITY_AUTO = 0;
 
 export default function VideoPlayer({
   nodeId,
@@ -73,21 +79,24 @@ export default function VideoPlayer({
     };
   }, [nodeId, bunnyStatus, track]);
 
-  // hls.js: nạp HLS vào <video>, seek tới vị trí dở, lắng nghe vị trí thật.
-  // Lỗi fatal (sau khi thử recover) → chuyển sang iframe embed dự phòng.
+  // hls.js + Plyr: nạp HLS vào <video>, dựng player có menu chất lượng/tốc độ,
+  // seek tới vị trí dở, lắng nghe vị trí thật. Lỗi fatal → iframe embed dự phòng.
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED' || initialPosition == null || useIframeFallback) return;
     const video = videoRef.current;
     if (!video) return;
     currentTimeRef.current = initialPosition;
 
-    const onLoadedMeta = () => {
-      playerReadyRef.current = true;
+    const seekToStart = () => {
       try {
         if (initialPosition > 0) video.currentTime = initialPosition;
       } catch {
         /* noop */
       }
+    };
+    const onLoadedMeta = () => {
+      playerReadyRef.current = true;
+      seekToStart();
     };
     const onTimeUpdate = () => {
       currentTimeRef.current = video.currentTime;
@@ -105,14 +114,58 @@ export default function VideoPlayer({
     video.addEventListener('ended', onPauseOrEnd);
 
     let hls: Hls | null = null;
+    let player: PlyrInstance | null = null;
     let watchdog: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
+
+    // Dựng Plyr với danh sách chất lượng lấy từ hls.js (rỗng = Safari native, chỉ tốc độ).
+    const setupPlyr = async (qualities: number[]) => {
+      // Interop CJS: webpack đặt class dưới `.default` lúc chạy, nhưng kiểu là chính class.
+      const mod = (await import('plyr')) as unknown as { default: typeof import('plyr') };
+      const Plyr = mod.default;
+      if (destroyed || !videoRef.current) return;
+      const options = qualities.length ? [QUALITY_AUTO, ...qualities] : [];
+      player = new Plyr(video, {
+        controls: [
+          'play-large',
+          'play',
+          'progress',
+          'current-time',
+          'duration',
+          'mute',
+          'volume',
+          'settings',
+          'pip',
+          'fullscreen',
+        ],
+        settings: ['quality', 'speed'],
+        speed: { selected: 1, options: SPEED_OPTIONS },
+        quality: options.length
+          ? {
+              default: QUALITY_AUTO,
+              options,
+              forced: true,
+              onChange: (q: number) => {
+                if (!hls) return;
+                if (q === QUALITY_AUTO) {
+                  hls.currentLevel = -1; // ABR tự động
+                  return;
+                }
+                const idx = hls.levels.findIndex((l) => l.height === q);
+                if (idx > -1) hls.currentLevel = idx;
+              },
+            }
+          : undefined,
+        i18n: { qualityLabel: { [QUALITY_AUTO]: 'Tự động' } },
+        tooltips: { controls: true, seek: true },
+      });
+    };
 
     if (Hls.isSupported()) {
       hls = new Hls({ maxBufferLength: 30 });
+      const activeHls = hls;
       let manifestParsed = false;
       let recovered = false;
-      hls.loadSource(videoUrl);
-      hls.attachMedia(video);
       // Manifest không tải/parse được trong 12s (mạng treo / bị chặn) → iframe dự phòng.
       watchdog = setTimeout(() => {
         if (!manifestParsed) {
@@ -120,10 +173,17 @@ export default function VideoPlayer({
           setUseIframeFallback(true);
         }
       }, 12_000);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, async () => {
         manifestParsed = true;
         if (watchdog) clearTimeout(watchdog);
+        // Các mức chất lượng phân biệt theo chiều cao (720p, 1080p...), từ cao xuống thấp.
+        const qualities = [...new Set(activeHls.levels.map((l) => l.height))].sort((a, b) => b - a);
+        // Dựng Plyr TRƯỚC, gắn MSE (attachMedia) SAU — nếu attach trước, Plyr dựng lại
+        // <video> khiến blob MSE cũ thành stale (ERR_FILE_NOT_FOUND ở console).
+        await setupPlyr(qualities);
+        if (!destroyed) activeHls.attachMedia(video);
       });
+      hls.loadSource(videoUrl);
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (!data.fatal) return;
         // Fatal TRƯỚC khi có manifest = nguồn không tải được (404 / bị chặn); hls.js
@@ -150,15 +210,17 @@ export default function VideoPlayer({
         setUseIframeFallback(true);
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari / iOS: HLS native.
+      // Safari / iOS: HLS native (trình duyệt tự ABR, không có menu chất lượng thủ công).
       video.src = videoUrl;
       video.addEventListener('error', () => setUseIframeFallback(true));
+      void setupPlyr([]);
     } else {
       // Trình duyệt không hỗ trợ HLS → dùng iframe player của Bunny.
       setUseIframeFallback(true);
     }
 
     return () => {
+      destroyed = true;
       playerReadyRef.current = false;
       isPlayingRef.current = false;
       video.removeEventListener('loadedmetadata', onLoadedMeta);
@@ -167,6 +229,13 @@ export default function VideoPlayer({
       video.removeEventListener('pause', onPauseOrEnd);
       video.removeEventListener('ended', onPauseOrEnd);
       if (watchdog) clearTimeout(watchdog);
+      if (player) {
+        try {
+          player.destroy();
+        } catch {
+          /* noop */
+        }
+      }
       if (hls) hls.destroy();
     };
   }, [videoUrl, bunnyStatus, initialPosition, useIframeFallback]);
@@ -299,14 +368,20 @@ export default function VideoPlayer({
 
   return (
     <div className={cn('overflow-hidden rounded-lg bg-black', fill && 'flex h-full flex-col')}>
-      <div className={cn('relative w-full', fill ? 'min-h-0 flex-1' : 'aspect-video')}>
+      <div
+        className={cn(
+          'w-full',
+          // Plyr tự set tỉ lệ theo video; ở chế độ fill ép player lấp đầy chiều cao.
+          fill &&
+            'min-h-0 flex-1 [&_.plyr]:h-full [&_.plyr\\_\\_video-wrapper]:h-full [&_video]:h-full [&_video]:object-contain',
+        )}
+      >
         <video
           ref={videoRef}
-          controls
           playsInline
           preload="metadata"
           title={title ?? 'Video bài giảng'}
-          className="absolute inset-0 h-full w-full bg-black"
+          className="w-full bg-black"
         />
       </div>
       {durationFooter}
