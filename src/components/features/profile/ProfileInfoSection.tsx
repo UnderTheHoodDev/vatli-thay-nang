@@ -1,49 +1,24 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ChevronDown, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButton } from '@/components/ui/custom';
-import { GENDER_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
-import {
-  FULL_NAME_MAX_LENGTH,
-  VN_PHONE_REGEX,
-  VALIDATION_MESSAGES,
-  isValidUrl,
-} from '@/lib/validation';
+import { ROLE_OPTIONS, GENDER_OPTIONS } from '@/lib/constants';
+import { validateProfileContact } from '@/lib/validation';
 import { handleActionResult } from '@/lib/actions';
 import { updateProfileAction } from '@/actions/v1/profile/update-profile';
+import ProfileContactFields, {
+  type ProfileContactValues,
+} from '@/components/features/users/ProfileContactFields';
 import type { Gender, Province } from '@/types/auth';
 import type { IUpdateProfilePayload, IUserProfile } from '@/types/actions/profile';
 
-interface FormState {
-  fullName: string;
-  gender: Gender | '';
-  provinceId: string;
-  schoolName: string;
-  parentPhonenumber: string;
-  facebookLink: string;
-}
+type FormState = ProfileContactValues;
 
 function toForm(profile: IUserProfile): FormState {
   return {
@@ -64,7 +39,6 @@ interface Props {
 export default function ProfileInfoSection({ profile, provinces }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(() => toForm(profile));
-  const [provinceOpen, setProvinceOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -84,28 +58,17 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    const fullName = form.fullName.trim();
-    if (fullName.length > FULL_NAME_MAX_LENGTH) {
-      toast.error(VALIDATION_MESSAGES.FULL_NAME_TOO_LONG);
-      return;
-    }
-    const schoolName = form.schoolName.trim();
-    const phone = form.parentPhonenumber.trim();
-    if (phone && !VN_PHONE_REGEX.test(phone)) {
-      toast.error(VALIDATION_MESSAGES.PHONE_INVALID);
-      return;
-    }
-    const facebookLink = form.facebookLink.trim();
-    if (facebookLink && !isValidUrl(facebookLink)) {
-      toast.error(VALIDATION_MESSAGES.FACEBOOK_LINK_INVALID);
+    const error = validateProfileContact(form);
+    if (error) {
+      toast.error(error);
       return;
     }
 
     const payload: IUpdateProfilePayload = {
-      fullName,
-      schoolName,
-      parentPhonenumber: phone,
-      facebookLink,
+      fullName: form.fullName.trim(),
+      schoolName: form.schoolName.trim(),
+      parentPhonenumber: form.parentPhonenumber.trim(),
+      facebookLink: form.facebookLink.trim(),
     };
     if (form.gender) payload.gender = form.gender as Gender;
     if (form.provinceId) payload.provinceId = Number(form.provinceId);
@@ -124,10 +87,6 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
   const genderLabel = profile.gender
     ? (GENDER_OPTIONS.find((o) => o.value === profile.gender)?.label ?? '—')
     : '—';
-  const provinceLabel =
-    form.provinceId === ''
-      ? 'Chọn tỉnh'
-      : (provinces.find((p) => String(p.id) === form.provinceId)?.name ?? 'Chọn tỉnh');
 
   return (
     <Card>
@@ -155,104 +114,13 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
           </div>
         ) : (
           <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="fullName">Họ và tên</Label>
-              <Input
-                id="fullName"
-                maxLength={FULL_NAME_MAX_LENGTH}
-                value={form.fullName}
-                onChange={(e) => update('fullName', e.target.value)}
-                disabled={pending}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Giới tính</Label>
-              <Select
-                value={form.gender || undefined}
-                onValueChange={(v) => update('gender', v as Gender)}
-                disabled={pending}
-              >
-                <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Chọn giới tính" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENDER_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tỉnh</Label>
-              <Popover open={provinceOpen} onOpenChange={setProvinceOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="border-input-border hover:text-foreground h-10 w-full cursor-pointer justify-between bg-white px-3 font-normal hover:bg-white"
-                    disabled={pending}
-                  >
-                    <span className="truncate">{provinceLabel}</span>
-                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
-                  <Command>
-                    <CommandInput placeholder="Tìm tỉnh..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy tỉnh</CommandEmpty>
-                      <CommandGroup>
-                        {provinces.map((p) => (
-                          <CommandItem
-                            key={p.id}
-                            value={p.name}
-                            onSelect={() => {
-                              update('provinceId', String(p.id));
-                              setProvinceOpen(false);
-                            }}
-                          >
-                            {p.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="schoolName">Trường</Label>
-              <Input
-                id="schoolName"
-                value={form.schoolName}
-                onChange={(e) => update('schoolName', e.target.value)}
-                disabled={pending}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="parentPhonenumber">Số điện thoại phụ huynh</Label>
-              <Input
-                id="parentPhonenumber"
-                value={form.parentPhonenumber}
-                onChange={(e) => update('parentPhonenumber', e.target.value)}
-                placeholder="0xxxxxxxxx"
-                disabled={pending}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="facebookLink">Link Facebook</Label>
-              <Input
-                id="facebookLink"
-                type="url"
-                value={form.facebookLink}
-                onChange={(e) => update('facebookLink', e.target.value)}
-                placeholder="https://facebook.com/..."
-                maxLength={255}
-                disabled={pending}
-              />
-            </div>
+            <ProfileContactFields
+              values={form}
+              onChange={update}
+              provinces={provinces}
+              disabled={pending}
+              idPrefix=""
+            />
             <div className="space-y-1.5">
               <Label>Vai trò</Label>
               <Input value={roleLabel} disabled readOnly />

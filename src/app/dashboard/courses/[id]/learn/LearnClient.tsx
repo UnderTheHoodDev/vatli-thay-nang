@@ -121,26 +121,28 @@ export default function LearnClient({ course, initialNodeId, initialTab }: Props
       </div>
 
       {/* Segmented control: nội dung khóa học ↔ bài kiểm tra */}
-      <div className="bg-muted inline-flex rounded-lg p-1">
+      <div className="bg-muted inline-flex rounded-lg p-1.5">
         <button
           type="button"
           onClick={() => changeTab('content')}
           className={cn(
-            'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
-            tab === 'content' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+            'flex h-9 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium transition',
+            tab === 'content'
+              ? 'bg-background text-primary shadow-sm'
+              : 'text-muted-foreground',
           )}
         >
-          <LayoutList className="size-4" /> Nội dung khóa học
+          <LayoutList className="size-4.5" /> Nội dung khóa học
         </button>
         <button
           type="button"
           onClick={() => changeTab('exams')}
           className={cn(
-            'flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
-            tab === 'exams' ? 'bg-background shadow-sm' : 'text-muted-foreground',
+            'flex h-9 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium transition',
+            tab === 'exams' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground',
           )}
         >
-          <ClipboardList className="size-4" /> Bài kiểm tra
+          <ClipboardList className="size-4.5" /> Bài kiểm tra
         </button>
       </div>
 

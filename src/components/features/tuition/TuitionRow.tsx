@@ -15,7 +15,7 @@ import {
   parseIntAmount,
   tuitionBaseDraft,
 } from '@/lib/tuition';
-import { todayISO } from '@/lib/format';
+import { formatDateTime, todayISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { TuitionListRow } from '@/types/actions/tuition';
 
@@ -131,7 +131,7 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
               title={
                 dirty
                   ? 'Lưu hoặc huỷ thay đổi của dòng trước khi khôi phục'
-                  : 'Khôi phục số tự tính theo các buổi học'
+                  : 'Khôi phục số tự tính theo học phí/tháng của lớp'
               }
               onClick={() => void clearOverride()}
             >
@@ -139,9 +139,6 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
             </Button>
           )}
         </div>
-        {row.isDueOverridden && (
-          <p className="text-muted-foreground mt-0.5 pr-9 text-right text-[11px]">Đã sửa tay</p>
-        )}
       </TableCell>
 
       <TableCell className="p-2">
@@ -205,6 +202,10 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
           onChange={(e) => set({ note: e.target.value })}
           onKeyDown={onCellKeyDown}
         />
+      </TableCell>
+
+      <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+        {row.isDueOverridden ? formatDateTime(row.updatedAt) : '—'}
       </TableCell>
 
       <TableCell className="p-2 text-right">

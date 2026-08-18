@@ -15,21 +15,18 @@ export default async function StudentClassSessionDetailPage({ params }: Props) {
   if (!Number.isInteger(classId) || classId <= 0) notFound();
   if (!Number.isInteger(classSessionId) || classSessionId <= 0) notFound();
 
-  const [classSession, myAttendanceRes, myLeaveRequestRes] = await Promise.all([
-    getClassSession(classSessionId),
-    getMyAttendance(classSessionId),
-    getMyLeaveRequestAction(classSessionId),
-  ]);
+  const myAttendancePromise = getMyAttendance(classSessionId);
+  const myLeaveRequestPromise = getMyLeaveRequestAction(classSessionId);
 
+  const classSession = await getClassSession(classSessionId);
   if (!classSession) notFound();
 
   return (
     <StudentClassSessionDetailClient
       classId={classId}
       classSession={classSession}
-      myAttendance={myAttendanceRes.data}
-      myLeaveRequest={myLeaveRequestRes.data}
-      errors={myAttendanceRes.errors}
+      myAttendancePromise={myAttendancePromise}
+      myLeaveRequestPromise={myLeaveRequestPromise}
     />
   );
 }

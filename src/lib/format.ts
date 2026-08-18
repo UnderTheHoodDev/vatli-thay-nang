@@ -144,3 +144,22 @@ export function vnCurrentYearMonth(): { year: number; month: number } {
   const [y, m] = vnDateISO(new Date()).split('-');
   return { year: Number(y), month: Number(m) };
 }
+
+export function daysLeftInCurrentVietnamMonth(): number {
+  const [y, m, d] = vnDateISO(new Date()).split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  return daysInMonth - d + 1;
+}
+
+// TODO tạm để 20 cho dễ test UI — trả lại 7 khi xong.
+const TUITION_REMINDER_DAYS_LEFT = 20;
+
+/**
+ * Tháng cần nhắc đóng học phí (không null khi còn <= N ngày cuối tháng),
+ * hoặc null nếu chưa tới hạn. Chỉ gọi ở RSC, cùng lý do với `vnCurrentYearMonth`.
+ */
+export function getTuitionReminderMonth(): { year: number; month: number } | null {
+  return daysLeftInCurrentVietnamMonth() <= TUITION_REMINDER_DAYS_LEFT
+    ? vnCurrentYearMonth()
+    : null;
+}

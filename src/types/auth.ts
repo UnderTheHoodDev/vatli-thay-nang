@@ -15,6 +15,10 @@ export interface UserRow {
   facebookLink: string | null;
   role: Role;
   status: UserStatus;
+  activationEmailSentAt: string | null;
+  /** true nếu token kích hoạt hiện tại còn hiệu lực trong Redis (nguồn sự thật
+   * ở BE) — dùng để disable nút "Gửi lại" thay vì đoán bằng TTL ở FE. */
+  activationTokenValid: boolean;
   classes: { id: number; code: string }[];
 }
 

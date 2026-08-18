@@ -1,54 +1,111 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { handleActionErrors } from '@/lib/actions';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useResolved } from '@/lib/actions';
 import ClassSessionInfoSection from '@/components/features/class-sessions/ClassSessionInfoSection';
 import AttendanceSection from '@/components/features/class-sessions/AttendanceSection';
 import AttendanceOverview from '@/components/features/class-sessions/AttendanceOverview';
 import LeaveRequestsSection from '@/components/features/leave-requests/LeaveRequestsSection';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
-import type { ListMeta } from '@/types/auth';
+import type { ListAttendanceSessionsResponse } from '@/actions/v1/attendance/list-attendance-sessions';
+import type { GetAttendanceSummaryResponse } from '@/actions/v1/attendance/get-attendance-summary';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
-import type { AttendanceSessionListRow, AttendanceSummary } from '@/types/actions/attendance';
-import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
+import type { IListLeaveRequestsResult } from '@/types/actions/leave-requests';
 
 interface Props {
-  classId: number;
   classSession: ClassSessionDetail;
   backHref: string;
   backLabel: string;
-  attendanceSessions: AttendanceSessionListRow[];
-  attendanceSessionsMeta: ListMeta;
-  attendanceSessionsErrors: string[];
-  summary: AttendanceSummary | null;
-  summaryErrors: string[];
-  leaveRequests: LeaveRequestListRow[];
-  leaveRequestsMeta: ListMeta;
+  attendanceSessionsPromise: Promise<ListAttendanceSessionsResponse>;
+  summaryPromise: Promise<GetAttendanceSummaryResponse>;
+  leaveRequestsPromise: Promise<IListLeaveRequestsResult>;
+}
+
+function AttendanceSectionsGroup({
+  classSession,
+  attendanceSessionsPromise,
+  summaryPromise,
+}: {
+  classSession: ClassSessionDetail;
+  attendanceSessionsPromise: Promise<ListAttendanceSessionsResponse>;
+  summaryPromise: Promise<GetAttendanceSummaryResponse>;
+}) {
+  const { data: attendanceSessions } = useResolved(attendanceSessionsPromise);
+  const { data: summary } = useResolved(summaryPromise);
+
+  return (
+    <>
+      <AttendanceOverview classSessionId={classSession.id} counts={summary?.counts ?? null} />
+
+      <AttendanceSection
+        classSessionId={classSession.id}
+        startTime={classSession.startTime}
+        endTime={classSession.endTime}
+        activeAttendanceSession={classSession.activeAttendanceSession}
+        attendanceSessions={attendanceSessions}
+        summary={summary}
+      />
+    </>
+  );
+}
+
+function LeaveRequestsSectionWrapper({
+  promise,
+}: {
+  promise: Promise<IListLeaveRequestsResult>;
+}) {
+  const { data, meta } = use(promise);
+  return <LeaveRequestsSection data={data} meta={meta} />;
+}
+
+export function AttendanceSectionsSkeleton() {
+  return (
+    <>
+      <Card>
+        <CardContent className="flex flex-wrap gap-6 py-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-1.5">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-6 w-10" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="space-y-3 py-6">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-24 w-full" />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+export function LeaveRequestsSkeleton() {
+  return (
+    <Card>
+      <CardContent className="space-y-3 py-6">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-16 w-full" />
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function ClassSessionDetailPageClient({
   classSession,
   backHref,
   backLabel,
-  attendanceSessions,
-  attendanceSessionsErrors,
-  summary,
-  summaryErrors,
-  leaveRequests,
-  leaveRequestsMeta,
+  attendanceSessionsPromise,
+  summaryPromise,
+  leaveRequestsPromise,
 }: Props) {
-  useEffect(() => {
-    handleActionErrors(attendanceSessionsErrors);
-  }, [attendanceSessionsErrors]);
-
-  useEffect(() => {
-    handleActionErrors(summaryErrors);
-  }, [summaryErrors]);
-
   const statusInfo =
     CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
@@ -77,18 +134,17 @@ export default function ClassSessionDetailPageClient({
 
       <ClassSessionInfoSection classSession={classSession} />
 
-      <AttendanceOverview classSessionId={classSession.id} counts={summary?.counts ?? null} />
+      <Suspense fallback={<AttendanceSectionsSkeleton />}>
+        <AttendanceSectionsGroup
+          classSession={classSession}
+          attendanceSessionsPromise={attendanceSessionsPromise}
+          summaryPromise={summaryPromise}
+        />
+      </Suspense>
 
-      <AttendanceSection
-        classSessionId={classSession.id}
-        startTime={classSession.startTime}
-        endTime={classSession.endTime}
-        activeAttendanceSession={classSession.activeAttendanceSession}
-        attendanceSessions={attendanceSessions}
-        summary={summary}
-      />
-
-      <LeaveRequestsSection data={leaveRequests} meta={leaveRequestsMeta} />
+      <Suspense fallback={<LeaveRequestsSkeleton />}>
+        <LeaveRequestsSectionWrapper promise={leaveRequestsPromise} />
+      </Suspense>
     </div>
   );
 }

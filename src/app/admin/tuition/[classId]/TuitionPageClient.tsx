@@ -22,7 +22,6 @@ import {
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import MonthPicker from '@/components/features/tuition/MonthPicker';
-import RecomputeTuitionButton from '@/components/features/tuition/RecomputeTuitionButton';
 import TuitionExportDialog from '@/components/features/tuition/TuitionExportDialog';
 import TuitionImportDialog from '@/components/features/tuition/TuitionImportDialog';
 import TuitionSaveAllButton from '@/components/features/tuition/TuitionSaveAllButton';
@@ -248,18 +247,6 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
                 classId={classDetail.id}
                 year={urlState.year}
                 month={urlState.month}
-              />
-              <RecomputeTuitionButton
-                classId={classDetail.id}
-                year={urlState.year}
-                month={urlState.month}
-                disabled={isPending}
-                onRequest={(run) =>
-                  guarded(() => {
-                    discardAll();
-                    run();
-                  })
-                }
               />
             </div>
           </div>

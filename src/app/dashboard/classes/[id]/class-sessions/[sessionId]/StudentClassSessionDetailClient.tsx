@@ -1,37 +1,68 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import ClassSessionInfoSection from '@/components/features/class-sessions/ClassSessionInfoSection';
 import StudentAttendancePanel from '@/components/features/class-sessions/StudentAttendancePanel';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
-import { handleActionErrors } from '@/lib/actions';
+import { useResolved } from '@/lib/actions';
+import type { GetMyAttendanceResponse } from '@/actions/v1/attendance/get-my-attendance';
+import type { GetMyLeaveRequestResult } from '@/actions/v1/leave-requests/get-my-leave-request';
 import type { ClassSessionDetail } from '@/types/actions/class-management';
-import type { MyAttendanceLog } from '@/types/actions/attendance';
-import type { MyLeaveRequest } from '@/actions/v1/leave-requests/get-my-leave-request';
 
 interface Props {
   classId: number;
   classSession: ClassSessionDetail;
-  myAttendance: MyAttendanceLog[];
-  myLeaveRequest: MyLeaveRequest | null;
-  errors: string[];
+  myAttendancePromise: Promise<GetMyAttendanceResponse>;
+  myLeaveRequestPromise: Promise<GetMyLeaveRequestResult>;
+}
+
+function AttendancePanelSection({
+  classSession,
+  myAttendancePromise,
+  myLeaveRequestPromise,
+}: {
+  classSession: ClassSessionDetail;
+  myAttendancePromise: Promise<GetMyAttendanceResponse>;
+  myLeaveRequestPromise: Promise<GetMyLeaveRequestResult>;
+}) {
+  const { data: myAttendance } = useResolved(myAttendancePromise);
+  const { data: myLeaveRequest } = use(myLeaveRequestPromise);
+
+  return (
+    <StudentAttendancePanel
+      classSessionId={classSession.id}
+      startTime={classSession.startTime}
+      endTime={classSession.endTime}
+      activeAttendanceSession={classSession.activeAttendanceSession}
+      myAttendance={myAttendance}
+      myLeaveRequest={myLeaveRequest}
+    />
+  );
+}
+
+export function AttendancePanelSkeleton() {
+  return (
+    <Card>
+      <CardContent className="space-y-3 py-6">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-24 w-full" />
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function StudentClassSessionDetailClient({
   classId,
   classSession,
-  myAttendance,
-  myLeaveRequest,
-  errors,
+  myAttendancePromise,
+  myLeaveRequestPromise,
 }: Props) {
-  useEffect(() => {
-    handleActionErrors(errors);
-  }, [errors]);
-
   const statusInfo =
     CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
@@ -56,14 +87,13 @@ export default function StudentClassSessionDetailClient({
         </div>
       </div>
 
-      <StudentAttendancePanel
-        classSessionId={classSession.id}
-        startTime={classSession.startTime}
-        endTime={classSession.endTime}
-        activeAttendanceSession={classSession.activeAttendanceSession}
-        myAttendance={myAttendance}
-        myLeaveRequest={myLeaveRequest}
-      />
+      <Suspense fallback={<AttendancePanelSkeleton />}>
+        <AttendancePanelSection
+          classSession={classSession}
+          myAttendancePromise={myAttendancePromise}
+          myLeaveRequestPromise={myLeaveRequestPromise}
+        />
+      </Suspense>
 
       <ClassSessionInfoSection classSession={classSession} />
     </div>

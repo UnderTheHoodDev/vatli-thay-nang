@@ -35,7 +35,7 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
       <Button
         type="button"
         variant="outline"
-        size="icon-sm"
+        size="icon"
         disabled={disabled}
         title="Tháng trước"
         aria-label="Tháng trước"
@@ -85,7 +85,7 @@ export default function MonthPicker({ year, month, currentYear, disabled, onChan
       <Button
         type="button"
         variant="outline"
-        size="icon-sm"
+        size="icon"
         disabled={disabled}
         title="Tháng sau"
         aria-label="Tháng sau"

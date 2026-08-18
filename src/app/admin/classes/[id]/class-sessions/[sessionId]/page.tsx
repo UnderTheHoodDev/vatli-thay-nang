@@ -24,28 +24,24 @@ export default async function ClassSessionDetailPage({ params, searchParams }: P
     : `/admin/classes/${classId}?tab=sessions`;
   const backLabel = fromSessionsList ? 'Quay lại danh sách buổi học' : 'Quay lại lớp học';
 
-  const [classSession, attendanceSessionsRes, summaryRes, leaveRequestsRes] = await Promise.all([
-    getClassSession(classSessionId),
-    listAttendanceSessions(classSessionId, { page: 1, pageSize: 50 }),
-    getAttendanceSummary(classSessionId),
-    listLeaveRequests(classSessionId, { page: 1, pageSize: 20 }),
-  ]);
+  const attendanceSessionsPromise = listAttendanceSessions(classSessionId, {
+    page: 1,
+    pageSize: 50,
+  });
+  const summaryPromise = getAttendanceSummary(classSessionId);
+  const leaveRequestsPromise = listLeaveRequests(classSessionId, { page: 1, pageSize: 20 });
 
+  const classSession = await getClassSession(classSessionId);
   if (!classSession) notFound();
 
   return (
     <ClassSessionDetailPageClient
-      classId={classId}
       classSession={classSession}
       backHref={backHref}
       backLabel={backLabel}
-      attendanceSessions={attendanceSessionsRes.data}
-      attendanceSessionsMeta={attendanceSessionsRes.meta}
-      attendanceSessionsErrors={attendanceSessionsRes.errors}
-      summary={summaryRes.data}
-      summaryErrors={summaryRes.errors}
-      leaveRequests={leaveRequestsRes.data}
-      leaveRequestsMeta={leaveRequestsRes.meta}
+      attendanceSessionsPromise={attendanceSessionsPromise}
+      summaryPromise={summaryPromise}
+      leaveRequestsPromise={leaveRequestsPromise}
     />
   );
 }
