@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,11 +10,11 @@ import {
   LayoutDashboard,
   UserRound,
   School,
-  GraduationCap,
   BookOpen,
   Wallet,
   CircleHelp,
 } from 'lucide-react';
+import { ASSETS } from '@/constants/assets';
 import {
   Sidebar,
   SidebarContent,
@@ -111,10 +112,17 @@ export default function AppSidebar({ title, items }: Props) {
           className="text-sidebar-foreground hover:bg-sidebar-accent flex h-12 items-center gap-2 px-4 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label={title}
         >
-          <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
-            <GraduationCap className="size-4" />
+          <span className="flex size-9 shrink-0 items-center justify-center">
+            <Image
+              src={ASSETS.logo}
+              alt={title}
+              width={36}
+              height={36}
+              className="size-9 object-contain"
+              priority
+            />
           </span>
-          <span className="font-paytone truncate text-base group-data-[collapsible=icon]:hidden">
+          <span className="font-paytone truncate text-sm group-data-[collapsible=icon]:hidden">
             {title}
           </span>
         </Link>
