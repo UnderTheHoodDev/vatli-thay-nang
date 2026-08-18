@@ -62,6 +62,8 @@ export default function NodeContentViewer({ node, track = true, fill = false }: 
         key={node.id}
         nodeId={node.id}
         videoUrl={node.videoUrl}
+        bunnyVideoId={node.bunnyVideoId}
+        bunnyLibraryId={node.bunnyLibraryId}
         durationSeconds={node.durationSeconds}
         bunnyStatus={node.bunnyStatus}
         title={node.title}
