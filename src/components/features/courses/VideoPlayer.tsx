@@ -139,6 +139,9 @@ export default function VideoPlayer({
           'fullscreen',
         ],
         settings: ['quality', 'speed'],
+        // Khung 16:9 cố định (letterbox video lệch tỉ lệ) — giữ layout như trước;
+        // chế độ fill (modal admin) để Plyr tự lấp đầy chiều cao khung cha.
+        ratio: fill ? undefined : '16:9',
         speed: { selected: 1, options: SPEED_OPTIONS },
         quality: options.length
           ? {
