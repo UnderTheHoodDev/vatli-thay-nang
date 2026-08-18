@@ -23,7 +23,13 @@ interface Props {
   allOption?: { value: string; label: string };
 }
 
-export default function ProvinceCombobox({ value, onChange, provinces, disabled, allOption }: Props) {
+export default function ProvinceCombobox({
+  value,
+  onChange,
+  provinces,
+  disabled,
+  allOption,
+}: Props) {
   const [open, setOpen] = useState(false);
 
   const label =

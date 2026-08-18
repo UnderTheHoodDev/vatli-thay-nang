@@ -24,10 +24,7 @@ export interface ProfileContactValues {
 
 interface Props {
   values: ProfileContactValues;
-  onChange: <K extends keyof ProfileContactValues>(
-    key: K,
-    value: ProfileContactValues[K],
-  ) => void;
+  onChange: <K extends keyof ProfileContactValues>(key: K, value: ProfileContactValues[K]) => void;
   provinces: Province[];
   disabled?: boolean;
   idPrefix: string;

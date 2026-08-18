@@ -278,11 +278,7 @@ function CoursesPaginationSection({
   return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
 }
 
-export default function CoursesPageClient({
-  urlState,
-  coursesPromise,
-  scheduleSettings,
-}: Props) {
+export default function CoursesPageClient({ urlState, coursesPromise, scheduleSettings }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);

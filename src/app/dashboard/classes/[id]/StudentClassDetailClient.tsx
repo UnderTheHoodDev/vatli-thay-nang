@@ -102,10 +102,7 @@ function SessionsCardSection({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">Hiển thị</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => onPageSizeChange(Number(v))}
-          >
+          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
             <SelectTrigger className="w-24 cursor-pointer">
               <SelectValue />
             </SelectTrigger>
@@ -144,7 +141,9 @@ function SessionsCardSection({
                 return (
                   <TableRow
                     key={s.id}
-                    onClick={() => router.push(`/dashboard/classes/${classId}/class-sessions/${s.id}`)}
+                    onClick={() =>
+                      router.push(`/dashboard/classes/${classId}/class-sessions/${s.id}`)
+                    }
                     className="hover:bg-primary/5 even:bg-muted/30 cursor-pointer transition-colors"
                   >
                     <TableCell className="text-foreground font-medium">

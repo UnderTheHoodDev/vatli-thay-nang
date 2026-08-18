@@ -67,8 +67,7 @@ export default function ClassSessionFormModal({
 
   const classError = submitted && classes && !selectedClassId ? 'Vui lòng chọn lớp' : '';
   const titleError = submitted && !title.trim() ? 'Vui lòng nhập tiêu đề' : '';
-  const startTimeError =
-    submitted && !startTime ? 'Vui lòng chọn thời gian bắt đầu' : '';
+  const startTimeError = submitted && !startTime ? 'Vui lòng chọn thời gian bắt đầu' : '';
   const endTimeError =
     submitted && !endTime
       ? 'Vui lòng chọn thời gian kết thúc'

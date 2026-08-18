@@ -127,9 +127,7 @@ export default function LearnClient({ course, initialNodeId, initialTab }: Props
           onClick={() => changeTab('content')}
           className={cn(
             'flex h-9 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium transition',
-            tab === 'content'
-              ? 'bg-background text-primary shadow-sm'
-              : 'text-muted-foreground',
+            tab === 'content' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground',
           )}
         >
           <LayoutList className="size-4.5" /> Nội dung khóa học

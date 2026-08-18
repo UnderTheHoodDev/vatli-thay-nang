@@ -55,11 +55,7 @@ function AttendanceSectionsGroup({
   );
 }
 
-function LeaveRequestsSectionWrapper({
-  promise,
-}: {
-  promise: Promise<IListLeaveRequestsResult>;
-}) {
+function LeaveRequestsSectionWrapper({ promise }: { promise: Promise<IListLeaveRequestsResult> }) {
   const { data, meta } = use(promise);
   return <LeaveRequestsSection data={data} meta={meta} />;
 }

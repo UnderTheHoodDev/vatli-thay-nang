@@ -21,9 +21,7 @@ import { handleActionResult } from '@/lib/actions';
 import { toDateInputValue } from '@/lib/format';
 import { validateProfileContact } from '@/lib/validation';
 import { adminUpdateUserAction } from '@/actions/v1/users/admin-update-user';
-import ProfileContactFields, {
-  type ProfileContactValues,
-} from './ProfileContactFields';
+import ProfileContactFields, { type ProfileContactValues } from './ProfileContactFields';
 import type { Gender, Province, UserRow } from '@/types/auth';
 import type { IAdminUpdateUserPayload } from '@/types/actions/users';
 

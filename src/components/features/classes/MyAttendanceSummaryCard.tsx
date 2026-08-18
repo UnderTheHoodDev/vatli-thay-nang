@@ -51,7 +51,9 @@ export default function MyAttendanceSummaryCard({ stats }: Props) {
             key={key}
             className="hover:ring-primary/15 flex items-center gap-3 rounded-xl p-2 transition-shadow hover:shadow-sm hover:ring-1"
           >
-            <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${tone}`}>
+            <span
+              className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${tone}`}
+            >
               <Icon className="size-5" />
             </span>
             <div className="min-w-0">

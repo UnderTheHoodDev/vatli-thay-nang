@@ -49,11 +49,11 @@ export default function AuthSplitLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="relative z-1 space-y-6">
-          <h2 className="font-paytone text-[1.9rem] leading-tight text-brown">
+          <h2 className="font-paytone text-brown text-[1.9rem] leading-tight">
             Chinh phục các kì thi
             <span className="text-purple block">học sinh giỏi môn Vật Lí</span>
           </h2>
-          <p className="max-w-md text-sm leading-[1.6] text-brown italic">
+          <p className="text-brown max-w-md text-sm leading-[1.6] italic">
             Hệ thống quản lý lớp học VLTN — đồng hành cùng thầy giáo trẻ Nguyễn Năng Linh trên hành
             trình chinh phục Vật Lí.
           </p>
@@ -67,7 +67,7 @@ export default function AuthSplitLayout({ children }: { children: React.ReactNod
               }
               cells.push(
                 <div key={item.value} className="flex flex-1 flex-col items-center gap-1 py-4">
-                  <span className="font-cabin text-[0.78rem] text-brown">{item.label}</span>
+                  <span className="font-cabin text-brown text-[0.78rem]">{item.label}</span>
                   <span className={`font-paytone text-[0.95rem] ${item.color}`}>{item.value}</span>
                 </div>,
               );

@@ -8,7 +8,9 @@ interface Props {
 
 export default function TuitionReminderBanner({ month, year, classNames }: Props) {
   const classLabel =
-    classNames.length > 0 ? ` cho ${classNames.length > 1 ? 'các lớp' : 'lớp'} ${classNames.join(', ')}` : '';
+    classNames.length > 0
+      ? ` cho ${classNames.length > 1 ? 'các lớp' : 'lớp'} ${classNames.join(', ')}`
+      : '';
 
   return (
     <div className="flex items-start gap-3 rounded-lg border border-amber-400/40 bg-amber-50 p-4">

@@ -24,9 +24,7 @@ async function ClassesSection({
   const classesRes = await classesPromise;
   const activeCount = classesRes.stats.active;
   const tuitionReminder = getTuitionReminderMonth();
-  const activeClassNames = classesRes.data
-    .filter((c) => c.status === 'ACTIVE')
-    .map((c) => c.name);
+  const activeClassNames = classesRes.data.filter((c) => c.status === 'ACTIVE').map((c) => c.name);
 
   return (
     <div className="space-y-6">

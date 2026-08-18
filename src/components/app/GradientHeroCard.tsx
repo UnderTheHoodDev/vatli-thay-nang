@@ -12,7 +12,7 @@ export default function GradientHeroCard({ children, className }: Props) {
   return (
     <Card
       className={cn(
-        'from-primary via-primary to-pink-dark/90 text-primary-foreground relative gap-3 overflow-hidden border-0 bg-linear-to-br shadow-lg shadow-primary/25',
+        'from-primary via-primary to-pink-dark/90 text-primary-foreground shadow-primary/25 relative gap-3 overflow-hidden border-0 bg-linear-to-br shadow-lg',
         className,
       )}
     >
