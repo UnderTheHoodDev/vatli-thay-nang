@@ -8,6 +8,8 @@ import {
   ChevronRight,
   ClipboardCheck,
   Download,
+  FileText,
+  Pencil,
   Search,
   Sparkles,
   Target,
@@ -42,9 +44,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
 import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { SubmissionRow, TestDetail, TestPhase } from '@/types/tests';
+import type { SubmissionRow, TestDetail, TestFile, TestPhase } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
 import TestAttachmentViewer from './TestAttachmentViewer';
+import TestFormModal from './TestFormModal';
 
 interface Props {
   courseId: number;
@@ -74,11 +77,12 @@ function formatDateTime(iso: string | null): string {
 }
 
 /**
- * Tiêu đề + nút xuất file: chỉ cần `test` (đã có ngay, không phải chờ danh sách bài
+ * Tiêu đề + nút sửa/xuất file: chỉ cần `test` (đã có ngay, không phải chờ danh sách bài
  * nộp) nên render eager ở page.tsx, tách khỏi phần Suspense cho bảng/thống kê.
  */
-export function TestHeaderBar({ test }: { test: TestDetail }) {
+export function TestHeaderBar({ courseId, test }: { courseId: number; test: TestDetail }) {
   const [exporting, setExporting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const phase = PHASE[test.phase];
 
   async function handleExport(format: 'csv' | 'xlsx') {
@@ -119,6 +123,9 @@ export function TestHeaderBar({ test }: { test: TestDetail }) {
       </div>
 
       <div className="flex gap-2">
+        <Button onClick={() => setEditOpen(true)} className="cursor-pointer">
+          <Pencil /> Sửa
+        </Button>
         <Button
           variant="outline"
           disabled={exporting}
@@ -136,7 +143,54 @@ export function TestHeaderBar({ test }: { test: TestDetail }) {
           <Download /> Excel
         </Button>
       </div>
+
+      {/* key theo editOpen để mỗi lần mở là remount → form nạp lại dữ liệu mới nhất
+          (giống pattern key={editingId} ở CourseTestsSection). Lưu xong TestFormModal
+          tự router.refresh() → page refetch getTest, header + đề bài cập nhật. */}
+      {editOpen && (
+        <TestFormModal
+          key={test.id}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          courseId={courseId}
+          testId={test.id}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * Card "Đề bài" cho admin xem lại các file đã upload (trước đây không hiển thị ở đâu —
+ * TestAttachmentViewer chỉ được dùng cho bài nộp của học sinh trong dialog chấm).
+ * Render eager ở page.tsx cùng TestHeaderBar vì attachments đi kèm sẵn trong `test`.
+ */
+export function TestAttachmentsCard({ attachments }: { attachments: TestFile[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="text-muted-foreground size-4" />
+          Đề bài
+          <span className="text-muted-foreground text-sm font-normal">
+            ({attachments.length} tệp)
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pb-6">
+        {attachments.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Chưa đính kèm file đề — bấm <span className="font-medium">Sửa</span> để thêm.
+          </p>
+        ) : (
+          // Đề nhiều trang ảnh rất dài — giới hạn chiều cao, cuộn trong card để phần
+          // thống kê/bài nộp phía dưới không bị đẩy mất hút.
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+            <TestAttachmentViewer files={attachments} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

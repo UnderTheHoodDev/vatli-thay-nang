@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import AdminTestDetailClient, {
+  TestAttachmentsCard,
   TestHeaderBar,
 } from '@/components/features/tests/AdminTestDetailClient';
 
@@ -58,7 +59,8 @@ export default async function AdminTestDetailPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <BackLink courseId={courseId} />
-      <TestHeaderBar test={testRes.data} />
+      <TestHeaderBar courseId={courseId} test={testRes.data} />
+      <TestAttachmentsCard attachments={testRes.data.attachments} />
       <Suspense fallback={<SubmissionsSkeleton />}>
         <AdminTestDetailClient
           courseId={courseId}
