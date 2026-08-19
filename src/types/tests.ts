@@ -44,7 +44,16 @@ export interface TestRow {
   startTime: string;
   endTime: string;
   maxScore: number;
+  /** Thời gian làm bài (phút), đếm từ lúc học sinh bấm Bắt đầu. */
+  durationMinutes: number;
   phase: TestPhase;
+}
+
+/** Lượt làm bài của học sinh — trả từ getTest và POST /tests/:id/start. */
+export interface TestAttempt {
+  startedAt: string;
+  /** Hạn nộp cá nhân = min(startedAt + durationMinutes, endTime). */
+  deadlineAt: string;
 }
 
 /** Danh sách bài kiểm tra — góc nhìn ADMIN (có số liệu lớp). */
@@ -79,6 +88,8 @@ export interface MySubmission {
 }
 
 export interface StudentTestDetail extends TestDetail {
+  /** null = chưa bấm Bắt đầu làm bài (khi đó đề bị giấu nếu bài đang mở). */
+  myAttempt: TestAttempt | null;
   mySubmissionStatus: TestSubmissionStatus;
   myScore: number | null;
   /** null = chưa nộp bài nào. */

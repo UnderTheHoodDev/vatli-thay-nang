@@ -174,6 +174,10 @@ export default function StudentTestsPanel({ courseId }: Props) {
                   <p className="truncate font-medium">{t.title}</p>
                   <p className="text-muted-foreground text-sm">
                     {formatRange(t.startTime, t.endTime)}
+                    <span aria-hidden className="mx-1.5">
+                      ·
+                    </span>
+                    Làm bài {t.durationMinutes} phút
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
