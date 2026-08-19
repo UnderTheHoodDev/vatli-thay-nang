@@ -1,5 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface FormTextFieldProps {
   id: string;
@@ -10,6 +11,10 @@ interface FormTextFieldProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  error?: string;
+  /** Bôi đỏ viền như `error` nhưng không hiện text — dùng khi nhiều ô dùng chung 1 lỗi. */
+  invalid?: boolean;
+  className?: string;
 }
 
 export function FormTextField({
@@ -21,9 +26,13 @@ export function FormTextField({
   placeholder,
   required = false,
   disabled = false,
+  error,
+  invalid = false,
+  className,
 }: FormTextFieldProps) {
+  const errorId = `${id}-error`;
   return (
-    <div className="space-y-1.5">
+    <div className={cn('space-y-1.5', className)}>
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
@@ -34,7 +43,14 @@ export function FormTextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-invalid={!!error || invalid}
+        aria-describedby={error ? errorId : undefined}
       />
+      {error && (
+        <p id={errorId} role="alert" className="text-destructive text-xs">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

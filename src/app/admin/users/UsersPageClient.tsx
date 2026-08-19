@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, use, useCallback, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Users, UserCheck, UserX, ShieldCheck, ShieldOff } from 'lucide-react';
 import {
@@ -22,6 +22,7 @@ import UserSearchForm, {
 } from '@/components/features/users/UserSearchForm';
 import UsersTable from '@/components/features/users/UsersTable';
 import CreateUserDialog from '@/components/features/users/CreateUserDialog';
+import BulkDeleteUsersButton from '@/components/features/users/BulkDeleteUsersButton';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import type { Province } from '@/types/auth';
 import type { IListUsersResult } from '@/types/actions/users';
@@ -100,13 +101,30 @@ function UsersResultSummary({
 
 function UsersTableSection({
   promise,
+  provinces,
   isPending,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }: {
   promise: Promise<IListUsersResult>;
+  provinces: Province[];
   isPending: boolean;
+  selectedIds: Set<number>;
+  onToggleRow: (id: number, checked: boolean) => void;
+  onToggleAll: (ids: number[], checked: boolean) => void;
 }) {
   const { data: rows } = use(promise);
-  return <UsersTable rows={rows} loading={isPending} />;
+  return (
+    <UsersTable
+      rows={rows}
+      provinces={provinces}
+      loading={isPending}
+      selectedIds={selectedIds}
+      onToggleRow={onToggleRow}
+      onToggleAll={onToggleAll}
+    />
+  );
 }
 
 function UsersPaginationSection({
@@ -129,6 +147,34 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Đổi trang/lọc/tìm kiếm (usersPromise đổi identity) thì bỏ chọn — tránh giữ
+  // selection trỏ tới id không còn hiển thị trên trang hiện tại.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedIds(new Set());
+  }, [usersPromise]);
+
+  const toggleRow = useCallback((id: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const toggleAll = useCallback((ids: number[], checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }, []);
 
   const updateUrl = useCallback(
     (next: Partial<UrlState>) => {
@@ -193,12 +239,25 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
                 ))}
               </SelectContent>
             </Select>
+            {selectedIds.size > 0 && (
+              <BulkDeleteUsersButton
+                selectedIds={Array.from(selectedIds)}
+                onDone={() => setSelectedIds(new Set())}
+              />
+            )}
             <CreateUserDialog />
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <Suspense fallback={<UsersTable rows={[]} loading />}>
-            <UsersTableSection promise={usersPromise} isPending={isPending} />
+          <Suspense fallback={<UsersTable rows={[]} provinces={provinces} loading />}>
+            <UsersTableSection
+              promise={usersPromise}
+              provinces={provinces}
+              isPending={isPending}
+              selectedIds={selectedIds}
+              onToggleRow={toggleRow}
+              onToggleAll={toggleAll}
+            />
           </Suspense>
         </CardContent>
         <Suspense fallback={null}>

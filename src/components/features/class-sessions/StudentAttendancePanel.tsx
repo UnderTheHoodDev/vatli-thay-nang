@@ -88,9 +88,7 @@ export default function StudentAttendancePanel({
   return (
     <Card
       className={cn(
-        activeAttendanceSession &&
-          !expired &&
-          'border-primary/40 ring-primary/15 shadow-sm ring-1',
+        activeAttendanceSession && !expired && 'border-primary/40 ring-primary/15 shadow-sm ring-1',
       )}
     >
       <CardHeader>

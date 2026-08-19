@@ -105,12 +105,7 @@ function fromForm(initial: CourseDetail | undefined): FormState {
   };
 }
 
-export default function CourseFormModal({
-  open,
-  onOpenChange,
-  mode,
-  initialData,
-}: Props) {
+export default function CourseFormModal({ open, onOpenChange, mode, initialData }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<'info' | 'detail'>('info');
   const [form, setForm] = useState<FormState>(() => fromForm(initialData));

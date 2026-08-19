@@ -25,8 +25,8 @@ export interface ClassRow {
   studentCount?: number;
   sessionCount?: number;
   createdAt?: string;
-  /** Học phí mặc định / buổi (VND, số nguyên). Chỉ trả cho ADMIN. */
-  defaultSessionFee?: number;
+  /** Học phí thu theo tháng (VND, số nguyên). Chỉ trả cho ADMIN. */
+  monthlyFee?: number;
   // STUDENT only.
   attendedCount?: number;
   leaveCount?: number;

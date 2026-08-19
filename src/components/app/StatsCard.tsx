@@ -36,7 +36,12 @@ export default function StatsCard({
             <p className="text-foreground/60 text-[0.8rem] font-medium tracking-wide uppercase">
               {label}
             </p>
-            <p className="text-foreground truncate text-2xl font-semibold">{value}</p>
+            {/* Không dùng `truncate`: số tiền lớn (vd "15.000.000 đ") bị cắt
+                thành "15.000.000..." khi card hẹp — sai số liệu nhìn vào. Cho
+                phép wrap 2 dòng thay vì cắt mất số. */}
+            <p className="text-foreground text-2xl leading-tight font-semibold wrap-break-word">
+              {value}
+            </p>
             {hint && <p className="text-muted-foreground text-[0.8rem]">{hint}</p>}
           </div>
           <span

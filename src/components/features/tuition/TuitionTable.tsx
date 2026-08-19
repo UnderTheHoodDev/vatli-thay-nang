@@ -8,7 +8,18 @@ import TuitionRow from './TuitionRow';
 import { cn } from '@/lib/utils';
 import type { TuitionListRow } from '@/types/actions/tuition';
 
-const SKELETON_COLUMNS = ['w-8', 'w-40', 'w-48', 'w-28', 'w-28', 'w-24', 'w-28', 'w-40', 'w-16'];
+const SKELETON_COLUMNS = [
+  'w-8',
+  'w-40',
+  'w-48',
+  'w-28',
+  'w-28',
+  'w-24',
+  'w-28',
+  'w-40',
+  'w-32',
+  'w-16',
+];
 
 function TuitionTableHead() {
   return (
@@ -22,6 +33,7 @@ function TuitionTableHead() {
         <TableHead className="w-32">Trạng thái</TableHead>
         <TableHead className="w-44">Ngày đóng</TableHead>
         <TableHead>Ghi chú</TableHead>
+        <TableHead className="w-40">Sửa tay lúc</TableHead>
         <TableHead className="w-28 text-right">Lưu</TableHead>
       </TableRow>
     </TableHeader>
@@ -52,7 +64,7 @@ export default function TuitionTable({ classId, rows, isPending, onRowSaved }: P
       <EmptyState
         icon={Wallet}
         title="Chưa có học sinh nào trong tháng này"
-        description='Lớp chưa có buổi học trong tháng, hoặc chưa có học sinh nào đang theo học. Thử bấm "Tính lại".'
+        description="Lớp chưa có buổi học trong tháng, hoặc chưa có học sinh nào đang theo học."
       />
     );
   }

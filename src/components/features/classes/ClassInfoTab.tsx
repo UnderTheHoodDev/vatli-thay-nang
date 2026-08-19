@@ -43,11 +43,11 @@ export default function ClassInfoTab({ classDetail }: Props) {
     { label: 'Trạng thái', value: statusBadge(classDetail.status), icon: Activity },
     { label: 'Số học sinh', value: classDetail.studentCount ?? 0, icon: UsersIcon },
     { label: 'Ngày tạo', value: formatDate(classDetail.createdAt), icon: Calendar },
-    ...(classDetail.defaultSessionFee !== undefined
+    ...(classDetail.monthlyFee !== undefined
       ? [
           {
-            label: 'Học phí mặc định / buổi',
-            value: formatAmountVnd(classDetail.defaultSessionFee),
+            label: 'Học phí / tháng',
+            value: formatAmountVnd(classDetail.monthlyFee),
             icon: CircleDollarSign,
           },
         ]

@@ -39,8 +39,8 @@ export default function Header({ role }: HeaderProps) {
                 marginTop: '12px',
                 paddingLeft: '24px',
                 paddingRight: '24px',
-                width: 'calc(100% - 48px)',
-                maxWidth: '1100px',
+                width: '100%',
+                maxWidth: '1200px',
               }
             : {
                 backgroundColor: '#fffdf9',

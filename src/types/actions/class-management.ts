@@ -28,7 +28,7 @@ export interface ICreateClassPayload {
   name: string;
   code: string;
   description?: string;
-  defaultSessionFee?: number;
+  monthlyFee?: number;
 }
 
 export interface IUpdateClassPayload {
@@ -36,7 +36,7 @@ export interface IUpdateClassPayload {
   code?: string;
   description?: string;
   status?: ClassStatus;
-  defaultSessionFee?: number;
+  monthlyFee?: number;
 }
 
 export interface ClassStudentListRow {
@@ -92,8 +92,6 @@ export interface ClassSessionListRow {
   attendedCount?: number;
   totalStudents?: number;
   activeAttendanceSession?: { id: number; closedAt: string } | null;
-  /** Học phí của buổi (VNĐ). Chỉ trả cho ADMIN. */
-  tuitionFee?: number;
   // STUDENT only (list() student branch).
   myStatus?: 'ATTENDED' | 'ON_LEAVE' | 'NOT_ATTENDED';
   hasActiveAttendance?: boolean;
@@ -136,8 +134,6 @@ export interface ClassSessionDetail {
   endTime: string;
   meetingUrl: string | null;
   activeAttendanceSession: { id: number; closedAt: string } | null;
-  /** Học phí của buổi (VNĐ). Chỉ trả cho ADMIN. */
-  tuitionFee?: number;
 }
 
 export interface ICreateClassSessionPayload {
@@ -146,7 +142,6 @@ export interface ICreateClassSessionPayload {
   startTime: string;
   endTime: string;
   meetingUrl?: string;
-  tuitionFee?: number;
 }
 
 export interface IUpdateClassSessionPayload {
@@ -155,5 +150,4 @@ export interface IUpdateClassSessionPayload {
   startTime?: string;
   endTime?: string;
   meetingUrl?: string;
-  tuitionFee?: number;
 }

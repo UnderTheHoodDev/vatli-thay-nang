@@ -33,10 +33,9 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 
-  // Không cái nào phụ thuộc kết quả của cái khác (chỉ cần classId từ params) —
-  // gộp một lượt thay vì 3 round-trip nối tiếp.
-  const [classDetail, studentsRes, attendanceSummaryRes, sessionsRes] = await Promise.all([
-    getClass(classId),
+  // Khởi tạo promise của tab đang active trước, song song với gate getClass() —
+  // tránh chờ nối tiếp (getClass xong mới bắt đầu fetch tab).
+  const studentsPromise =
     urlState.tab === 'students'
       ? listClassStudents(classId, {
           email: urlState.email || undefined,
@@ -47,32 +46,32 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
       : Promise.resolve({
           data: [],
           meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
+          stats: { total: 0, studying: 0, left: 0 },
           errors: [],
-        }),
+        });
+  const attendanceSummaryPromise =
     urlState.tab === 'students'
       ? listAttendanceSummary(classId)
-      : Promise.resolve({ data: [], errors: [] }),
+      : Promise.resolve({ data: [], errors: [] });
+  const sessionsPromise =
     urlState.tab === 'sessions'
       ? listClassSessions(classId, { page: urlState.page, pageSize: urlState.pageSize })
       : Promise.resolve({
           data: [],
           meta: { total: 0, page: urlState.page, pageSize: urlState.pageSize },
           errors: [],
-        }),
-  ]);
+        });
+
+  const classDetail = await getClass(classId);
   if (!classDetail) notFound();
 
   return (
     <ClassDetailPageClient
       classDetail={classDetail}
       urlState={urlState}
-      students={studentsRes.data}
-      studentsAttendanceStats={attendanceSummaryRes.data}
-      studentsMeta={studentsRes.meta}
-      studentsErrors={studentsRes.errors}
-      sessions={sessionsRes.data}
-      sessionsMeta={sessionsRes.meta}
-      sessionsErrors={sessionsRes.errors}
+      studentsPromise={studentsPromise}
+      attendanceSummaryPromise={attendanceSummaryPromise}
+      sessionsPromise={sessionsPromise}
     />
   );
 }
