@@ -29,8 +29,7 @@ export default async function DashboardPage() {
               Chào {displayName}!
             </h1>
             <p className="text-primary-foreground/85 max-w-xl text-sm">
-              Sẵn sàng chinh phục những bài học mới hôm nay. Cùng kiểm tra lịch học và tiến độ của
-              bạn nhé.
+              Xem lịch học, điểm danh và tiến độ của bạn tại đây.
             </p>
           </div>
           <Button

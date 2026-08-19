@@ -228,10 +228,12 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
                 <strong className="text-purple">{test.durationMinutes} phút</strong>
               </p>
               <p className="text-muted-foreground mx-auto max-w-md text-sm">
-                Đồng hồ đếm ngược bắt đầu chạy ngay khi bạn bấm Bắt đầu và{' '}
-                <strong className="text-foreground">không thể tạm dừng</strong>. Hết giờ, bài sẽ
-                tự động nộp và không sửa được nữa. Hạn chót của bài là{' '}
-                {formatDateTimeShort(test.endTime)} — bắt đầu muộn thì thời gian còn lại ngắn đi.
+                Đồng hồ chạy ngay khi bấm Bắt đầu,{' '}
+                <strong className="text-foreground">không tạm dừng được</strong>. Hết giờ, bài tự
+                động nộp.
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Hạn chót nộp: {formatDateTimeShort(test.endTime)}
               </p>
             </div>
             <Button
@@ -266,12 +268,13 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
               ) : (
                 <span>
                   Còn lại <span className="tabular-nums">{formatRemaining(remainingMs)}</span> —
-                  hết giờ bài sẽ tự động nộp.
+                  hết giờ tự động nộp.
                 </span>
               )}
             </div>
           )}
-          <Tabs defaultValue={ongoing ? 'submit' : hasResult ? 'result' : 'paper'}>
+          {/* Vào bài là đọc ĐỀ trước — tab Nộp bài chỉ là bước sau khi làm xong. */}
+          <Tabs defaultValue={hasResult ? 'result' : 'paper'}>
           {/*
             Khoá đổi tab khi đang tải tệp: tab Nộp bài bị unmount là uploader đi theo,
             tệp vẫn lên tới R2 nhưng không còn ai giữ nó — quay lại thấy form trống như
@@ -395,9 +398,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Bắt đầu làm bài?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có <strong>{test.durationMinutes} phút</strong> kể từ lúc bấm Bắt đầu. Đồng hồ
-              không thể tạm dừng; hết giờ bài sẽ tự động nộp và khoá. Hãy chắc chắn bạn đã sẵn
-              sàng.
+              Bạn có <strong>{test.durationMinutes} phút</strong>, không tạm dừng được. Hết giờ
+              bài sẽ tự động nộp.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -577,9 +579,8 @@ function SubmitTab({
       <CardContent className="space-y-4 py-6">
         {mySubmission && (
           <p className="bg-muted rounded-md p-3 text-sm">
-            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong> — bạn có thể
-            cập nhật đến <strong>{formatDateTimeShort(deadlineAt)}</strong>. Bài nộp mới sẽ thay
-            thế bài cũ.
+            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong>. Có thể nộp
+            lại (thay bài cũ) đến <strong>{formatDateTimeShort(deadlineAt)}</strong>.
           </p>
         )}
 
