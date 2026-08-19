@@ -118,6 +118,10 @@ export function TestHeaderBar({ courseId, test }: { courseId: number; test: Test
             ·
           </span>
           <span>Thang điểm {test.maxScore}</span>
+          <span aria-hidden className="text-input-border">
+            ·
+          </span>
+          <span>Làm bài {test.durationMinutes} phút</span>
           <Badge variant={phase.variant}>{phase.text}</Badge>
         </div>
       </div>

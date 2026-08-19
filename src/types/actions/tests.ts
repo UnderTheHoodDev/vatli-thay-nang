@@ -21,6 +21,8 @@ export interface ICreateTestPayload {
   endTime: string;
   /** 0.01 … 999.99 (Decimal(5,2) ở BE). */
   maxScore: number;
+  /** Thời gian làm bài (phút), 1 … 1440. */
+  durationMinutes: number;
   attachments?: TestFilePayload[];
 }
 
