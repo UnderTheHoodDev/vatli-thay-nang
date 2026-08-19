@@ -1,13 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { AlarmClock, ArrowLeft, Lock, Play, TimerOff } from 'lucide-react';
 import { getTest } from '@/actions/v1/tests/get-test';
 import { listParticipants } from '@/actions/v1/tests/list-participants';
+import { startTestAction } from '@/actions/v1/tests/start-test';
 import { upsertSubmissionAction } from '@/actions/v1/tests/upsert-submission';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,8 +63,23 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const [participants, setParticipants] = useState<ParticipantsResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [startOpen, setStartOpen] = useState(false);
+  const [starting, setStarting] = useState(false);
+  // Đồng hồ đếm ngược thời gian làm bài — tick mỗi giây khi có lượt đang chạy.
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const mountedRef = useRef(true);
   const requestSeqRef = useRef(0);
+
+  const deadlineMs =
+    test?.phase === 'ONGOING' && test.myAttempt
+      ? new Date(test.myAttempt.deadlineAt).getTime()
+      : null;
+
+  useEffect(() => {
+    if (deadlineMs === null) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [deadlineMs]);
 
   const load = useCallback(async (): Promise<boolean> => {
     const seq = requestSeqRef.current + 1;
@@ -132,6 +159,30 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const ended = test.phase === 'ENDED';
   const hasResult = ended && test.mySubmissionStatus === 'GRADED';
 
+  // Giới hạn thời gian làm bài: đang mở mà CHƯA bấm Bắt đầu thì đề bị giấu (BE chốt),
+  // chỉ hiện màn bắt đầu. Đã bắt đầu thì chạy đếm ngược tới hạn cá nhân.
+  const notStarted = ongoing && !test.myAttempt;
+  const remainingMs = deadlineMs === null ? null : Math.max(0, deadlineMs - nowMs);
+  const expired = ongoing && deadlineMs !== null && deadlineMs - nowMs <= 0;
+
+  async function handleStart() {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const res = await startTestAction(testId);
+      if (!mountedRef.current) return;
+      if (res.errors.length) {
+        handleActionErrors(res.errors);
+        return;
+      }
+      setStartOpen(false);
+      // Tải lại để nhận đề + myAttempt (đề chỉ mở sau khi có lượt).
+      await load();
+    } finally {
+      if (mountedRef.current) setStarting(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <BackButton onBack={onBack} disabled={uploading} />
@@ -146,6 +197,10 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             ·
           </span>
           <span>Thang điểm {test.maxScore}</span>
+          <span aria-hidden className="text-input-border">
+            ·
+          </span>
+          <span>Làm bài {test.durationMinutes} phút</span>
           <Badge variant={ongoing ? 'default' : ended ? 'secondary' : 'outline'}>
             {scheduled ? 'Sắp diễn ra' : ongoing ? 'Đang mở' : 'Đã kết thúc'}
           </Badge>
@@ -162,8 +217,61 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             </p>
           </CardContent>
         </Card>
+      ) : notStarted ? (
+        /* Đang mở nhưng chưa bấm Bắt đầu: đề bị giấu (BE), chỉ hiện màn bắt đầu. */
+        <Card>
+          <CardContent className="space-y-4 py-10 text-center">
+            <AlarmClock className="text-purple mx-auto size-10" />
+            <div className="space-y-1">
+              <p className="font-medium">
+                Bài kiểm tra kéo dài{' '}
+                <strong className="text-purple">{test.durationMinutes} phút</strong>
+              </p>
+              <p className="text-muted-foreground mx-auto max-w-md text-sm">
+                Đồng hồ đếm ngược bắt đầu chạy ngay khi bạn bấm Bắt đầu và{' '}
+                <strong className="text-foreground">không thể tạm dừng</strong>. Hết giờ, bài sẽ
+                tự động nộp và không sửa được nữa. Hạn chót của bài là{' '}
+                {formatDateTimeShort(test.endTime)} — bắt đầu muộn thì thời gian còn lại ngắn đi.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => setStartOpen(true)}
+              disabled={starting}
+              className="cursor-pointer"
+            >
+              <Play /> Bắt đầu làm bài
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <Tabs defaultValue={ongoing ? 'submit' : hasResult ? 'result' : 'paper'}>
+        <>
+          {/* Banner đếm ngược — chỉ khi bài đang mở và đã bắt đầu lượt làm. */}
+          {ongoing && remainingMs !== null && (
+            <div
+              role="timer"
+              aria-live="off"
+              className={cn(
+                'flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium',
+                expired
+                  ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                  : remainingMs <= 5 * 60 * 1000
+                    ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                    : 'border-purple/30 bg-purple/5 text-purple',
+              )}
+            >
+              {expired ? <TimerOff className="size-4" /> : <AlarmClock className="size-4" />}
+              {expired ? (
+                <span>Đã hết thời gian làm bài.</span>
+              ) : (
+                <span>
+                  Còn lại <span className="tabular-nums">{formatRemaining(remainingMs)}</span> —
+                  hết giờ bài sẽ tự động nộp.
+                </span>
+              )}
+            </div>
+          )}
+          <Tabs defaultValue={ongoing ? 'submit' : hasResult ? 'result' : 'paper'}>
           {/*
             Khoá đổi tab khi đang tải tệp: tab Nộp bài bị unmount là uploader đi theo,
             tệp vẫn lên tới R2 nhưng không còn ai giữ nó — quay lại thấy form trống như
@@ -207,7 +315,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
               courseId={courseId}
               testId={testId}
               ongoing={ongoing}
-              endTime={test.endTime}
+              deadlineAt={test.myAttempt?.deadlineAt ?? test.endTime}
+              expired={expired}
               status={test.mySubmissionStatus}
               mySubmission={test.mySubmission}
               onSubmitted={load}
@@ -277,9 +386,49 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             )}
           </TabsContent>
         </Tabs>
+        </>
       )}
+
+      {/* Xác nhận bắt đầu — bấm rồi là đồng hồ chạy, không quay lại được. */}
+      <AlertDialog open={startOpen} onOpenChange={(o) => !starting && setStartOpen(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bắt đầu làm bài?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có <strong>{test.durationMinutes} phút</strong> kể từ lúc bấm Bắt đầu. Đồng hồ
+              không thể tạm dừng; hết giờ bài sẽ tự động nộp và khoá. Hãy chắc chắn bạn đã sẵn
+              sàng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={starting} className="cursor-pointer">
+              Để sau
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleStart();
+              }}
+              disabled={starting}
+              className="cursor-pointer"
+            >
+              {starting ? 'Đang mở đề…' : 'Bắt đầu ngay'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+}
+
+/** mm:ss (hoặc h:mm:ss khi trên 1 giờ) cho đồng hồ đếm ngược. */
+function formatRemaining(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
 function BackButton({ onBack, disabled }: { onBack: () => void; disabled?: boolean }) {
@@ -302,7 +451,8 @@ function SubmitTab({
   courseId,
   testId,
   ongoing,
-  endTime,
+  deadlineAt,
+  expired,
   status,
   mySubmission,
   onSubmitted,
@@ -311,7 +461,10 @@ function SubmitTab({
   courseId: number;
   testId: number;
   ongoing: boolean;
-  endTime: string;
+  /** Hạn nộp cá nhân (startedAt + thời gian làm bài, chặn bởi endTime). */
+  deadlineAt: string;
+  /** Đồng hồ cá nhân đã về 0 — khoá form + tự nộp phần đang dở. */
+  expired: boolean;
   status: TDetail['mySubmissionStatus'];
   mySubmission: MySubmission | null;
   onSubmitted: () => Promise<boolean>;
@@ -332,8 +485,11 @@ function SubmitTab({
   const [note, setNote] = useState(mySubmission?.note ?? '');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Hết giờ đã tự nộp thành công (để hiện đúng thông báo ở màn khoá).
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
   const mountedRef = useRef(true);
   const submittingRef = useRef(false);
+  const autoSubmitFiredRef = useRef(false);
 
   // Tab này còn cần `uploading` cho nút bấm của mình, nhưng cha cũng phải biết để khoá
   // nút Quay lại — nên báo lên cả hai nơi.
@@ -355,22 +511,40 @@ function SubmitTab({
     };
   }, [onUploadingChange]);
 
+  // Hết giờ → TỰ ĐỘNG NỘP phần đang dở, đúng một lần. Chỉ nộp khi có thay đổi so với
+  // bài đã lưu: nộp lại y nguyên sẽ reset trạng thái GRADED → SUBMITTED và xoá điểm
+  // (admin có thể đã chấm sớm trong giờ). BE có 30s nhân nhượng sau hạn cho request này.
+  useEffect(() => {
+    if (!expired || autoSubmitFiredRef.current) return;
+    autoSubmitFiredRef.current = true;
+    const savedKeys = (mySubmission?.files ?? []).map((f) => f.fileStorageKey).join('|');
+    const currentKeys = files.map((f) => f.fileStorageKey).join('|');
+    const dirty = savedKeys !== currentKeys || note.trim() !== (mySubmission?.note ?? '');
+    if (dirty && files.length > 0 && !uploading) void submit(true);
+    // Cố ý chỉ chạy theo `expired` — chụp files/note tại đúng khoảnh khắc hết giờ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
+
   // Hết giờ là khoá hẳn. BE cũng chặn (403) — đây chỉ là để không mời gọi bấm.
-  if (!ongoing) {
+  if (!ongoing || expired) {
     return (
       <Card>
         <CardContent className="text-muted-foreground space-y-2 py-10 text-center text-sm">
           <Lock className="mx-auto size-8" />
-          <p>Đã hết thời gian nộp bài.</p>
-          {status !== 'NOT_SUBMITTED' && (
+          <p>{expired ? 'Đã hết thời gian làm bài.' : 'Đã hết thời gian nộp bài.'}</p>
+          {saving ? (
+            <p className="text-foreground">Đang tự động nộp bài của bạn…</p>
+          ) : autoSubmitted ? (
+            <p className="text-foreground">Bài đang dở đã được tự động nộp.</p>
+          ) : status !== 'NOT_SUBMITTED' ? (
             <p className="text-foreground">Bài của bạn đã được ghi nhận.</p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     );
   }
 
-  async function submit() {
+  async function submit(auto = false) {
     if (submittingRef.current || uploading) return;
     if (!files.length) return handleActionErrors(['Chưa chọn tệp bài làm nào']);
     submittingRef.current = true;
@@ -387,7 +561,8 @@ function SubmitTab({
         return;
       }
 
-      handleActionSuccess('Nộp bài thành công');
+      handleActionSuccess(auto ? 'Hết giờ — bài đã được tự động nộp' : 'Nộp bài thành công');
+      if (auto) setAutoSubmitted(true);
       // Không xoá form ở đây: cha tải lại rồi remount tab này với bài vừa nộp, để học
       // sinh thấy đúng thứ mình đang giữ và sửa tiếp được.
       await onSubmitted();
@@ -403,8 +578,8 @@ function SubmitTab({
         {mySubmission && (
           <p className="bg-muted rounded-md p-3 text-sm">
             Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong> — bạn có thể
-            cập nhật đến <strong>{formatDateTimeShort(endTime)}</strong>. Bài nộp mới sẽ thay thế
-            bài cũ.
+            cập nhật đến <strong>{formatDateTimeShort(deadlineAt)}</strong>. Bài nộp mới sẽ thay
+            thế bài cũ.
           </p>
         )}
 

@@ -56,6 +56,7 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [maxScore, setMaxScore] = useState('10');
+  const [durationMinutes, setDurationMinutes] = useState('60');
   const [attachments, setAttachments] = useState<TestFilePayload[]>([]);
 
   // Nạp dữ liệu bài đang sửa. fileStorageKey chỉ có trong response của admin — thiếu
@@ -82,6 +83,7 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
       setStartTime(toLocalInput(t.startTime));
       setEndTime(toLocalInput(t.endTime));
       setMaxScore(String(t.maxScore));
+      setDurationMinutes(String(t.durationMinutes));
       setAttachments(
         t.attachments.map((a) => ({
           fileStorageKey: a.fileStorageKey!,
@@ -109,6 +111,10 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
     if (!Number.isFinite(score) || score <= 0) {
       return handleActionErrors(['Điểm tối đa phải lớn hơn 0']);
     }
+    const duration = Number(durationMinutes);
+    if (!Number.isInteger(duration) || duration < 1 || duration > 1440) {
+      return handleActionErrors(['Thời gian làm bài phải từ 1 đến 1440 phút']);
+    }
 
     const payload = {
       title: title.trim(),
@@ -116,6 +122,7 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
       startTime: toIso(startTime),
       endTime: toIso(endTime),
       maxScore: score,
+      durationMinutes: duration,
       attachments,
     };
 
@@ -214,20 +221,40 @@ export default function TestFormModal({ open, onOpenChange, courseId, testId, on
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="test-max" className="block">
-                Điểm tối đa
-              </Label>
-              <Input
-                id="test-max"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max="999.99"
-                value={maxScore}
-                onChange={(e) => setMaxScore(e.target.value)}
-                className="w-32"
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="test-max" className="block">
+                  Điểm tối đa
+                </Label>
+                <Input
+                  id="test-max"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="999.99"
+                  value={maxScore}
+                  onChange={(e) => setMaxScore(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="test-duration" className="block">
+                  Thời gian làm bài (phút)
+                </Label>
+                <Input
+                  id="test-duration"
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="1440"
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(e.target.value)}
+                  className="w-32"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Đếm từ lúc học sinh bấm Bắt đầu; hết giờ tự động nộp.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
