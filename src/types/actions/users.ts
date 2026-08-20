@@ -1,6 +1,8 @@
 import type { Gender, ListMeta, Role, UserRow, UserStatus } from '@/types/auth';
 
 export interface IListUsersParams {
+  /** Tìm gộp (OR): email, họ tên, trường, SĐT phụ huynh. */
+  q?: string;
   email?: string;
   fullName?: string;
   gender?: Gender;

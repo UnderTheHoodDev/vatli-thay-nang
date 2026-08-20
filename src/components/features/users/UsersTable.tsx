@@ -18,6 +18,9 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
 import DeleteUserButton from './DeleteUserButton';
 import EditUserDialog from './EditUserDialog';
 import { setUserStatusAction } from '@/actions/v1/users/set-user-status';
@@ -114,6 +117,20 @@ function activationAction(u: UserRow): ActivationAction {
   return { icon: Mail, label: 'Gửi mail kích hoạt', variant: 'default', sentBefore: false };
 }
 
+/** Lọc gắn thẳng vào header cột (giới tính / vai trò / lớp / trạng thái). */
+export interface UsersHeaderFilters {
+  gender: HeaderFilter;
+  role: HeaderFilter;
+  status: HeaderFilter;
+  classId: HeaderFilter;
+}
+
+interface HeaderFilter {
+  value: string;
+  options: ColumnFilterOption[];
+  onChange: (value: string) => void;
+}
+
 interface Props {
   rows: UserRow[];
   provinces: Province[];
@@ -121,6 +138,8 @@ interface Props {
   selectedIds?: Set<number>;
   onToggleRow?: (id: number, checked: boolean) => void;
   onToggleAll?: (ids: number[], checked: boolean) => void;
+  /** Không truyền = header tĩnh (dùng ở ngữ cảnh không có URL filter). */
+  headerFilters?: UsersHeaderFilters;
 }
 
 export default function UsersTable({
@@ -130,6 +149,7 @@ export default function UsersTable({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  headerFilters,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -183,14 +203,30 @@ export default function UsersTable({
           <TableHead className="w-14">ID</TableHead>
           <TableHead className="min-w-45">Email</TableHead>
           <TableHead className="min-w-35">Họ và tên</TableHead>
-          <TableHead>Giới tính</TableHead>
+          {headerFilters ? (
+            <ColumnFilterHead label="Giới tính" {...headerFilters.gender} />
+          ) : (
+            <TableHead>Giới tính</TableHead>
+          )}
           <TableHead className="min-w-22.5">Ngày sinh</TableHead>
           <TableHead>Tỉnh</TableHead>
           <TableHead className="min-w-30">Trường</TableHead>
           <TableHead>SĐT phụ huynh</TableHead>
-          <TableHead>Vai trò</TableHead>
-          <TableHead className="min-w-30">Lớp</TableHead>
-          <TableHead>Trạng thái</TableHead>
+          {headerFilters ? (
+            <ColumnFilterHead label="Vai trò" {...headerFilters.role} />
+          ) : (
+            <TableHead>Vai trò</TableHead>
+          )}
+          {headerFilters ? (
+            <ColumnFilterHead label="Lớp" className="min-w-30" {...headerFilters.classId} />
+          ) : (
+            <TableHead className="min-w-30">Lớp</TableHead>
+          )}
+          {headerFilters ? (
+            <ColumnFilterHead label="Trạng thái" {...headerFilters.status} />
+          ) : (
+            <TableHead>Trạng thái</TableHead>
+          )}
           <TableHead className="min-w-40">Mail kích hoạt</TableHead>
           <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
         </TableRow>
