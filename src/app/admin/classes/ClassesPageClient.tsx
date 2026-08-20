@@ -1,17 +1,15 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Suspense, use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   Pencil,
   Plus,
-  Search,
   School,
   Trash2,
   Users as UsersIcon,
   Wallet,
-  X,
   CheckCircle2,
   Lock,
 } from 'lucide-react';
@@ -52,6 +50,11 @@ import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import AdvancedFiltersButton from '@/components/app/table-filters/AdvancedFiltersButton';
+import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
+import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
@@ -63,13 +66,14 @@ import type { ClassRow } from '@/types/class-management';
 import type { ListClassesResponse } from '@/actions/v1/classes/list-classes';
 
 export interface UrlState {
-  name: string;
-  code: string;
+  /** Tìm gộp: tên lớp, mã lớp. */
+  q: string;
   status: string;
   createdFrom: string;
   createdTo: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
@@ -83,19 +87,22 @@ const CLASS_STATUS_OPTIONS = [
   { value: 'CLOSED', label: 'Đã đóng' },
 ] as const;
 
+const DEFAULTS: UrlState = {
+  q: '',
+  status: ALL_VALUE,
+  createdFrom: '',
+  createdTo: '',
+  page: 1,
+  pageSize: 20,
+};
+
 const STATS_GRID = 'grid-cols-2 lg:grid-cols-4';
 const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-24', 'w-10', 'w-10', 'w-24', 'w-28', 'w-20'];
 
-function buildUrlParams(state: UrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (state.name) sp.set('name', state.name);
-  if (state.code) sp.set('code', state.code);
-  if (state.status && state.status !== ALL_VALUE) sp.set('status', state.status);
-  if (state.createdFrom) sp.set('createdFrom', state.createdFrom);
-  if (state.createdTo) sp.set('createdTo', state.createdTo);
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
-  return sp;
+/** Lọc trạng thái gắn thẳng vào header cột. */
+interface StatusHeaderFilter {
+  value: string;
+  onChange: (value: string) => void;
 }
 
 function ClassesStatsSection({ promise }: { promise: Promise<ListClassesResponse> }) {
@@ -135,7 +142,7 @@ function ClassesResultSummary({
   );
 }
 
-function ClassesTableHead() {
+function ClassesTableHead({ statusFilter }: { statusFilter: StatusHeaderFilter }) {
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -145,17 +152,22 @@ function ClassesTableHead() {
         <TableHead className="w-32 text-center">Số học sinh</TableHead>
         <TableHead className="w-28 text-center">Số buổi học</TableHead>
         <TableHead className="w-32">Ngày tạo</TableHead>
-        <TableHead className="w-36">Trạng thái</TableHead>
+        <ColumnFilterHead
+          label="Trạng thái"
+          className="w-36"
+          options={[...CLASS_STATUS_OPTIONS]}
+          {...statusFilter}
+        />
         <TableHead className="w-32 text-right">Hành động</TableHead>
       </TableRow>
     </TableHeader>
   );
 }
 
-function ClassesTableFallback() {
+function ClassesTableFallback({ statusFilter }: { statusFilter: StatusHeaderFilter }) {
   return (
     <Table>
-      <ClassesTableHead />
+      <ClassesTableHead statusFilter={statusFilter} />
       <TableBody>
         <TableSkeleton columnWidths={SKELETON_COLUMNS} />
       </TableBody>
@@ -166,12 +178,14 @@ function ClassesTableFallback() {
 function ClassesTableSection({
   promise,
   isPending,
+  statusFilter,
   onCreate,
   onEdit,
   onDelete,
 }: {
   promise: Promise<ListClassesResponse>;
   isPending: boolean;
+  statusFilter: StatusHeaderFilter;
   onCreate: () => void;
   onEdit: (row: ClassRow) => void;
   onDelete: (row: ClassRow) => void;
@@ -201,7 +215,7 @@ function ClassesTableSection({
   return (
     <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
       <Table>
-        <ClassesTableHead />
+        <ClassesTableHead statusFilter={statusFilter} />
         <TableBody>
           {rows.map((row) => (
             <TableRow
@@ -285,49 +299,11 @@ function ClassesPaginationSection({
 
 export default function ClassesPageClient({ urlState, classesPromise, allClasses }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassRow | null>(null);
   const [deletingClass, setDeletingClass] = useState<ClassRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  const [searchName, setSearchName] = useState(urlState.name);
-  const [searchCode, setSearchCode] = useState(urlState.code);
-  const [searchStatus, setSearchStatus] = useState(urlState.status);
-  const [searchCreatedFrom, setSearchCreatedFrom] = useState(urlState.createdFrom);
-  const [searchCreatedTo, setSearchCreatedTo] = useState(urlState.createdTo);
-
-  const updateUrl = useCallback(
-    (next: Partial<UrlState>) => {
-      const params = buildUrlParams({ ...urlState, ...next });
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
-  const handleSearch = () => {
-    updateUrl({
-      name: searchName,
-      code: searchCode,
-      status: searchStatus,
-      createdFrom: searchCreatedFrom,
-      createdTo: searchCreatedTo,
-      page: 1,
-    });
-  };
-
-  const handleResetFilters = () => {
-    setSearchName('');
-    setSearchCode('');
-    setSearchStatus(ALL_VALUE);
-    setSearchCreatedFrom('');
-    setSearchCreatedTo('');
-    updateUrl({ name: '', code: '', status: ALL_VALUE, createdFrom: '', createdTo: '', page: 1 });
-  };
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const confirmDelete = async () => {
     if (!deletingClass) return;
@@ -343,6 +319,23 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
 
   const { page, pageSize } = urlState;
 
+  // Lọc trạng thái ngay trên header cột thay cho ô select rời.
+  const statusFilter: StatusHeaderFilter = {
+    value: urlState.status,
+    onChange: (v) => filters.setValue('status', v),
+  };
+
+  // Chip cho các lọc không nhìn thấy trực tiếp (q đã hiện trong ô search).
+  const chips: FilterChip[] = [];
+  if (urlState.status !== ALL_VALUE) {
+    const label = CLASS_STATUS_OPTIONS.find((o) => o.value === urlState.status)?.label;
+    chips.push({ key: 'status', label: `Trạng thái: ${label ?? urlState.status}` });
+  }
+  if (urlState.createdFrom) chips.push({ key: 'createdFrom', label: `Từ ${urlState.createdFrom}` });
+  if (urlState.createdTo) chips.push({ key: 'createdTo', label: `Đến ${urlState.createdTo}` });
+
+  const dateFilterCount = (urlState.createdFrom ? 1 : 0) + (urlState.createdTo ? 1 : 0);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -356,118 +349,79 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
 
       <AttendanceExportCard classes={allClasses} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="search-name">Tên lớp</Label>
-              <Input
-                id="search-name"
-                placeholder="Tìm theo tên lớp..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Danh sách lớp học</CardTitle>
+              <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
+                <ClassesResultSummary promise={classesPromise} page={page} pageSize={pageSize} />
+              </Suspense>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="search-code">Mã lớp</Label>
-              <Input
-                id="search-code"
-                placeholder="Tìm theo mã lớp..."
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Trạng thái</Label>
-              <Select value={searchStatus} onValueChange={setSearchStatus}>
-                <SelectTrigger className="cursor-pointer">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Hiển thị</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
+              >
+                <SelectTrigger className="w-24 cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
-                  {CLASS_STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="created-from">Ngày tạo từ</Label>
-              <Input
-                id="created-from"
-                type="date"
-                value={searchCreatedFrom}
-                onChange={(e) => setSearchCreatedFrom(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="created-to">Ngày tạo đến</Label>
-              <Input
-                id="created-to"
-                type="date"
-                value={searchCreatedTo}
-                onChange={(e) => setSearchCreatedTo(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row md:col-span-3 lg:col-span-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResetFilters}
-                className="cursor-pointer"
-              >
-                <X /> Xoá bộ lọc
-              </Button>
-              <Button onClick={handleSearch} className="cursor-pointer">
-                <Search /> Tìm kiếm
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                <Plus /> Tạo lớp
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Danh sách lớp học</CardTitle>
-            <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
-              <ClassesResultSummary promise={classesPromise} page={page} pageSize={pageSize} />
-            </Suspense>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Hiển thị</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
-            >
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              <Plus /> Tạo lớp
-            </Button>
+          {/* Thanh lọc: search gộp gõ-là-lọc + khoảng ngày trong popover + chips. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <TableSearchInput
+              value={filters.value('q')}
+              onChange={(v) => filters.setText('q', v)}
+              placeholder="Tìm theo tên hoặc mã lớp…"
+              isPending={filters.isPending}
+            />
+            <AdvancedFiltersButton activeCount={dateFilterCount}>
+              <div className="space-y-2">
+                <Label htmlFor="created-from">Từ ngày</Label>
+                <Input
+                  id="created-from"
+                  type="date"
+                  value={urlState.createdFrom}
+                  onChange={(e) => filters.setValue('createdFrom', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="created-to">Đến ngày</Label>
+                <Input
+                  id="created-to"
+                  type="date"
+                  value={urlState.createdTo}
+                  onChange={(e) => filters.setValue('createdTo', e.target.value)}
+                />
+              </div>
+            </AdvancedFiltersButton>
+            <FilterChips
+              chips={chips}
+              onRemove={(key) => filters.setValue(key, key === 'status' ? ALL_VALUE : '')}
+              onClearAll={filters.clearAll}
+            />
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <Suspense fallback={<ClassesTableFallback />}>
+          <Suspense fallback={<ClassesTableFallback statusFilter={statusFilter} />}>
             <ClassesTableSection
               promise={classesPromise}
-              isPending={isPending}
+              isPending={filters.isPending}
+              statusFilter={statusFilter}
               onCreate={() => setCreateOpen(true)}
               onEdit={setEditingClass}
               onDelete={setDeletingClass}
@@ -479,7 +433,7 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
             promise={classesPromise}
             page={page}
             pageSize={pageSize}
-            onPageChange={(p) => updateUrl({ page: p })}
+            onPageChange={(p) => filters.setPaging({ page: p })}
           />
         </Suspense>
       </Card>

@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Suspense, use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Archive, BookOpen, CheckCircle2, FileEdit, Plus, Search, Trash2, X } from 'lucide-react';
+import { Archive, BookOpen, CheckCircle2, FileEdit, Plus, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -40,6 +38,12 @@ import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
+import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { handleActionResult } from '@/lib/actions';
@@ -53,27 +57,40 @@ import ScheduleSettingsCard from '@/components/features/schedule-settings/Schedu
 import type { IScheduleSettings } from '@/types/actions/schedule-settings';
 
 export interface UrlState {
-  title: string;
-  code: string;
+  /** Tìm gộp: tiêu đề, mã khóa học. */
+  q: string;
   status: string;
+  instructorId: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
   urlState: UrlState;
   coursesPromise: Promise<ListCoursesResponse>;
   scheduleSettings: IScheduleSettings | null;
+  instructorOptions: ColumnFilterOption[];
 }
 
-function buildUrlParams(state: UrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (state.title) sp.set('title', state.title);
-  if (state.code) sp.set('code', state.code);
-  if (state.status && state.status !== ALL_VALUE) sp.set('status', state.status);
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
-  return sp;
+const DEFAULTS: UrlState = {
+  q: '',
+  status: ALL_VALUE,
+  instructorId: ALL_VALUE,
+  page: 1,
+  pageSize: 20,
+};
+
+/** Lọc gắn thẳng vào header cột (giảng viên / trạng thái). */
+interface CoursesHeaderFilters {
+  status: HeaderFilter;
+  instructorId: HeaderFilter;
+}
+
+interface HeaderFilter {
+  value: string;
+  options: ColumnFilterOption[];
+  onChange: (value: string) => void;
 }
 
 const SKELETON_COLUMNS = [
@@ -129,7 +146,7 @@ function CoursesResultSummary({
   );
 }
 
-function CoursesTableHead() {
+function CoursesTableHead({ headerFilters }: { headerFilters: CoursesHeaderFilters }) {
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -137,8 +154,8 @@ function CoursesTableHead() {
         <TableHead className="w-20">Ảnh</TableHead>
         <TableHead className="min-w-50">Tiêu đề</TableHead>
         <TableHead className="w-24">Mã</TableHead>
-        <TableHead>Giảng viên</TableHead>
-        <TableHead className="w-32">Trạng thái</TableHead>
+        <ColumnFilterHead label="Giảng viên" {...headerFilters.instructorId} />
+        <ColumnFilterHead label="Trạng thái" className="w-32" {...headerFilters.status} />
         <TableHead className="w-24 text-center">Nội dung</TableHead>
         <TableHead className="w-20 text-center">Học sinh</TableHead>
         <TableHead className="w-24 text-right">Hành động</TableHead>
@@ -147,11 +164,11 @@ function CoursesTableHead() {
   );
 }
 
-function CoursesTableFallback() {
+function CoursesTableFallback({ headerFilters }: { headerFilters: CoursesHeaderFilters }) {
   return (
     <div className="overflow-x-auto">
       <Table>
-        <CoursesTableHead />
+        <CoursesTableHead headerFilters={headerFilters} />
         <TableBody>
           <TableSkeleton columnWidths={SKELETON_COLUMNS} />
         </TableBody>
@@ -163,11 +180,13 @@ function CoursesTableFallback() {
 function CoursesTableSection({
   promise,
   isPending,
+  headerFilters,
   onCreate,
   onDeleteRow,
 }: {
   promise: Promise<ListCoursesResponse>;
   isPending: boolean;
+  headerFilters: CoursesHeaderFilters;
   onCreate: () => void;
   onDeleteRow: (row: CourseRow) => void;
 }) {
@@ -201,7 +220,7 @@ function CoursesTableSection({
       )}
     >
       <Table>
-        <CoursesTableHead />
+        <CoursesTableHead headerFilters={headerFilters} />
         <TableBody>
           {rows.map((row) => (
             <TableRow
@@ -278,49 +297,17 @@ function CoursesPaginationSection({
   return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
 }
 
-export default function CoursesPageClient({ urlState, coursesPromise, scheduleSettings }: Props) {
+export default function CoursesPageClient({
+  urlState,
+  coursesPromise,
+  scheduleSettings,
+  instructorOptions,
+}: Props) {
   const router = useRouter();
-  const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState<CourseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  const [searchTitle, setSearchTitle] = useState(urlState.title);
-  const [searchCode, setSearchCode] = useState(urlState.code);
-  const [searchStatus, setSearchStatus] = useState(urlState.status);
-
-  const updateUrl = useCallback(
-    (next: Partial<UrlState>) => {
-      const params = buildUrlParams({ ...urlState, ...next });
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
-  const handleSearch = () => {
-    updateUrl({
-      title: searchTitle,
-      code: searchCode,
-      status: searchStatus,
-      page: 1,
-    });
-  };
-
-  const handleResetFilters = () => {
-    setSearchTitle('');
-    setSearchCode('');
-    setSearchStatus(ALL_VALUE);
-    updateUrl({
-      title: '',
-      code: '',
-      status: ALL_VALUE,
-      page: 1,
-    });
-  };
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const confirmDelete = async () => {
     if (!deletingCourse) return;
@@ -336,6 +323,31 @@ export default function CoursesPageClient({ urlState, coursesPromise, scheduleSe
 
   const { page, pageSize } = urlState;
 
+  // Lọc theo cột — dropdown ngay trên header bảng.
+  const headerFilters: CoursesHeaderFilters = {
+    status: {
+      value: urlState.status,
+      options: [...COURSE_STATUS_OPTIONS],
+      onChange: (v) => filters.setValue('status', v),
+    },
+    instructorId: {
+      value: urlState.instructorId,
+      options: instructorOptions,
+      onChange: (v) => filters.setValue('instructorId', v),
+    },
+  };
+
+  // Chip cho các lọc không nhìn thấy trực tiếp (q đã hiện trong ô search).
+  const chips: FilterChip[] = [];
+  if (urlState.status !== ALL_VALUE) {
+    const label = COURSE_STATUS_OPTIONS.find((o) => o.value === urlState.status)?.label;
+    chips.push({ key: 'status', label: `Trạng thái: ${label ?? urlState.status}` });
+  }
+  if (urlState.instructorId !== ALL_VALUE) {
+    const label = instructorOptions.find((o) => o.value === urlState.instructorId)?.label;
+    chips.push({ key: 'instructorId', label: `Giảng viên: ${label ?? urlState.instructorId}` });
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -349,100 +361,59 @@ export default function CoursesPageClient({ urlState, coursesPromise, scheduleSe
 
       <ScheduleSettingsCard settings={scheduleSettings} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="search-title">Tên khóa học</Label>
-              <Input
-                id="search-title"
-                placeholder="Tìm theo tên khóa học..."
-                value={searchTitle}
-                onChange={(e) => setSearchTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Danh sách khóa học</CardTitle>
+              <Suspense fallback={<Skeleton className="mt-1 h-4 w-60" />}>
+                <CoursesResultSummary promise={coursesPromise} page={page} pageSize={pageSize} />
+              </Suspense>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="search-code">Mã khóa học</Label>
-              <Input
-                id="search-code"
-                placeholder="Tìm theo mã..."
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Trạng thái</Label>
-              <Select value={searchStatus} onValueChange={setSearchStatus}>
-                <SelectTrigger className="cursor-pointer">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Hiển thị</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
+              >
+                <SelectTrigger className="w-24 cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
-                  {COURSE_STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row lg:col-span-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResetFilters}
-                className="cursor-pointer"
-              >
-                <X /> Xoá bộ lọc
-              </Button>
-              <Button onClick={handleSearch} className="cursor-pointer">
-                <Search /> Tìm kiếm
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                <Plus /> Tạo khóa học
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Danh sách khóa học</CardTitle>
-            <Suspense fallback={<Skeleton className="mt-1 h-4 w-60" />}>
-              <CoursesResultSummary promise={coursesPromise} page={page} pageSize={pageSize} />
-            </Suspense>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Hiển thị</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
-            >
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              <Plus /> Tạo khóa học
-            </Button>
+          {/* Thanh lọc: search gộp gõ-là-lọc + chips (trạng thái/giảng viên lọc trên cột). */}
+          <div className="flex flex-wrap items-center gap-2">
+            <TableSearchInput
+              value={filters.value('q')}
+              onChange={(v) => filters.setText('q', v)}
+              placeholder="Tìm theo tiêu đề hoặc mã khóa học…"
+              isPending={filters.isPending}
+            />
+            <FilterChips
+              chips={chips}
+              onRemove={(key) => filters.setValue(key, ALL_VALUE)}
+              onClearAll={filters.clearAll}
+            />
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <Suspense fallback={<CoursesTableFallback />}>
+          <Suspense fallback={<CoursesTableFallback headerFilters={headerFilters} />}>
             <CoursesTableSection
               promise={coursesPromise}
-              isPending={isPending}
+              isPending={filters.isPending}
+              headerFilters={headerFilters}
               onCreate={() => setCreateOpen(true)}
               onDeleteRow={setDeletingCourse}
             />
@@ -453,7 +424,7 @@ export default function CoursesPageClient({ urlState, coursesPromise, scheduleSe
             promise={coursesPromise}
             page={page}
             pageSize={pageSize}
-            onPageChange={(p) => updateUrl({ page: p })}
+            onPageChange={(p) => filters.setPaging({ page: p })}
           />
         </Suspense>
       </Card>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -21,15 +21,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import MonthPicker from '@/components/features/tuition/MonthPicker';
 import TuitionExportDialog from '@/components/features/tuition/TuitionExportDialog';
 import TuitionImportDialog from '@/components/features/tuition/TuitionImportDialog';
 import TuitionSaveAllButton from '@/components/features/tuition/TuitionSaveAllButton';
-import TuitionTable, { TuitionTableFallback } from '@/components/features/tuition/TuitionTable';
+import TuitionTable, {
+  TuitionTableFallback,
+  type TuitionStatusFilter,
+} from '@/components/features/tuition/TuitionTable';
 import TuitionDraftsProvider, {
   useTuitionDrafts,
 } from '@/components/features/tuition/TuitionDraftsProvider';
+import { ALL_VALUE } from '@/lib/constants';
 import { formatAmountVnd } from '@/lib/format';
+import { TUITION_STATUS_LABEL } from '@/types/tuition';
 import type { ClassDetail } from '@/types/class-management';
 import type { ListTuitionResponse } from '@/actions/v1/tuition/list-tuition';
 
@@ -46,6 +52,11 @@ interface Props {
 }
 
 const STATS_GRID = 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5';
+
+const TUITION_STATUS_OPTIONS = Object.entries(TUITION_STATUS_LABEL).map(([value, label]) => ({
+  value,
+  label,
+}));
 
 /** year/month LUÔN có mặt: URL chia sẻ được và không đổi nghĩa khi sang tháng mới. */
 function buildUrlParams(state: TuitionUrlState): URLSearchParams {
@@ -112,18 +123,48 @@ function TuitionTableSection({
   promise,
   isPending,
   onRowSaved,
+  q,
+  statusFilter,
 }: {
   classId: number;
   promise: Promise<ListTuitionResponse>;
   isPending: boolean;
   onRowSaved: (rowId: number) => void;
+  q: string;
+  statusFilter: TuitionStatusFilter;
 }) {
   const { data: rows, errors } = use(promise);
   useEffect(() => {
     errors.forEach((e) => toast.error(e));
   }, [errors]);
+
+  // Lọc THUẦN client-side trên mảng rows render — không đụng URL/guarded/remount
+  // để nháp chưa lưu (keyed theo row.id trong provider) sống sót qua lọc.
+  const needle = q.trim().toLowerCase();
+  const isFiltered = needle !== '' || statusFilter.value !== ALL_VALUE;
+  const filteredRows = useMemo(
+    () =>
+      isFiltered
+        ? rows.filter(
+            (r) =>
+              (!needle ||
+                (r.fullName ?? '').toLowerCase().includes(needle) ||
+                r.email.toLowerCase().includes(needle)) &&
+              (statusFilter.value === ALL_VALUE || r.status === statusFilter.value),
+          )
+        : rows,
+    [rows, needle, statusFilter.value, isFiltered],
+  );
+
   return (
-    <TuitionTable classId={classId} rows={rows} isPending={isPending} onRowSaved={onRowSaved} />
+    <TuitionTable
+      classId={classId}
+      rows={filteredRows}
+      isPending={isPending}
+      onRowSaved={onRowSaved}
+      statusFilter={statusFilter}
+      isFiltered={isFiltered}
+    />
   );
 }
 
@@ -134,6 +175,9 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
   const [isPending, startTransition] = useTransition();
   const { dirtyCount, discard, discardAll } = useTuitionDrafts();
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
+  // Bộ lọc thuần client-side — cố ý KHÔNG qua URL/guarded để không mất nháp chưa lưu.
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState<string>(ALL_VALUE);
 
   // Chặn đóng tab / F5 / gõ URL khi còn dòng chưa lưu. KHÔNG bắt được <Link>
   // trong sidebar — Next 16 chưa có hook chặn điều hướng nội bộ.
@@ -254,28 +298,35 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
       </Card>
 
       <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <CardTitle>Bảng học phí {monthLabel}</CardTitle>
-            <Suspense fallback={<Skeleton className="mt-1 h-4 w-40" />}>
-              <TuitionResultSummary promise={tuitionPromise} />
-            </Suspense>
-          </div>
-          {dirtyCount > 0 && (
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="flex items-center gap-1.5 text-xs text-amber-700">
-                <TriangleAlert className="size-3.5" />
-                {dirtyCount} dòng chưa lưu. Đổi tháng hoặc tính lại sẽ mất các thay đổi này.
-              </p>
-              <Suspense fallback={null}>
-                <TuitionSaveAllButton
-                  classId={classDetail.id}
-                  promise={tuitionPromise}
-                  onSaved={handleAllSaved}
-                />
+        <CardHeader className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <CardTitle>Bảng học phí {monthLabel}</CardTitle>
+              <Suspense fallback={<Skeleton className="mt-1 h-4 w-40" />}>
+                <TuitionResultSummary promise={tuitionPromise} />
               </Suspense>
             </div>
-          )}
+            {dirtyCount > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="flex items-center gap-1.5 text-xs text-amber-700">
+                  <TriangleAlert className="size-3.5" />
+                  {dirtyCount} dòng chưa lưu. Đổi tháng hoặc tính lại sẽ mất các thay đổi này.
+                </p>
+                <Suspense fallback={null}>
+                  <TuitionSaveAllButton
+                    classId={classDetail.id}
+                    promise={tuitionPromise}
+                    onSaved={handleAllSaved}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </div>
+          <TableSearchInput
+            value={q}
+            onChange={setQ}
+            placeholder="Tìm theo họ tên hoặc email học sinh…"
+          />
         </CardHeader>
         <CardContent className="px-3 pb-4">
           <Suspense fallback={<TuitionTableFallback />}>
@@ -284,6 +335,12 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
               promise={tuitionPromise}
               isPending={isPending}
               onRowSaved={handleRowSaved}
+              q={q}
+              statusFilter={{
+                value: status,
+                options: TUITION_STATUS_OPTIONS,
+                onChange: setStatus,
+              }}
             />
           </Suspense>
         </CardContent>

@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Suspense, use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { CalendarClock, Search, X } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,6 +30,11 @@ import PageHeader from '@/components/app/PageHeader';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import AdvancedFiltersButton from '@/components/app/table-filters/AdvancedFiltersButton';
+import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
+import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -40,11 +45,14 @@ import type { ClassRow } from '@/types/class-management';
 import type { ListAllClassSessionsResponse } from '@/actions/v1/class-sessions/list-all-class-sessions';
 
 export interface UrlState {
+  /** Tìm gộp: tiêu đề buổi học. */
+  q: string;
   classCode: string;
   startDate: string;
   endDate: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
@@ -53,14 +61,20 @@ interface Props {
   classes: ClassRow[];
 }
 
-function buildUrlParams(state: UrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (state.classCode) sp.set('classCode', state.classCode);
-  if (state.startDate) sp.set('startDate', state.startDate);
-  if (state.endDate) sp.set('endDate', state.endDate);
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
-  return sp;
+const DEFAULTS: UrlState = {
+  q: '',
+  classCode: '',
+  startDate: '',
+  endDate: '',
+  page: 1,
+  pageSize: 20,
+};
+
+/** Lọc mã lớp gắn thẳng vào header cột. */
+interface ClassCodeHeaderFilter {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
 }
 
 const SKELETON_COLUMNS = ['w-8', 'w-24', 'w-48', 'w-40', 'w-40', 'w-28', 'w-24', 'w-32'];
@@ -85,15 +99,16 @@ function SessionsResultSummary({
   );
 }
 
-function SessionsTableHead() {
+function SessionsTableHead({ classCodeFilter }: { classCodeFilter: ClassCodeHeaderFilter }) {
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
         <TableHead className="w-14">ID</TableHead>
-        <TableHead className="w-32">Mã lớp</TableHead>
+        <ColumnFilterHead label="Mã lớp" className="w-32" {...classCodeFilter} />
         <TableHead>Tiêu đề</TableHead>
         <TableHead className="w-40">Bắt đầu</TableHead>
         <TableHead className="w-40">Kết thúc</TableHead>
+        {/* Trạng thái được suy ra ở client từ giờ bắt đầu/kết thúc — BE không lọc được. */}
         <TableHead className="w-32">Trạng thái</TableHead>
         <TableHead className="w-24 text-center">Điểm danh</TableHead>
         <TableHead className="w-48">Hành động</TableHead>
@@ -102,10 +117,10 @@ function SessionsTableHead() {
   );
 }
 
-function SessionsTableFallback() {
+function SessionsTableFallback({ classCodeFilter }: { classCodeFilter: ClassCodeHeaderFilter }) {
   return (
     <Table>
-      <SessionsTableHead />
+      <SessionsTableHead classCodeFilter={classCodeFilter} />
       <TableBody>
         <TableSkeleton columnWidths={SKELETON_COLUMNS} />
       </TableBody>
@@ -116,9 +131,11 @@ function SessionsTableFallback() {
 function SessionsTableSection({
   promise,
   isPending,
+  classCodeFilter,
 }: {
   promise: Promise<ListAllClassSessionsResponse>;
   isPending: boolean;
+  classCodeFilter: ClassCodeHeaderFilter;
 }) {
   const router = useRouter();
   const { data: rows, errors } = use(promise);
@@ -140,7 +157,7 @@ function SessionsTableSection({
   return (
     <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
       <Table>
-        <SessionsTableHead />
+        <SessionsTableHead classCodeFilter={classCodeFilter} />
         <TableBody>
           {rows.map((row) => {
             const statusInfo =
@@ -226,141 +243,105 @@ function SessionsPaginationSection({
 }
 
 export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, classes }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
-
-  const [searchCode, setSearchCode] = useState(urlState.classCode);
-  const [searchStartDate, setSearchStartDate] = useState(urlState.startDate);
-  const [searchEndDate, setSearchEndDate] = useState(urlState.endDate);
-
-  const updateUrl = useCallback(
-    (next: Partial<UrlState>) => {
-      const params = buildUrlParams({ ...urlState, ...next });
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
-  const handleSearch = () => {
-    updateUrl({
-      classCode: searchCode,
-      startDate: searchStartDate,
-      endDate: searchEndDate,
-      page: 1,
-    });
-  };
-
-  const handleResetFilters = () => {
-    setSearchCode('');
-    setSearchStartDate('');
-    setSearchEndDate('');
-    updateUrl({ classCode: '', startDate: '', endDate: '', page: 1 });
-  };
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const { page, pageSize } = urlState;
+
+  // Lọc mã lớp ngay trên header cột; ALL_VALUE của dropdown quy về '' vì URL
+  // dùng chuỗi rỗng làm "không lọc".
+  const classCodeFilter: ClassCodeHeaderFilter = {
+    value: urlState.classCode,
+    options: classes.map((c) => ({ value: c.code, label: `${c.code} — ${c.name}` })),
+    onChange: (v) => filters.setValue('classCode', v === ALL_VALUE ? '' : v),
+  };
+
+  // Chip cho các lọc không nhìn thấy trực tiếp (q đã hiện trong ô search).
+  const chips: FilterChip[] = [];
+  if (urlState.classCode) chips.push({ key: 'classCode', label: `Lớp: ${urlState.classCode}` });
+  if (urlState.startDate) chips.push({ key: 'startDate', label: `Từ ${urlState.startDate}` });
+  if (urlState.endDate) chips.push({ key: 'endDate', label: `Đến ${urlState.endDate}` });
+
+  const dateFilterCount = (urlState.startDate ? 1 : 0) + (urlState.endDate ? 1 : 0);
 
   return (
     <div className="space-y-6">
       <PageHeader title="Danh sách buổi học" description="Tổng hợp tất cả buổi học trên mọi lớp." />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label>Mã lớp</Label>
+      <Card className="gap-0 pb-0">
+        <CardHeader className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Kết quả</CardTitle>
+              <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
+                <SessionsResultSummary promise={sessionsPromise} page={page} pageSize={pageSize} />
+              </Suspense>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Hiển thị</span>
               <Select
-                value={searchCode || ALL_VALUE}
-                onValueChange={(v) => setSearchCode(v === ALL_VALUE ? '' : v)}
+                value={String(pageSize)}
+                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
               >
-                <SelectTrigger className="w-full cursor-pointer">
-                  <SelectValue placeholder="Tất cả lớp" />
+                <SelectTrigger className="w-24 cursor-pointer">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_VALUE}>Tất cả</SelectItem>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.code}>
-                      <span className="font-mono text-xs">{c.code}</span> — {c.name}
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="search-start">Từ ngày</Label>
-              <Input
-                id="search-start"
-                type="date"
-                value={searchStartDate}
-                onChange={(e) => setSearchStartDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="search-end">Đến ngày</Label>
-              <Input
-                id="search-end"
-                type="date"
-                value={searchEndDate}
-                onChange={(e) => setSearchEndDate(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:col-span-2 sm:flex-row md:col-span-3 lg:col-span-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResetFilters}
-                className="cursor-pointer"
-              >
-                <X /> Xoá bộ lọc
-              </Button>
-              <Button onClick={handleSearch} className="cursor-pointer">
-                <Search /> Tìm kiếm
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                Tạo buổi học
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Kết quả</CardTitle>
-            <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
-              <SessionsResultSummary promise={sessionsPromise} page={page} pageSize={pageSize} />
-            </Suspense>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Hiển thị</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
-            >
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              Tạo buổi học
-            </Button>
+          {/* Thanh lọc: search gộp gõ-là-lọc + khoảng ngày trong popover + chips. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <TableSearchInput
+              value={filters.value('q')}
+              onChange={(v) => filters.setText('q', v)}
+              placeholder="Tìm theo tiêu đề buổi học…"
+              isPending={filters.isPending}
+            />
+            <AdvancedFiltersButton activeCount={dateFilterCount}>
+              <div className="space-y-2">
+                <Label htmlFor="search-start">Từ ngày</Label>
+                <Input
+                  id="search-start"
+                  type="date"
+                  value={urlState.startDate}
+                  onChange={(e) => filters.setValue('startDate', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="search-end">Đến ngày</Label>
+                <Input
+                  id="search-end"
+                  type="date"
+                  value={urlState.endDate}
+                  onChange={(e) => filters.setValue('endDate', e.target.value)}
+                />
+              </div>
+            </AdvancedFiltersButton>
+            <FilterChips
+              chips={chips}
+              onRemove={(key) => filters.setValue(key, '')}
+              onClearAll={filters.clearAll}
+            />
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <Suspense fallback={<SessionsTableFallback />}>
-            <SessionsTableSection promise={sessionsPromise} isPending={isPending} />
+          <Suspense fallback={<SessionsTableFallback classCodeFilter={classCodeFilter} />}>
+            <SessionsTableSection
+              promise={sessionsPromise}
+              isPending={filters.isPending}
+              classCodeFilter={classCodeFilter}
+            />
           </Suspense>
         </CardContent>
         <Suspense fallback={null}>
@@ -368,7 +349,7 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
             promise={sessionsPromise}
             page={page}
             pageSize={pageSize}
-            onPageChange={(p) => updateUrl({ page: p })}
+            onPageChange={(p) => filters.setPaging({ page: p })}
           />
         </Suspense>
       </Card>
