@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,14 +38,20 @@ export default function DeleteUserButton({ userId, email }: Props) {
 
   return (
     <AlertDialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
-      <Button
-        size="sm"
-        variant="destructive"
-        className="cursor-pointer"
-        onClick={() => setOpen(true)}
-      >
-        <Trash2 /> Xoá
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon-sm"
+            variant="destructive"
+            className="cursor-pointer"
+            aria-label="Xoá tài khoản"
+            onClick={() => setOpen(true)}
+          >
+            <Trash2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Xoá tài khoản</TooltipContent>
+      </Tooltip>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Xoá tài khoản {email}?</AlertDialogTitle>
