@@ -269,44 +269,28 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
       <PageHeader title="Danh sách buổi học" description="Tổng hợp tất cả buổi học trên mọi lớp." />
 
       <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          {/* Hàng 1: tiêu đề + hành động chính. Hàng 2: toolbar lọc, "Hiển thị" sát phải. */}
+          <div className="flex w-full flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle>Kết quả</CardTitle>
               <Suspense fallback={<Skeleton className="mt-1 h-4 w-56" />}>
                 <SessionsResultSummary promise={sessionsPromise} page={page} pageSize={pageSize} />
               </Suspense>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">Hiển thị</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
-              >
-                <SelectTrigger className="w-24 cursor-pointer">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-                Tạo buổi học
-              </Button>
-            </div>
+            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+              Tạo buổi học
+            </Button>
           </div>
 
           {/* Thanh lọc: search gộp gõ-là-lọc + khoảng ngày trong popover + chips. */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2">
             <TableSearchInput
               value={filters.value('q')}
               onChange={(v) => filters.setText('q', v)}
               placeholder="Tìm theo tiêu đề buổi học…"
               isPending={filters.isPending}
+              className="min-w-60 flex-1 sm:max-w-md"
             />
             <AdvancedFiltersButton activeCount={dateFilterCount}>
               <div className="space-y-2">
@@ -333,6 +317,24 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
               onRemove={(key) => filters.setValue(key, '')}
               onClearAll={filters.clearAll}
             />
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <span className="text-muted-foreground text-sm">Hiển thị</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
+              >
+                <SelectTrigger className="w-20 cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
