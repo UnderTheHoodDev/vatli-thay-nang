@@ -35,6 +35,10 @@ import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
 import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+} from '@/components/app/table-filters/sticky';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
@@ -111,7 +115,7 @@ function SessionsTableHead({ classCodeFilter }: { classCodeFilter: ClassCodeHead
         {/* Trạng thái được suy ra ở client từ giờ bắt đầu/kết thúc — BE không lọc được. */}
         <TableHead className="w-32">Trạng thái</TableHead>
         <TableHead className="w-24 text-center">Điểm danh</TableHead>
-        <TableHead className="w-48">Hành động</TableHead>
+        <TableHead className={`w-48 ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -170,7 +174,7 @@ function SessionsTableSection({
                     `/admin/classes/${row.classId}/class-sessions/${row.id}?from=sessions-list`,
                   )
                 }
-                className="hover:bg-muted cursor-pointer transition-colors"
+                className="group/r hover:bg-muted cursor-pointer transition-colors"
               >
                 <TableCell className="text-muted-foreground">{row.id}</TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
@@ -208,7 +212,7 @@ function SessionsTableSection({
                     {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
                   </span>
                 </TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
+                <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                   <AttendanceToggle
                     classSessionId={row.id}
                     startTime={row.startTime}

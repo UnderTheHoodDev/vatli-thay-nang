@@ -4,6 +4,15 @@ import { useMemo, useState } from 'react';
 import { CheckCircle2, ClipboardX, MoreHorizontal, X } from 'lucide-react';
 import DataPagination from '@/components/app/DataPagination';
 import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+  STICKY_L0_CELL,
+  STICKY_L0_HEAD,
+  STICKY_L10_CELL,
+  STICKY_L10_HEAD,
+  STICKY_ROW,
+} from '@/components/app/table-filters/sticky';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
@@ -249,14 +258,16 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="w-10 text-center">
+              <TableHead className={`w-10 text-center ${STICKY_L0_HEAD}`}>
                 <Checkbox
                   checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                   onCheckedChange={toggleAll}
                   aria-label="Chọn tất cả"
                 />
               </TableHead>
-              <TableHead className="min-w-45">Họ tên học sinh</TableHead>
+              <TableHead className={`w-52 min-w-52 ${STICKY_L10_HEAD} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}>
+                Họ tên học sinh
+              </TableHead>
               <ColumnFilterHead
                 label="Xin nghỉ"
                 className="w-25 text-center"
@@ -272,7 +283,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
               {sessions.map((s, idx) => (
                 <SessionColumnHead key={s.id} idx={idx} />
               ))}
-              <TableHead className="w-16 text-center">Hành động</TableHead>
+              <TableHead className={`w-16 text-center ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -289,17 +300,22 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                 <TableRow
                   key={row.studentId}
                   data-state={selectedIds.has(row.studentId) ? 'selected' : undefined}
-                  className="cursor-pointer"
+                  className={`cursor-pointer ${STICKY_ROW}`}
                   onClick={() => toggleOne(row.studentId)}
                 >
-                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className={`text-center ${STICKY_L0_CELL}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       checked={selectedIds.has(row.studentId)}
                       onCheckedChange={() => toggleOne(row.studentId)}
                       aria-label={`Chọn ${row.fullName ?? row.email}`}
                     />
                   </TableCell>
-                  <TableCell className="text-foreground font-medium">
+                  <TableCell
+                    className={`text-foreground max-w-52 truncate font-medium ${STICKY_L10_CELL} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+                  >
                     {row.fullName ?? row.email}
                     {row.fullName && (
                       <div className="text-muted-foreground text-xs">{row.email}</div>
@@ -327,7 +343,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                     const log = row.logsBySession.get(s.id);
                     return <SessionColumnCells key={s.id} log={log} />;
                   })}
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                     <div className="flex items-center justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

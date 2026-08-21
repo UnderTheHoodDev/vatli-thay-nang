@@ -44,6 +44,10 @@ import ColumnFilterHead, {
 import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+} from '@/components/app/table-filters/sticky';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { handleActionResult } from '@/lib/actions';
@@ -158,7 +162,7 @@ function CoursesTableHead({ headerFilters }: { headerFilters: CoursesHeaderFilte
         <ColumnFilterHead label="Trạng thái" className="w-32" {...headerFilters.status} />
         <TableHead className="w-24 text-center">Nội dung</TableHead>
         <TableHead className="w-20 text-center">Học sinh</TableHead>
-        <TableHead className="w-24 text-right">Hành động</TableHead>
+        <TableHead className={`w-24 text-right ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -226,7 +230,7 @@ function CoursesTableSection({
             <TableRow
               key={row.id}
               onClick={() => router.push(`/admin/courses/${row.id}`)}
-              className="hover:bg-muted cursor-pointer transition-colors"
+              className="group/r hover:bg-muted cursor-pointer transition-colors"
             >
               <TableCell className="text-muted-foreground">{row.id}</TableCell>
               <TableCell>
@@ -258,7 +262,7 @@ function CoursesTableSection({
               </TableCell>
               <TableCell className="text-center font-medium">{row.nodeCount ?? 0}</TableCell>
               <TableCell className="text-center font-medium">{row.enrollmentCount ?? 0}</TableCell>
-              <TableCell onClick={(e) => e.stopPropagation()}>
+              <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                 <div className="flex items-center justify-end gap-1">
                   {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
                     <Button

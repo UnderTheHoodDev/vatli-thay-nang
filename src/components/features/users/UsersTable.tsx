@@ -21,6 +21,17 @@ import TableSkeleton from '@/components/app/TableSkeleton';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+  STICKY_L0_CELL,
+  STICKY_L0_HEAD,
+  STICKY_L10_CELL,
+  STICKY_L10_HEAD,
+  STICKY_L24_CELL,
+  STICKY_L24_HEAD,
+  STICKY_ROW,
+} from '@/components/app/table-filters/sticky';
 import DeleteUserButton from './DeleteUserButton';
 import EditUserDialog from './EditUserDialog';
 import { setUserStatusAction } from '@/actions/v1/users/set-user-status';
@@ -191,7 +202,7 @@ export default function UsersTable({
     <Table>
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead className="w-10">
+          <TableHead className={`w-10 ${STICKY_L0_HEAD}`}>
             {selectable && (
               <Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
@@ -200,8 +211,8 @@ export default function UsersTable({
               />
             )}
           </TableHead>
-          <TableHead className="w-14">ID</TableHead>
-          <TableHead className="min-w-45">Email</TableHead>
+          <TableHead className={`w-14 ${STICKY_L10_HEAD}`}>ID</TableHead>
+          <TableHead className={`w-52 min-w-52 ${STICKY_L24_HEAD}`}>Email</TableHead>
           <TableHead className="min-w-35">Họ và tên</TableHead>
           {headerFilters ? (
             <ColumnFilterHead label="Giới tính" {...headerFilters.gender} />
@@ -228,7 +239,7 @@ export default function UsersTable({
             <TableHead>Trạng thái</TableHead>
           )}
           <TableHead className="min-w-40">Mail kích hoạt</TableHead>
-          <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
+          <TableHead className={`min-w-37.5 text-right ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -239,8 +250,8 @@ export default function UsersTable({
             const action = activationAction(u);
             const Icon = action.icon;
             return (
-              <TableRow key={u.id}>
-                <TableCell>
+              <TableRow key={u.id} className={STICKY_ROW}>
+                <TableCell className={STICKY_L0_CELL}>
                   {selectable && (
                     <Checkbox
                       checked={selectedIds!.has(u.id)}
@@ -249,8 +260,10 @@ export default function UsersTable({
                     />
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{u.id}</TableCell>
-                <TableCell className="text-foreground font-medium">{u.email}</TableCell>
+                <TableCell className={`text-muted-foreground ${STICKY_L10_CELL}`}>{u.id}</TableCell>
+                <TableCell className={`text-foreground max-w-52 truncate font-medium ${STICKY_L24_CELL}`}>
+                  {u.email}
+                </TableCell>
                 <TableCell>{u.fullName ?? '—'}</TableCell>
                 <TableCell>{genderBadge(u.gender)}</TableCell>
                 <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
@@ -273,7 +286,7 @@ export default function UsersTable({
                 </TableCell>
                 <TableCell>{statusBadge(u.status)}</TableCell>
                 <TableCell>{activationEmailCell(u.activationEmailSentAt)}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className={`text-right ${STICKY_ACTION_CELL}`}>
                   <div className="flex flex-wrap items-center justify-end gap-1.5">
                     <Button
                       size="sm"

@@ -55,6 +55,10 @@ import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
 import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+} from '@/components/app/table-filters/sticky';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
@@ -158,7 +162,7 @@ function ClassesTableHead({ statusFilter }: { statusFilter: StatusHeaderFilter }
           options={[...CLASS_STATUS_OPTIONS]}
           {...statusFilter}
         />
-        <TableHead className="w-32 text-right">Hành động</TableHead>
+        <TableHead className={`w-32 text-right ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -221,7 +225,7 @@ function ClassesTableSection({
             <TableRow
               key={row.id}
               onClick={() => router.push(`/admin/classes/${row.id}`)}
-              className="hover:bg-muted cursor-pointer transition-colors"
+              className="group/r hover:bg-muted cursor-pointer transition-colors"
             >
               <TableCell className="text-muted-foreground">{row.id}</TableCell>
               <TableCell className="text-foreground font-medium">{row.name}</TableCell>
@@ -240,7 +244,7 @@ function ClassesTableSection({
                   {row.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã đóng'}
                 </Badge>
               </TableCell>
-              <TableCell onClick={(e) => e.stopPropagation()}>
+              <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                 <div className="flex items-center justify-end gap-1">
                   <Button
                     variant="ghost"
