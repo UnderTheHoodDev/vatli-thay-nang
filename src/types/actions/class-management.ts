@@ -2,6 +2,8 @@ import type { ListMeta } from '@/types/auth';
 import type { ClassRow, ClassStatus, ClassStudentStatus } from '@/types/class-management';
 
 export interface IListClassesParams {
+  /** Tìm gộp (OR): tên lớp, mã lớp. */
+  q?: string;
   name?: string;
   code?: string;
   status?: ClassStatus;
@@ -59,6 +61,8 @@ export interface ClassStudentListStats {
 }
 
 export interface IListClassStudentsParams {
+  /** Tìm gộp (OR): email, họ tên học sinh. */
+  q?: string;
   email?: string;
   fullName?: string;
   status?: ClassStudentStatus;
@@ -104,6 +108,8 @@ export interface ClassSessionListRowWithClass extends ClassSessionListRow {
 }
 
 export interface IListAllClassSessionsParams {
+  /** Tìm gộp: tiêu đề buổi học. */
+  q?: string;
   classCode?: string;
   startDate?: string;
   endDate?: string;

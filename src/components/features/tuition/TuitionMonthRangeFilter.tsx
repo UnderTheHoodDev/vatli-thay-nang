@@ -64,7 +64,7 @@ export default function TuitionMonthRangeFilter({
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-end">
+    <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
       <div className="space-y-2">
         <Label>Từ tháng</Label>
         <MonthPicker

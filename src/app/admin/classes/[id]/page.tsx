@@ -3,10 +3,12 @@ import { listAttendanceSummary } from '@/actions/v1/attendance/list-attendance-s
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listClassStudents } from '@/actions/v1/classes/list-class-students';
 import { listClassSessions } from '@/actions/v1/class-sessions/list-class-sessions';
+import { ALL_VALUE } from '@/lib/constants';
 import ClassDetailPageClient, {
   type ClassDetailTab,
   type ClassDetailUrlState,
 } from './ClassDetailPageClient';
+import type { ClassStudentStatus } from '@/types/class-management';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -16,10 +18,12 @@ interface Props {
 function readUrlState(sp: Record<string, string | undefined>): ClassDetailUrlState {
   const tab: ClassDetailTab =
     sp.tab === 'students' ? 'students' : sp.tab === 'sessions' ? 'sessions' : 'info';
+  // Chỉ nhận giá trị hợp lệ — status lạ trên URL rơi về "tất cả".
+  const status: string = sp.status === 'STUDYING' || sp.status === 'LEFT' ? sp.status : ALL_VALUE;
   return {
     tab,
-    email: sp.email ?? '',
-    fullName: sp.fullName ?? '',
+    q: sp.q ?? '',
+    status,
     page: Number(sp.page) || 1,
     pageSize: Number(sp.pageSize) || 50,
   };
@@ -38,8 +42,9 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
   const studentsPromise =
     urlState.tab === 'students'
       ? listClassStudents(classId, {
-          email: urlState.email || undefined,
-          fullName: urlState.fullName || undefined,
+          q: urlState.q || undefined,
+          status:
+            urlState.status === ALL_VALUE ? undefined : (urlState.status as ClassStudentStatus),
           page: urlState.page,
           pageSize: urlState.pageSize,
         })

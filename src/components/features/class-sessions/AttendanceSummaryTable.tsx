@@ -1,9 +1,20 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardX, MoreHorizontal, Search, X } from 'lucide-react';
+import { CheckCircle2, ClipboardX, MoreHorizontal, X } from 'lucide-react';
 import DataPagination from '@/components/app/DataPagination';
-import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+  STICKY_L0_CELL,
+  STICKY_L0_HEAD,
+  STICKY_L10_CELL,
+  STICKY_L10_HEAD,
+  STICKY_ROW,
+} from '@/components/app/table-filters/sticky';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,7 +32,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -84,10 +94,9 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [bulkDialog, setBulkDialog] = useState<BulkDialogState | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [nameInput, setNameInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [appliedName, setAppliedName] = useState('');
-  const [appliedEmail, setAppliedEmail] = useState('');
+  // Lọc client-side: dữ liệu đã tải trọn buổi học nên gõ là lọc ngay, không cần debounce.
+  const [search, setSearch] = useState('');
+  const [leaveFilter, setLeaveFilter] = useState(ALL_VALUE);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
 
@@ -105,29 +114,24 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
   }, [summary]);
 
   const filteredRows = useMemo(() => {
-    const name = appliedName.trim().toLowerCase();
-    const email = appliedEmail.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
     return studentRows.filter((r) => {
-      const matchName =
-        !name ||
-        (r.fullName ?? '').toLowerCase().includes(name) ||
-        r.email.toLowerCase().includes(name);
-      const matchEmail = !email || r.email.toLowerCase().includes(email);
-      return matchName && matchEmail;
+      const matchQ =
+        !q || (r.fullName ?? '').toLowerCase().includes(q) || r.email.toLowerCase().includes(q);
+      const matchLeave =
+        leaveFilter === ALL_VALUE ||
+        (leaveFilter === 'NONE' ? !r.leaveRequest : r.leaveRequest?.status === leaveFilter);
+      return matchQ && matchLeave;
     });
-  }, [studentRows, appliedName, appliedEmail]);
+  }, [studentRows, search, leaveFilter]);
 
-  const handleSearch = () => {
-    setAppliedName(nameInput);
-    setAppliedEmail(emailInput);
+  const handleSearchChange = (v: string) => {
+    setSearch(v);
     setPage(1);
   };
 
-  const handleClear = () => {
-    setNameInput('');
-    setEmailInput('');
-    setAppliedName('');
-    setAppliedEmail('');
+  const handleLeaveFilterChange = (v: string) => {
+    setLeaveFilter(v);
     setPage(1);
   };
 
@@ -135,8 +139,6 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
     setPageSize(size);
     setPage(1);
   };
-
-  const isFiltering = !!appliedName || !!appliedEmail;
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const pagedRows = useMemo(
@@ -196,39 +198,12 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
 
   return (
     <>
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-45 flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <Input
-            placeholder="Họ tên..."
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-8"
-          />
-        </div>
-        <div className="relative min-w-45 flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <Input
-            placeholder="Email..."
-            value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-8"
-          />
-        </div>
-        <Button variant="default" onClick={handleSearch}>
-          <Search className="size-4" />
-          Tìm kiếm
-        </Button>
-        {isFiltering && (
-          <Button variant="ghost" onClick={handleClear}>
-            <X className="size-4" />
-            Xoá bộ lọc
-          </Button>
-        )}
-      </div>
+      {/* Tìm gộp tên + email, gõ là lọc — thay cho 2 ô riêng + nút Tìm kiếm. */}
+      <TableSearchInput
+        value={search}
+        onChange={handleSearchChange}
+        placeholder="Tìm theo họ tên hoặc email…"
+      />
 
       {/* Bulk action bar */}
       <div className="bg-muted/50 border-divider flex flex-wrap items-start gap-3 rounded-lg border p-3">
@@ -283,20 +258,34 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="w-10 text-center">
+              <TableHead className={`w-10 text-center ${STICKY_L0_HEAD}`}>
                 <Checkbox
                   checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                   onCheckedChange={toggleAll}
                   aria-label="Chọn tất cả"
                 />
               </TableHead>
-              <TableHead className="min-w-45">Họ tên học sinh</TableHead>
-              <TableHead className="w-20 text-center">Xin nghỉ</TableHead>
+              <TableHead
+                className={`w-52 min-w-52 ${STICKY_L10_HEAD} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+              >
+                Họ tên học sinh
+              </TableHead>
+              <ColumnFilterHead
+                label="Xin nghỉ"
+                className="w-25 text-center"
+                value={leaveFilter}
+                options={[
+                  { value: 'ACKNOWLEDGED', label: 'Đã duyệt' },
+                  { value: 'SUBMITTED', label: 'Chờ duyệt' },
+                  { value: 'NONE', label: 'Không xin nghỉ' },
+                ]}
+                onChange={handleLeaveFilterChange}
+              />
               <TableHead className="min-w-45">Lý do nghỉ</TableHead>
               {sessions.map((s, idx) => (
                 <SessionColumnHead key={s.id} idx={idx} />
               ))}
-              <TableHead className="w-16 text-center">Hành động</TableHead>
+              <TableHead className={`w-16 text-center ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -313,17 +302,22 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                 <TableRow
                   key={row.studentId}
                   data-state={selectedIds.has(row.studentId) ? 'selected' : undefined}
-                  className="cursor-pointer"
+                  className={`cursor-pointer ${STICKY_ROW}`}
                   onClick={() => toggleOne(row.studentId)}
                 >
-                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className={`text-center ${STICKY_L0_CELL}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       checked={selectedIds.has(row.studentId)}
                       onCheckedChange={() => toggleOne(row.studentId)}
                       aria-label={`Chọn ${row.fullName ?? row.email}`}
                     />
                   </TableCell>
-                  <TableCell className="text-foreground font-medium">
+                  <TableCell
+                    className={`text-foreground max-w-52 truncate font-medium ${STICKY_L10_CELL} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+                  >
                     {row.fullName ?? row.email}
                     {row.fullName && (
                       <div className="text-muted-foreground text-xs">{row.email}</div>
@@ -351,7 +345,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                     const log = row.logsBySession.get(s.id);
                     return <SessionColumnCells key={s.id} log={log} />;
                   })}
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                     <div className="flex items-center justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -414,17 +408,18 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
           <span>Hiển thị</span>
-          <select
-            value={pageSize}
-            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            className="border-input bg-background rounded-md border px-2 py-1 text-sm focus:outline-none"
-          >
-            {PAGE_SIZE_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          <Select value={String(pageSize)} onValueChange={(v) => handlePageSizeChange(Number(v))}>
+            <SelectTrigger className="w-20 cursor-pointer">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <SelectItem key={s} value={String(s)}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <span>/ {filteredRows.length} học sinh</span>
         </div>
         <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />

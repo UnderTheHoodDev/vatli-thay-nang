@@ -9,8 +9,7 @@ interface Props {
 
 function readUrlState(sp: Record<string, string | undefined>): UrlState {
   return {
-    name: sp.name ?? '',
-    code: sp.code ?? '',
+    q: sp.q ?? '',
     status: sp.status ?? ALL_VALUE,
     createdFrom: sp.createdFrom ?? '',
     createdTo: sp.createdTo ?? '',
@@ -24,8 +23,7 @@ export default async function ClassesPage({ searchParams }: Props) {
   const urlState = readUrlState(sp);
 
   const apiParams = {
-    name: urlState.name || undefined,
-    code: urlState.code || undefined,
+    q: urlState.q || undefined,
     status: urlState.status !== ALL_VALUE ? (urlState.status as ClassStatus) : undefined,
     createdFrom: urlState.createdFrom || undefined,
     createdTo: urlState.createdTo || undefined,

@@ -1,28 +1,37 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Info, Users as UsersIcon, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import { useResolved } from '@/lib/actions';
-import type { ClassStudentSearchValues } from '@/components/features/classes/ClassStudentsSearchForm';
+import { ALL_VALUE } from '@/lib/constants';
+import type { ClassStudentsStatusFilter } from '@/components/features/classes/ClassStudentsTable';
 import type { ListAttendanceSummaryResponse } from '@/actions/v1/attendance/list-attendance-summary';
 import type { ListClassSessionsResponse } from '@/actions/v1/class-sessions/list-class-sessions';
 import type { ListClassStudentsResponse } from '@/actions/v1/classes/list-class-students';
-import type { ClassDetail, ClassStatus } from '@/types/class-management';
+import {
+  CLASS_STUDENT_STATUS_LABEL,
+  type ClassDetail,
+  type ClassStatus,
+} from '@/types/class-management';
 
 export type ClassDetailTab = 'info' | 'students' | 'sessions';
 
-export interface ClassDetailUrlState extends ClassStudentSearchValues {
+export interface ClassDetailUrlState {
   tab: ClassDetailTab;
+  /** Tìm gộp (OR): email, họ tên học sinh. */
+  q: string;
+  status: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
@@ -33,18 +42,17 @@ interface Props {
   sessionsPromise: Promise<ListClassSessionsResponse>;
 }
 
-const DEFAULT_TAB: ClassDetailTab = 'info';
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULTS: ClassDetailUrlState = {
+  tab: 'info',
+  q: '',
+  status: ALL_VALUE,
+  page: 1,
+  pageSize: 50,
+};
 
-function buildUrlParams(state: ClassDetailUrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (state.tab !== DEFAULT_TAB) sp.set('tab', state.tab);
-  if (state.email) sp.set('email', state.email);
-  if (state.fullName) sp.set('fullName', state.fullName);
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== DEFAULT_PAGE_SIZE) sp.set('pageSize', String(state.pageSize));
-  return sp;
-}
+const CLASS_STUDENT_STATUS_OPTIONS = Object.entries(CLASS_STUDENT_STATUS_LABEL).map(
+  ([value, label]) => ({ value, label }),
+);
 
 function statusBadge(s: ClassStatus) {
   if (s === 'ACTIVE') return <Badge variant="success">Đang hoạt động</Badge>;
@@ -53,22 +61,24 @@ function statusBadge(s: ClassStatus) {
 
 interface StudentsSectionProps {
   classId: number;
-  search: ClassStudentSearchValues;
+  q: string;
+  statusFilter: ClassStudentsStatusFilter;
   studentsPromise: Promise<ListClassStudentsResponse>;
   attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
   isPending: boolean;
-  onSearchChange: (next: ClassStudentSearchValues) => void;
+  onQChange: (q: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
 
 function StudentsSection({
   classId,
-  search,
+  q,
+  statusFilter,
   studentsPromise,
   attendanceSummaryPromise,
   isPending,
-  onSearchChange,
+  onQChange,
   onPageChange,
   onPageSizeChange,
 }: StudentsSectionProps) {
@@ -78,12 +88,13 @@ function StudentsSection({
   return (
     <ClassStudentsTab
       classId={classId}
-      search={search}
+      q={q}
+      statusFilter={statusFilter}
       rows={rows}
       attendanceStats={attendanceStats}
       meta={meta}
       loading={isPending}
-      onSearchChange={onSearchChange}
+      onQChange={onQChange}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
     />
@@ -126,9 +137,7 @@ export default function ClassDetailPageClient({
   attendanceSummaryPromise,
   sessionsPromise,
 }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const [activeTab, setActiveTab] = useState<ClassDetailTab>(urlState.tab);
   useEffect(() => {
@@ -136,38 +145,22 @@ export default function ClassDetailPageClient({
     setActiveTab(urlState.tab);
   }, [urlState.tab]);
 
-  const updateUrl = useCallback(
-    (next: Partial<ClassDetailUrlState>) => {
-      const merged = { ...urlState, ...next };
-      const params = buildUrlParams(merged);
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
   function handleTabChange(v: string) {
     const tab = v as ClassDetailTab;
     setActiveTab(tab);
-    updateUrl({ tab, page: 1 });
+    // setValue reset page về 1 — giữ hành vi đổi tab cũ.
+    filters.setValue('tab', tab);
   }
 
-  const studentsSearch: ClassStudentSearchValues = {
-    email: urlState.email,
-    fullName: urlState.fullName,
+  const statusFilter: ClassStudentsStatusFilter = {
+    value: urlState.status,
+    options: CLASS_STUDENT_STATUS_OPTIONS,
+    onChange: (v) => filters.setValue('status', v),
   };
-
-  const onSearchChange = useCallback(
-    (v: ClassStudentSearchValues) => updateUrl({ ...v, page: 1 }),
-    [updateUrl],
-  );
-  const onPageChange = useCallback((p: number) => updateUrl({ page: p }), [updateUrl]);
-  const onPageSizeChange = useCallback(
-    (s: number) => updateUrl({ pageSize: s, page: 1 }),
-    [updateUrl],
-  );
+  const q = filters.value('q');
+  const onQChange = (v: string) => filters.setText('q', v);
+  const onPageChange = (p: number) => filters.setPaging({ page: p });
+  const onPageSizeChange = (s: number) => filters.setPaging({ pageSize: s, page: 1 });
 
   return (
     <div className="space-y-6">
@@ -227,12 +220,13 @@ export default function ClassDetailPageClient({
             fallback={
               <ClassStudentsTab
                 classId={classDetail.id}
-                search={studentsSearch}
+                q={q}
+                statusFilter={statusFilter}
                 rows={[]}
                 attendanceStats={[]}
                 meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
                 loading
-                onSearchChange={onSearchChange}
+                onQChange={onQChange}
                 onPageChange={onPageChange}
                 onPageSizeChange={onPageSizeChange}
               />
@@ -240,11 +234,12 @@ export default function ClassDetailPageClient({
           >
             <StudentsSection
               classId={classDetail.id}
-              search={studentsSearch}
+              q={q}
+              statusFilter={statusFilter}
               studentsPromise={studentsPromise}
               attendanceSummaryPromise={attendanceSummaryPromise}
-              isPending={isPending}
-              onSearchChange={onSearchChange}
+              isPending={filters.isPending}
+              onQChange={onQChange}
               onPageChange={onPageChange}
               onPageSizeChange={onPageSizeChange}
             />
@@ -266,7 +261,7 @@ export default function ClassDetailPageClient({
             <SessionsSection
               classId={classDetail.id}
               sessionsPromise={sessionsPromise}
-              isPending={isPending}
+              isPending={filters.isPending}
               onPageChange={onPageChange}
               onPageSizeChange={onPageSizeChange}
             />

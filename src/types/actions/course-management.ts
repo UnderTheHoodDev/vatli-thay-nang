@@ -19,6 +19,8 @@ export interface CoursesListStats {
 }
 
 export interface IListCoursesParams {
+  /** Tìm gộp (OR): tiêu đề, mã khóa học. */
+  q?: string;
   title?: string;
   code?: string;
   status?: CourseStatus;

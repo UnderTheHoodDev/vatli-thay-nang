@@ -8,6 +8,7 @@ interface Props {
 
 function readUrlState(sp: Record<string, string | undefined>): UrlState {
   return {
+    q: sp.q ?? '',
     classCode: sp.classCode ?? '',
     startDate: sp.startDate ?? '',
     endDate: sp.endDate ?? '',
@@ -22,6 +23,7 @@ export default async function ClassSessionsAllPage({ searchParams }: Props) {
 
   const allClassesResult = await listClasses({ page: 1, pageSize: 200 });
   const sessionsPromise = listAllClassSessions({
+    q: urlState.q || undefined,
     classCode: urlState.classCode || undefined,
     startDate: urlState.startDate || undefined,
     endDate: urlState.endDate || undefined,

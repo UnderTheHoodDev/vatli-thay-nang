@@ -16,8 +16,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
+import {
+  STICKY_ACTION_CELL,
+  STICKY_ACTION_HEAD,
+  STICKY_L0_CELL,
+  STICKY_L0_HEAD,
+  STICKY_L10_CELL,
+  STICKY_L10_HEAD,
+  STICKY_L24_CELL,
+  STICKY_L24_HEAD,
+  STICKY_ROW,
+} from '@/components/app/table-filters/sticky';
 import DeleteUserButton from './DeleteUserButton';
 import EditUserDialog from './EditUserDialog';
 import { setUserStatusAction } from '@/actions/v1/users/set-user-status';
@@ -114,6 +129,20 @@ function activationAction(u: UserRow): ActivationAction {
   return { icon: Mail, label: 'Gửi mail kích hoạt', variant: 'default', sentBefore: false };
 }
 
+/** Lọc gắn thẳng vào header cột (giới tính / vai trò / lớp / trạng thái). */
+export interface UsersHeaderFilters {
+  gender: HeaderFilter;
+  role: HeaderFilter;
+  status: HeaderFilter;
+  classId: HeaderFilter;
+}
+
+interface HeaderFilter {
+  value: string;
+  options: ColumnFilterOption[];
+  onChange: (value: string) => void;
+}
+
 interface Props {
   rows: UserRow[];
   provinces: Province[];
@@ -121,6 +150,8 @@ interface Props {
   selectedIds?: Set<number>;
   onToggleRow?: (id: number, checked: boolean) => void;
   onToggleAll?: (ids: number[], checked: boolean) => void;
+  /** Không truyền = header tĩnh (dùng ở ngữ cảnh không có URL filter). */
+  headerFilters?: UsersHeaderFilters;
 }
 
 export default function UsersTable({
@@ -130,6 +161,7 @@ export default function UsersTable({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  headerFilters,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -168,96 +200,133 @@ export default function UsersTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead className="w-10">
-            {selectable && (
-              <Checkbox
-                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                onCheckedChange={(checked) => onToggleAll!(rowIds, checked === true)}
-                aria-label="Chọn tất cả"
-              />
+    <TooltipProvider delayDuration={300}>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            <TableHead className={`w-10 ${STICKY_L0_HEAD}`}>
+              {selectable && (
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => onToggleAll!(rowIds, checked === true)}
+                  aria-label="Chọn tất cả"
+                />
+              )}
+            </TableHead>
+            <TableHead className={`w-14 ${STICKY_L10_HEAD}`}>ID</TableHead>
+            <TableHead className={`w-52 min-w-52 ${STICKY_L24_HEAD}`}>Email</TableHead>
+            <TableHead className="min-w-35">Họ và tên</TableHead>
+            {headerFilters ? (
+              <ColumnFilterHead label="Giới tính" {...headerFilters.gender} />
+            ) : (
+              <TableHead>Giới tính</TableHead>
             )}
-          </TableHead>
-          <TableHead className="w-14">ID</TableHead>
-          <TableHead className="min-w-45">Email</TableHead>
-          <TableHead className="min-w-35">Họ và tên</TableHead>
-          <TableHead>Giới tính</TableHead>
-          <TableHead className="min-w-22.5">Ngày sinh</TableHead>
-          <TableHead>Tỉnh</TableHead>
-          <TableHead className="min-w-30">Trường</TableHead>
-          <TableHead>SĐT phụ huynh</TableHead>
-          <TableHead>Vai trò</TableHead>
-          <TableHead className="min-w-30">Lớp</TableHead>
-          <TableHead>Trạng thái</TableHead>
-          <TableHead className="min-w-40">Mail kích hoạt</TableHead>
-          <TableHead className="min-w-37.5 text-right">Hành động</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
-          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-        ) : (
-          rows.map((u) => {
-            const action = activationAction(u);
-            const Icon = action.icon;
-            return (
-              <TableRow key={u.id}>
-                <TableCell>
-                  {selectable && (
-                    <Checkbox
-                      checked={selectedIds!.has(u.id)}
-                      onCheckedChange={(checked) => onToggleRow!(u.id, checked === true)}
-                      aria-label={`Chọn ${u.email}`}
-                    />
-                  )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">{u.id}</TableCell>
-                <TableCell className="text-foreground font-medium">{u.email}</TableCell>
-                <TableCell>{u.fullName ?? '—'}</TableCell>
-                <TableCell>{genderBadge(u.gender)}</TableCell>
-                <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
-                <TableCell>{u.province ?? '—'}</TableCell>
-                <TableCell>{u.schoolName ?? '—'}</TableCell>
-                <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
-                <TableCell>{roleBadge(u.role)}</TableCell>
-                <TableCell>
-                  {u.classes && u.classes.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {u.classes.map((c) => (
-                        <Badge key={c.id} variant="outline" className="font-mono text-xs">
-                          {c.code}
-                        </Badge>
-                      ))}
+            <TableHead className="min-w-22.5">Ngày sinh</TableHead>
+            <TableHead>Tỉnh</TableHead>
+            <TableHead className="min-w-30">Trường</TableHead>
+            <TableHead>SĐT phụ huynh</TableHead>
+            {headerFilters ? (
+              <ColumnFilterHead label="Vai trò" {...headerFilters.role} />
+            ) : (
+              <TableHead>Vai trò</TableHead>
+            )}
+            {headerFilters ? (
+              <ColumnFilterHead label="Lớp" className="min-w-30" {...headerFilters.classId} />
+            ) : (
+              <TableHead className="min-w-30">Lớp</TableHead>
+            )}
+            {headerFilters ? (
+              <ColumnFilterHead label="Trạng thái" {...headerFilters.status} />
+            ) : (
+              <TableHead>Trạng thái</TableHead>
+            )}
+            <TableHead className="min-w-40">Mail kích hoạt</TableHead>
+            <TableHead className={`min-w-37.5 text-right ${STICKY_ACTION_HEAD}`}>
+              Hành động
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+          ) : (
+            rows.map((u) => {
+              const action = activationAction(u);
+              const Icon = action.icon;
+              return (
+                <TableRow key={u.id} className={STICKY_ROW}>
+                  <TableCell className={STICKY_L0_CELL}>
+                    {selectable && (
+                      <Checkbox
+                        checked={selectedIds!.has(u.id)}
+                        onCheckedChange={(checked) => onToggleRow!(u.id, checked === true)}
+                        aria-label={`Chọn ${u.email}`}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className={`text-muted-foreground ${STICKY_L10_CELL}`}>
+                    {u.id}
+                  </TableCell>
+                  <TableCell
+                    className={`text-foreground max-w-52 truncate font-medium ${STICKY_L24_CELL}`}
+                  >
+                    {u.email}
+                  </TableCell>
+                  <TableCell>{u.fullName ?? '—'}</TableCell>
+                  <TableCell>{genderBadge(u.gender)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{formatBirthday(u.birthday)}</TableCell>
+                  <TableCell>{u.province ?? '—'}</TableCell>
+                  <TableCell>{u.schoolName ?? '—'}</TableCell>
+                  <TableCell>{u.parentPhonenumber ?? '—'}</TableCell>
+                  <TableCell>{roleBadge(u.role)}</TableCell>
+                  <TableCell>
+                    {u.classes && u.classes.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {u.classes.map((c) => (
+                          <Badge key={c.id} variant="outline" className="font-mono text-xs">
+                            {c.code}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{statusBadge(u.status)}</TableCell>
+                  <TableCell>{activationEmailCell(u.activationEmailSentAt)}</TableCell>
+                  <TableCell className={`text-right ${STICKY_ACTION_CELL}`}>
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                      {/* Icon-only + tooltip cho gọn cột. Nút disabled không phát sự kiện
+                        hover → bọc span để tooltip vẫn hiện được lý do. */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span tabIndex={action.disabled ? 0 : undefined}>
+                            <Button
+                              size="icon-sm"
+                              variant={action.variant}
+                              className={action.disabled ? '' : 'cursor-pointer'}
+                              disabled={pending || action.disabled}
+                              aria-label={action.label}
+                              onClick={() => handleToggleStatus(u.id, u.status, action.sentBefore)}
+                            >
+                              <Icon />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {action.title ? `${action.label} — ${action.title}` : action.label}
+                        </TooltipContent>
+                      </Tooltip>
+                      <EditUserDialog user={u} provinces={provinces} />
+                      <DeleteUserButton userId={u.id} email={u.email} />
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>{statusBadge(u.status)}</TableCell>
-                <TableCell>{activationEmailCell(u.activationEmailSentAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex flex-wrap items-center justify-end gap-1.5">
-                    <Button
-                      size="sm"
-                      variant={action.variant}
-                      className={action.disabled ? '' : 'cursor-pointer'}
-                      disabled={pending || action.disabled}
-                      title={action.title}
-                      onClick={() => handleToggleStatus(u.id, u.status, action.sentBefore)}
-                    >
-                      <Icon /> {action.label}
-                    </Button>
-                    <EditUserDialog user={u} provinces={provinces} />
-                    <DeleteUserButton userId={u.id} email={u.email} />
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })
-        )}
-      </TableBody>
-    </Table>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </TooltipProvider>
   );
 }

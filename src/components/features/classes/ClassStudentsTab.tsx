@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DataPagination from '@/components/app/DataPagination';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
-import ClassStudentsSearchForm, { type ClassStudentSearchValues } from './ClassStudentsSearchForm';
-import ClassStudentsTable from './ClassStudentsTable';
+import ClassStudentsTable, { type ClassStudentsStatusFilter } from './ClassStudentsTable';
 import AddStudentsDialog from './AddStudentsDialog';
 import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
 import type { ListMeta } from '@/types/auth';
@@ -19,24 +19,27 @@ import type { ClassStudentListRow } from '@/types/actions/class-management';
 
 interface Props {
   classId: number;
-  search: ClassStudentSearchValues;
+  /** Tìm gộp (OR): email, họ tên — debounce ở hook phía trên. */
+  q: string;
+  statusFilter: ClassStudentsStatusFilter;
   rows: ClassStudentListRow[];
   attendanceStats: ClassAttendanceStudentRow[];
   meta: ListMeta;
   loading?: boolean;
-  onSearchChange: (next: ClassStudentSearchValues) => void;
+  onQChange: (q: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
 
 export default function ClassStudentsTab({
   classId,
-  search,
+  q,
+  statusFilter,
   rows,
   attendanceStats,
   meta,
   loading,
-  onSearchChange,
+  onQChange,
   onPageChange,
   onPageSizeChange,
 }: Props) {
@@ -46,18 +49,9 @@ export default function ClassStudentsTab({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Tìm kiếm học sinh</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-6">
-          <ClassStudentsSearchForm initial={search} onSearch={onSearchChange} />
-        </CardContent>
-      </Card>
-
-      <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="gap-0 pb-0">
+      <CardHeader className="flex flex-col gap-3 pb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Học sinh trong lớp</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -84,24 +78,33 @@ export default function ClassStudentsTab({
             </Select>
             <AddStudentsDialog classId={classId} />
           </div>
-        </CardHeader>
-        <CardContent className="px-3 pb-0">
-          <ClassStudentsTable
-            classId={classId}
-            rows={rows}
-            attendanceStats={attendanceStats}
-            loading={loading}
-          />
-        </CardContent>
-        {totalPages > 1 && (
-          <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
-            <div className="text-muted-foreground text-sm whitespace-nowrap">
-              Trang {page} / {totalPages}
-            </div>
-            <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        </div>
+
+        {/* Ô search gộp gõ-là-lọc — thay form Tìm kiếm email/họ tên tách rời cũ. */}
+        <TableSearchInput
+          value={q}
+          onChange={onQChange}
+          placeholder="Tìm theo email hoặc họ tên…"
+          isPending={loading}
+        />
+      </CardHeader>
+      <CardContent className="px-3 pb-0">
+        <ClassStudentsTable
+          classId={classId}
+          rows={rows}
+          attendanceStats={attendanceStats}
+          loading={loading}
+          statusFilter={statusFilter}
+        />
+      </CardContent>
+      {totalPages > 1 && (
+        <div className="border-divider flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row">
+          <div className="text-muted-foreground text-sm whitespace-nowrap">
+            Trang {page} / {totalPages}
           </div>
-        )}
-      </Card>
-    </div>
+          <DataPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        </div>
+      )}
+    </Card>
   );
 }

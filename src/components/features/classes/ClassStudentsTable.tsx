@@ -23,6 +23,9 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/app/EmptyState';
 import TableSkeleton from '@/components/app/TableSkeleton';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
 import AttendanceSummaryCell from './AttendanceSummaryCell';
 import ClassStudentStatusBadge from './ClassStudentStatusBadge';
 import EnrollmentDateModal from './EnrollmentDateModal';
@@ -37,14 +40,29 @@ import type { ClassStudentListRow } from '@/types/actions/class-management';
 
 const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-36', 'w-28', 'w-28', 'w-24', 'w-32', 'w-44'];
 
+/** Lọc gắn thẳng vào header cột Trạng thái (đang học / đã nghỉ). */
+export interface ClassStudentsStatusFilter {
+  value: string;
+  options: ColumnFilterOption[];
+  onChange: (value: string) => void;
+}
+
 interface Props {
   classId: number;
   rows: ClassStudentListRow[];
   attendanceStats?: ClassAttendanceStudentRow[];
   loading?: boolean;
+  /** Không truyền = header tĩnh (dùng ở ngữ cảnh không có URL filter). */
+  statusFilter?: ClassStudentsStatusFilter;
 }
 
-export default function ClassStudentsTable({ classId, rows, attendanceStats, loading }: Props) {
+export default function ClassStudentsTable({
+  classId,
+  rows,
+  attendanceStats,
+  loading,
+  statusFilter,
+}: Props) {
   const attendanceByStudent = useMemo(
     () => new Map((attendanceStats ?? []).map((s) => [s.studentId, s])),
     [attendanceStats],
@@ -95,7 +113,11 @@ export default function ClassStudentsTable({ classId, rows, attendanceStats, loa
             <TableHead>Họ và tên</TableHead>
             <TableHead>Ngày vào học</TableHead>
             <TableHead>Ngày nghỉ học</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            {statusFilter ? (
+              <ColumnFilterHead label="Trạng thái" {...statusFilter} />
+            ) : (
+              <TableHead>Trạng thái</TableHead>
+            )}
             <TableHead>Chuyên cần</TableHead>
             <TableHead className="w-44 text-right">Hành động</TableHead>
           </TableRow>

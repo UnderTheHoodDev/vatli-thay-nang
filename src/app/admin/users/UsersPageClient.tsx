@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Suspense, use, useCallback, useEffect, useState } from 'react';
 import { Users, UserCheck, UserX, ShieldCheck, ShieldOff } from 'lucide-react';
 import {
   Select,
@@ -11,25 +10,47 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import PageHeader from '@/components/app/PageHeader';
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
-import UserSearchForm, {
-  type UserSearchValues,
-  type ClassOption,
-} from '@/components/features/users/UserSearchForm';
-import UsersTable from '@/components/features/users/UsersTable';
+import AdvancedFiltersButton from '@/components/app/table-filters/AdvancedFiltersButton';
+import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
+import ProvinceCombobox from '@/components/features/users/ProvinceCombobox';
+import UsersTable, { type UsersHeaderFilters } from '@/components/features/users/UsersTable';
 import CreateUserDialog from '@/components/features/users/CreateUserDialog';
 import BulkDeleteUsersButton from '@/components/features/users/BulkDeleteUsersButton';
-import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
+import {
+  ALL_VALUE,
+  GENDER_OPTIONS,
+  PAGE_SIZE_OPTIONS,
+  ROLE_OPTIONS,
+  STATUS_OPTIONS,
+} from '@/lib/constants';
 import type { Province } from '@/types/auth';
 import type { IListUsersResult } from '@/types/actions/users';
 
-export interface UrlState extends UserSearchValues {
+export interface ClassOption {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface UrlState {
+  /** Tìm gộp: email, họ tên, trường, SĐT phụ huynh. */
+  q: string;
+  gender: string;
+  provinceId: string;
+  role: string;
+  status: string;
+  classId: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
@@ -39,30 +60,18 @@ interface Props {
   classes: ClassOption[];
 }
 
-const SEARCH_KEYS: (keyof UserSearchValues)[] = [
-  'email',
-  'fullName',
-  'gender',
-  'provinceId',
-  'schoolName',
-  'parentPhonenumber',
-  'role',
-  'status',
-  'classId',
-];
+const DEFAULTS: UrlState = {
+  q: '',
+  gender: ALL_VALUE,
+  provinceId: ALL_VALUE,
+  role: ALL_VALUE,
+  status: ALL_VALUE,
+  classId: ALL_VALUE,
+  page: 1,
+  pageSize: 20,
+};
 
 const STATS_GRID = 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
-
-function buildUrlParams(state: UrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  for (const key of SEARCH_KEYS) {
-    const v = state[key];
-    if (v && v !== ALL_VALUE && v !== '') sp.set(key, v);
-  }
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== 20) sp.set('pageSize', String(state.pageSize));
-  return sp;
-}
 
 function UsersStatsSection({ promise }: { promise: Promise<IListUsersResult> }) {
   const { stats } = use(promise);
@@ -106,6 +115,7 @@ function UsersTableSection({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  headerFilters,
 }: {
   promise: Promise<IListUsersResult>;
   provinces: Province[];
@@ -113,6 +123,7 @@ function UsersTableSection({
   selectedIds: Set<number>;
   onToggleRow: (id: number, checked: boolean) => void;
   onToggleAll: (ids: number[], checked: boolean) => void;
+  headerFilters: UsersHeaderFilters;
 }) {
   const { data: rows } = use(promise);
   return (
@@ -123,6 +134,7 @@ function UsersTableSection({
       selectedIds={selectedIds}
       onToggleRow={onToggleRow}
       onToggleAll={onToggleAll}
+      headerFilters={headerFilters}
     />
   );
 }
@@ -144,10 +156,8 @@ function UsersPaginationSection({
 }
 
 export default function UsersPageClient({ urlState, usersPromise, provinces, classes }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   // Đổi trang/lọc/tìm kiếm (usersPromise đổi identity) thì bỏ chọn — tránh giữ
   // selection trỏ tới id không còn hiển thị trên trang hiện tại.
@@ -176,18 +186,56 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
     });
   }, []);
 
-  const updateUrl = useCallback(
-    (next: Partial<UrlState>) => {
-      const params = buildUrlParams({ ...urlState, ...next });
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
   const { page, pageSize } = urlState;
+
+  // Lọc theo cột — dropdown ngay trên header bảng.
+  const headerFilters: UsersHeaderFilters = {
+    gender: {
+      value: urlState.gender,
+      options: [...GENDER_OPTIONS],
+      onChange: (v) => filters.setValue('gender', v),
+    },
+    role: {
+      value: urlState.role,
+      options: [...ROLE_OPTIONS],
+      onChange: (v) => filters.setValue('role', v),
+    },
+    status: {
+      value: urlState.status,
+      options: [...STATUS_OPTIONS],
+      onChange: (v) => filters.setValue('status', v),
+    },
+    classId: {
+      value: urlState.classId,
+      options: classes.map((c) => ({ value: String(c.id), label: `${c.code} — ${c.name}` })),
+      onChange: (v) => filters.setValue('classId', v),
+    },
+  };
+
+  // Chip cho các lọc không nhìn thấy trực tiếp (q đã hiện trong ô search).
+  const optionLabel = (opts: readonly { value: string; label: string }[], v: string) =>
+    opts.find((o) => o.value === v)?.label ?? v;
+  const chips: FilterChip[] = [];
+  if (urlState.gender !== ALL_VALUE)
+    chips.push({
+      key: 'gender',
+      label: `Giới tính: ${optionLabel(GENDER_OPTIONS, urlState.gender)}`,
+    });
+  if (urlState.role !== ALL_VALUE)
+    chips.push({ key: 'role', label: `Vai trò: ${optionLabel(ROLE_OPTIONS, urlState.role)}` });
+  if (urlState.status !== ALL_VALUE)
+    chips.push({
+      key: 'status',
+      label: `Trạng thái: ${optionLabel(STATUS_OPTIONS, urlState.status)}`,
+    });
+  if (urlState.classId !== ALL_VALUE) {
+    const cls = classes.find((c) => String(c.id) === urlState.classId);
+    chips.push({ key: 'classId', label: `Lớp: ${cls ? cls.code : urlState.classId}` });
+  }
+  if (urlState.provinceId !== ALL_VALUE) {
+    const p = provinces.find((x) => String(x.id) === urlState.provinceId);
+    chips.push({ key: 'provinceId', label: `Tỉnh: ${p ? p.name : urlState.provinceId}` });
+  }
 
   return (
     <div className="space-y-6">
@@ -200,63 +248,86 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
         <UsersStatsSection promise={usersPromise} />
       </Suspense>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-6">
-          <UserSearchForm
-            provinces={provinces}
-            classes={classes}
-            initial={urlState}
-            onSearch={(v) => updateUrl({ ...v, page: 1 })}
-          />
-        </CardContent>
-      </Card>
-
       <Card className="gap-0 pb-0">
-        <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Danh sách người dùng</CardTitle>
-            <Suspense fallback={<Skeleton className="mt-1 h-4 w-60" />}>
-              <UsersResultSummary promise={usersPromise} page={page} pageSize={pageSize} />
-            </Suspense>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          {/* Hàng 1: tiêu đề + hành động chính. Hàng 2: toolbar lọc (search rộng,
+              Bộ lọc cùng hàng, "Hiển thị" đẩy sát phải) — tránh 4 tầng xếp chồng. */}
+          <div className="flex w-full flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle>Danh sách người dùng</CardTitle>
+              <Suspense fallback={<Skeleton className="mt-1 h-4 w-60" />}>
+                <UsersResultSummary promise={usersPromise} page={page} pageSize={pageSize} />
+              </Suspense>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <BulkDeleteUsersButton
+                  selectedIds={Array.from(selectedIds)}
+                  onDone={() => setSelectedIds(new Set())}
+                />
+              )}
+              <CreateUserDialog />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Hiển thị</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => updateUrl({ pageSize: Number(v), page: 1 })}
-            >
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedIds.size > 0 && (
-              <BulkDeleteUsersButton
-                selectedIds={Array.from(selectedIds)}
-                onDone={() => setSelectedIds(new Set())}
-              />
-            )}
-            <CreateUserDialog />
+
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <TableSearchInput
+              value={filters.value('q')}
+              onChange={(v) => filters.setText('q', v)}
+              placeholder="Tìm theo email, họ tên, trường, SĐT phụ huynh…"
+              isPending={filters.isPending}
+              className="min-w-60 flex-1 sm:max-w-md"
+            />
+            <AdvancedFiltersButton activeCount={urlState.provinceId !== ALL_VALUE ? 1 : 0}>
+              <div className="space-y-2">
+                <Label>Tỉnh</Label>
+                <ProvinceCombobox
+                  value={urlState.provinceId}
+                  onChange={(v) => filters.setValue('provinceId', v)}
+                  provinces={provinces}
+                  allOption={{ value: ALL_VALUE, label: 'Tất cả' }}
+                />
+              </div>
+            </AdvancedFiltersButton>
+            <FilterChips
+              chips={chips}
+              onRemove={(key) => filters.setValue(key, ALL_VALUE)}
+              onClearAll={filters.clearAll}
+            />
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <span className="text-muted-foreground text-sm">Hiển thị</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => filters.setPaging({ pageSize: Number(v), page: 1 })}
+              >
+                <SelectTrigger className="w-20 cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
-          <Suspense fallback={<UsersTable rows={[]} provinces={provinces} loading />}>
+          <Suspense
+            fallback={
+              <UsersTable rows={[]} provinces={provinces} loading headerFilters={headerFilters} />
+            }
+          >
             <UsersTableSection
               promise={usersPromise}
               provinces={provinces}
-              isPending={isPending}
+              isPending={filters.isPending}
               selectedIds={selectedIds}
               onToggleRow={toggleRow}
               onToggleAll={toggleAll}
+              headerFilters={headerFilters}
             />
           </Suspense>
         </CardContent>
@@ -265,7 +336,7 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
             promise={usersPromise}
             page={page}
             pageSize={pageSize}
-            onPageChange={(p) => updateUrl({ page: p })}
+            onPageChange={(p) => filters.setPaging({ page: p })}
           />
         </Suspense>
       </Card>

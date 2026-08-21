@@ -11,12 +11,9 @@ interface Props {
 
 function readUrlState(sp: Record<string, string | undefined>): UrlState {
   return {
-    email: sp.email ?? '',
-    fullName: sp.fullName ?? '',
+    q: sp.q ?? '',
     gender: sp.gender ?? ALL_VALUE,
     provinceId: sp.provinceId ?? ALL_VALUE,
-    schoolName: sp.schoolName ?? '',
-    parentPhonenumber: sp.parentPhonenumber ?? '',
     role: sp.role ?? ALL_VALUE,
     status: sp.status ?? ALL_VALUE,
     classId: sp.classId ?? ALL_VALUE,
@@ -30,12 +27,9 @@ export default async function AccountsPage({ searchParams }: Props) {
   const urlState = readUrlState(sp);
 
   const apiParams = {
-    email: urlState.email || undefined,
-    fullName: urlState.fullName || undefined,
+    q: urlState.q || undefined,
     gender: urlState.gender !== ALL_VALUE ? (urlState.gender as Gender) : undefined,
     provinceId: urlState.provinceId !== ALL_VALUE ? Number(urlState.provinceId) : undefined,
-    schoolName: urlState.schoolName || undefined,
-    parentPhonenumber: urlState.parentPhonenumber || undefined,
     role: urlState.role !== ALL_VALUE ? (urlState.role as Role) : undefined,
     status: urlState.status !== ALL_VALUE ? (urlState.status as UserStatus) : undefined,
     classId: urlState.classId !== ALL_VALUE ? Number(urlState.classId) : undefined,
