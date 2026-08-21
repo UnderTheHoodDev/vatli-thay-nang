@@ -35,10 +35,7 @@ import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
 import FilterChips, { type FilterChip } from '@/components/app/table-filters/FilterChips';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
-import {
-  STICKY_ACTION_CELL,
-  STICKY_ACTION_HEAD,
-} from '@/components/app/table-filters/sticky';
+import { STICKY_ACTION_CELL, STICKY_ACTION_HEAD } from '@/components/app/table-filters/sticky';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';

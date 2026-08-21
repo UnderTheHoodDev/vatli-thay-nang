@@ -217,11 +217,17 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
     opts.find((o) => o.value === v)?.label ?? v;
   const chips: FilterChip[] = [];
   if (urlState.gender !== ALL_VALUE)
-    chips.push({ key: 'gender', label: `Giới tính: ${optionLabel(GENDER_OPTIONS, urlState.gender)}` });
+    chips.push({
+      key: 'gender',
+      label: `Giới tính: ${optionLabel(GENDER_OPTIONS, urlState.gender)}`,
+    });
   if (urlState.role !== ALL_VALUE)
     chips.push({ key: 'role', label: `Vai trò: ${optionLabel(ROLE_OPTIONS, urlState.role)}` });
   if (urlState.status !== ALL_VALUE)
-    chips.push({ key: 'status', label: `Trạng thái: ${optionLabel(STATUS_OPTIONS, urlState.status)}` });
+    chips.push({
+      key: 'status',
+      label: `Trạng thái: ${optionLabel(STATUS_OPTIONS, urlState.status)}`,
+    });
   if (urlState.classId !== ALL_VALUE) {
     const cls = classes.find((c) => String(c.id) === urlState.classId);
     chips.push({ key: 'classId', label: `Lớp: ${cls ? cls.code : urlState.classId}` });

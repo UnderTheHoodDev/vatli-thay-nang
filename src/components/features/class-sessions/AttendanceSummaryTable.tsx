@@ -265,7 +265,9 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                   aria-label="Chọn tất cả"
                 />
               </TableHead>
-              <TableHead className={`w-52 min-w-52 ${STICKY_L10_HEAD} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}>
+              <TableHead
+                className={`w-52 min-w-52 ${STICKY_L10_HEAD} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+              >
                 Họ tên học sinh
               </TableHead>
               <ColumnFilterHead
@@ -406,10 +408,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
           <span>Hiển thị</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => handlePageSizeChange(Number(v))}
-          >
+          <Select value={String(pageSize)} onValueChange={(v) => handlePageSizeChange(Number(v))}>
             <SelectTrigger className="w-20 cursor-pointer">
               <SelectValue />
             </SelectTrigger>

@@ -277,128 +277,128 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
                 <span>Đã hết thời gian làm bài.</span>
               ) : (
                 <span>
-                  Còn lại <span className="tabular-nums">{formatRemaining(remainingMs)}</span> —
-                  hết giờ tự động nộp.
+                  Còn lại <span className="tabular-nums">{formatRemaining(remainingMs)}</span> — hết
+                  giờ tự động nộp.
                 </span>
               )}
             </div>
           )}
           {/* Vào bài là đọc ĐỀ trước — tab Nộp bài chỉ là bước sau khi làm xong. */}
           <Tabs defaultValue={hasResult ? 'result' : 'paper'}>
-          {/*
+            {/*
             Khoá đổi tab khi đang tải tệp: tab Nộp bài bị unmount là uploader đi theo,
             tệp vẫn lên tới R2 nhưng không còn ai giữ nó — quay lại thấy form trống như
             chưa từng chọn, còn tệp thì nằm lại đó không ai dọn.
           */}
-          <TabsList>
-            <TabsTrigger value="paper" disabled={uploading} className="cursor-pointer">
-              <FileText /> Đề bài
-            </TabsTrigger>
-            <TabsTrigger value="submit" disabled={uploading} className="cursor-pointer">
-              <Upload /> Nộp bài
-              {/* Chấm nhỏ báo đã nộp — quét nhanh không cần mở tab. */}
-              {test.mySubmissionStatus !== 'NOT_SUBMITTED' && (
-                <span className="inline-block size-1.5 rounded-full bg-green-500" aria-hidden />
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="stats" disabled={uploading} className="cursor-pointer">
-              <BarChart3 /> Thống kê
-            </TabsTrigger>
-            <TabsTrigger value="result" disabled={uploading} className="cursor-pointer">
-              <Award /> Kết quả
-              {hasResult && (
-                <span className="bg-purple inline-block size-1.5 rounded-full" aria-hidden />
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="paper" className="mt-4">
-            {test.description && (
-              <div className="bg-muted mb-3 rounded-lg p-3 text-sm whitespace-pre-wrap">
-                {test.description}
-              </div>
-            )}
-            <TestAttachmentViewer files={test.attachments} emptyHint="Bài này không có tệp đề" />
-          </TabsContent>
-
-          <TabsContent value="submit" className="mt-4">
-            <SubmitTab
-              // Remount sau mỗi lần nộp để form nạp lại đúng bài vừa lưu.
-              key={test.mySubmission?.updatedAt ?? 'chua-nop'}
-              courseId={courseId}
-              testId={testId}
-              ongoing={ongoing}
-              deadlineAt={test.myAttempt?.deadlineAt ?? test.endTime}
-              expired={expired}
-              status={test.mySubmissionStatus}
-              mySubmission={test.mySubmission}
-              onSubmitted={load}
-              onUploadingChange={setUploading}
-            />
-          </TabsContent>
-
-          <TabsContent value="stats" className="mt-4">
-            <StatsTab participants={participants} maxScore={test.maxScore} ended={ended} />
-          </TabsContent>
-
-          <TabsContent value="result" className="mt-4">
-            {hasResult ? (
-              <div className="space-y-4">
-                <Card>
-                  <CardContent className="space-y-3 py-6">
-                    <p className="text-muted-foreground text-sm">Điểm của bạn</p>
-                    <p className="text-3xl font-semibold">
-                      {test.myScore}
-                      <span className="text-muted-foreground text-lg"> / {test.maxScore}</span>
-                    </p>
-                    {test.myScore !== null && (
-                      <Progress
-                        value={(test.myScore / test.maxScore) * 100}
-                        indicatorClassName={
-                          SCORE_TIER_CLASS[scoreTier(test.myScore, test.maxScore)]
-                        }
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-
-                {test.mySubmission?.feedback && (
-                  <Card>
-                    <CardContent className="space-y-2 py-6">
-                      <p className="text-muted-foreground text-sm">Nhận xét của giáo viên</p>
-                      <p className="text-sm whitespace-pre-wrap">{test.mySubmission.feedback}</p>
-                    </CardContent>
-                  </Card>
+            <TabsList>
+              <TabsTrigger value="paper" disabled={uploading} className="cursor-pointer">
+                <FileText /> Đề bài
+              </TabsTrigger>
+              <TabsTrigger value="submit" disabled={uploading} className="cursor-pointer">
+                <Upload /> Nộp bài
+                {/* Chấm nhỏ báo đã nộp — quét nhanh không cần mở tab. */}
+                {test.mySubmissionStatus !== 'NOT_SUBMITTED' && (
+                  <span className="inline-block size-1.5 rounded-full bg-green-500" aria-hidden />
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="stats" disabled={uploading} className="cursor-pointer">
+                <BarChart3 /> Thống kê
+              </TabsTrigger>
+              <TabsTrigger value="result" disabled={uploading} className="cursor-pointer">
+                <Award /> Kết quả
+                {hasResult && (
+                  <span className="bg-purple inline-block size-1.5 rounded-full" aria-hidden />
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-                {test.mySubmission && (
+            <TabsContent value="paper" className="mt-4">
+              {test.description && (
+                <div className="bg-muted mb-3 rounded-lg p-3 text-sm whitespace-pre-wrap">
+                  {test.description}
+                </div>
+              )}
+              <TestAttachmentViewer files={test.attachments} emptyHint="Bài này không có tệp đề" />
+            </TabsContent>
+
+            <TabsContent value="submit" className="mt-4">
+              <SubmitTab
+                // Remount sau mỗi lần nộp để form nạp lại đúng bài vừa lưu.
+                key={test.mySubmission?.updatedAt ?? 'chua-nop'}
+                courseId={courseId}
+                testId={testId}
+                ongoing={ongoing}
+                deadlineAt={test.myAttempt?.deadlineAt ?? test.endTime}
+                expired={expired}
+                status={test.mySubmissionStatus}
+                mySubmission={test.mySubmission}
+                onSubmitted={load}
+                onUploadingChange={setUploading}
+              />
+            </TabsContent>
+
+            <TabsContent value="stats" className="mt-4">
+              <StatsTab participants={participants} maxScore={test.maxScore} ended={ended} />
+            </TabsContent>
+
+            <TabsContent value="result" className="mt-4">
+              {hasResult ? (
+                <div className="space-y-4">
                   <Card>
                     <CardContent className="space-y-3 py-6">
-                      <p className="text-sm font-medium">Bài làm của bạn</p>
-                      {test.mySubmission.note && (
-                        <div className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
-                          {test.mySubmission.note}
-                        </div>
+                      <p className="text-muted-foreground text-sm">Điểm của bạn</p>
+                      <p className="text-3xl font-semibold">
+                        {test.myScore}
+                        <span className="text-muted-foreground text-lg"> / {test.maxScore}</span>
+                      </p>
+                      {test.myScore !== null && (
+                        <Progress
+                          value={(test.myScore / test.maxScore) * 100}
+                          indicatorClassName={
+                            SCORE_TIER_CLASS[scoreTier(test.myScore, test.maxScore)]
+                          }
+                        />
                       )}
-                      <TestAttachmentViewer
-                        files={test.mySubmission.files}
-                        emptyHint="Bạn không nộp tệp nào"
-                      />
                     </CardContent>
                   </Card>
-                )}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="text-muted-foreground py-10 text-center text-sm">
-                  {ended
-                    ? 'Giáo viên chưa chấm bài của bạn.'
-                    : 'Điểm chỉ hiện sau khi bài kiểm tra kết thúc.'}
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+
+                  {test.mySubmission?.feedback && (
+                    <Card>
+                      <CardContent className="space-y-2 py-6">
+                        <p className="text-muted-foreground text-sm">Nhận xét của giáo viên</p>
+                        <p className="text-sm whitespace-pre-wrap">{test.mySubmission.feedback}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {test.mySubmission && (
+                    <Card>
+                      <CardContent className="space-y-3 py-6">
+                        <p className="text-sm font-medium">Bài làm của bạn</p>
+                        {test.mySubmission.note && (
+                          <div className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
+                            {test.mySubmission.note}
+                          </div>
+                        )}
+                        <TestAttachmentViewer
+                          files={test.mySubmission.files}
+                          emptyHint="Bạn không nộp tệp nào"
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="text-muted-foreground py-10 text-center text-sm">
+                    {ended
+                      ? 'Giáo viên chưa chấm bài của bạn.'
+                      : 'Điểm chỉ hiện sau khi bài kiểm tra kết thúc.'}
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </>
       )}
 
@@ -408,8 +408,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Bắt đầu làm bài?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có <strong>{test.durationMinutes} phút</strong>, không tạm dừng được. Hết giờ
-              bài sẽ tự động nộp.
+              Bạn có <strong>{test.durationMinutes} phút</strong>, không tạm dừng được. Hết giờ bài
+              sẽ tự động nộp.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
