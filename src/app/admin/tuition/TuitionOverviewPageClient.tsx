@@ -329,7 +329,7 @@ export default function TuitionOverviewPageClient({
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
             <div className="flex flex-col gap-2">
               <Label>Lớp</Label>
               <Suspense fallback={<ClassFilterFallback />}>

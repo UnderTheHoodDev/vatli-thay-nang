@@ -59,8 +59,8 @@ export default function HelpSections({ sections }: Props) {
                 onClick={() => handleSelect(item.id)}
                 className={
                   item.id === activeId
-                    ? 'bg-primary/10 text-primary flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors'
+                    ? 'bg-primary/10 text-primary flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors'
                 }
               >
                 <item.icon className="size-4" />

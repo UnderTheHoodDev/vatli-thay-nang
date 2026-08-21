@@ -113,7 +113,7 @@ export default function TestAttachmentViewer({ files, emptyHint }: Props) {
                   key={`${f.fileUrl}-${i}`}
                   type="button"
                   onClick={() => document.getElementById(`test-page-${i}`)?.scrollIntoView()}
-                  className="border-divider hover:border-purple relative size-16 shrink-0 overflow-hidden rounded border"
+                  className="border-divider hover:border-purple relative size-16 shrink-0 cursor-pointer overflow-hidden rounded border"
                   aria-label={`Trang ${i + 1}`}
                 >
                   {/* next/image cần khai remotePatterns cho host R2 — repo chưa có, và
@@ -134,6 +134,7 @@ export default function TestAttachmentViewer({ files, emptyHint }: Props) {
                 id={`test-page-${i}`}
                 type="button"
                 onClick={() => setLightboxIndex(images.indexOf(f))}
+                aria-label={`Phóng to ${f.fileName}`}
                 className="border-divider block w-full cursor-zoom-in overflow-hidden rounded-lg border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
