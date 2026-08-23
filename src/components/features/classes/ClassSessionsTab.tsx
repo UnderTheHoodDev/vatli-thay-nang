@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DataPagination from '@/components/app/DataPagination';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { handleActionResult } from '@/lib/actions';
@@ -54,6 +55,7 @@ export default function ClassSessionsTab({
   onPageSizeChange,
 }: Props) {
   const router = useRouter();
+  const isTA = useIsTeachingAssistant();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<ClassSessionListRow | null>(null);
 
@@ -96,10 +98,14 @@ export default function ClassSessionsTab({
                 ))}
               </SelectContent>
             </Select>
-            <ClassAttendanceExportDialog classId={classId} />
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              Tạo buổi học
-            </Button>
+            {!isTA && (
+              <>
+                <ClassAttendanceExportDialog classId={classId} />
+                <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                  Tạo buổi học
+                </Button>
+              </>
+            )}
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-0">
@@ -174,28 +180,30 @@ export default function ClassSessionsTab({
                             activeAttendanceSession={row.activeAttendanceSession ?? null}
                             onChanged={() => router.refresh()}
                           />
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Sửa"
-                              className="cursor-pointer"
-                              onClick={() => setEditingSession(row)}
-                            >
-                              <Pencil />
-                            </Button>
-                            {effectiveStatus !== 'IN_PROGRESS' && (
+                          {!isTA && (
+                            <div className="flex items-center gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                title="Xoá"
-                                className="text-destructive hover:text-destructive cursor-pointer"
-                                onClick={() => handleDelete(row.id)}
+                                title="Sửa"
+                                className="cursor-pointer"
+                                onClick={() => setEditingSession(row)}
                               >
-                                <Trash2 />
+                                <Pencil />
                               </Button>
-                            )}
-                          </div>
+                              {effectiveStatus !== 'IN_PROGRESS' && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  title="Xoá"
+                                  className="text-destructive hover:text-destructive cursor-pointer"
+                                  onClick={() => handleDelete(row.id)}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

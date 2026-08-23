@@ -18,6 +18,12 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { logoutAction } from '@/actions/v1/auth/logout';
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Quản trị viên',
+  TEACHING_ASSISTANT: 'Trợ giảng',
+  STUDENT: 'Học sinh',
+};
+
 interface Props {
   email: string;
   role: string;
@@ -42,9 +48,9 @@ export default function AppTopbar({ email, role }: Props) {
   }
 
   const initial = email.charAt(0).toUpperCase();
-  const isAdmin = role === 'ADMIN';
-  const roleLabel = isAdmin ? 'Quản trị viên' : 'Học sinh';
-  const profileHref = isAdmin ? '/admin/profile' : '/dashboard/profile';
+  const isStudent = role === 'STUDENT';
+  const roleLabel = ROLE_LABELS[role] ?? role;
+  const profileHref = isStudent ? '/dashboard/profile' : '/admin/profile';
 
   return (
     <header className="border-divider bg-background/85 sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur md:px-6">

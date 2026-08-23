@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, use, useCallback, useEffect, useState } from 'react';
-import { Users, UserCheck, UserX, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Users, UserCheck, UserX, ShieldCheck, ShieldOff, GraduationCap } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -71,7 +71,7 @@ const DEFAULTS: UrlState = {
   pageSize: 20,
 };
 
-const STATS_GRID = 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+const STATS_GRID = 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6';
 
 function UsersStatsSection({ promise }: { promise: Promise<IListUsersResult> }) {
   const { stats } = use(promise);
@@ -82,6 +82,12 @@ function UsersStatsSection({ promise }: { promise: Promise<IListUsersResult> }) 
       <StatsCard label="Chờ kích hoạt" value={stats.unactivated} icon={UserX} tone="warning" />
       <StatsCard label="Vô hiệu hóa" value={stats.disabled} icon={ShieldOff} tone="destructive" />
       <StatsCard label="Quản trị viên" value={stats.admins} icon={ShieldCheck} tone="info" />
+      <StatsCard
+        label="Trợ giảng"
+        value={stats.teachingAssistants}
+        icon={GraduationCap}
+        tone="info"
+      />
     </div>
   );
 }

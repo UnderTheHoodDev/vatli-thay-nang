@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { apiClient } from '@/lib/axios';
 import { setSessionCookieInAction } from '@/lib/server/cookies';
 import { extractErrors } from '@/lib/errors';
+import { roleHomePath } from '@/lib/auth/routes';
 import type { Role } from '@/types/auth';
 import type { IAuthActionResult } from '@/types/actions/auth';
 
@@ -18,7 +19,7 @@ export async function loginAction(email: string, password: string): Promise<IAut
     return {
       success: true,
       errors: [],
-      redirectTo: data.role === 'ADMIN' ? '/admin/accounts' : '/dashboard',
+      redirectTo: roleHomePath(data.role),
     };
   } catch (error) {
     if (error instanceof AxiosError && error.response?.data) {

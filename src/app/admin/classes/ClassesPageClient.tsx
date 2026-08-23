@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import PageHeader from '@/components/app/PageHeader';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
@@ -180,6 +181,7 @@ function ClassesTableSection({
   promise,
   isPending,
   statusFilter,
+  isTA,
   onCreate,
   onEdit,
   onDelete,
@@ -187,6 +189,7 @@ function ClassesTableSection({
   promise: Promise<ListClassesResponse>;
   isPending: boolean;
   statusFilter: StatusHeaderFilter;
+  isTA: boolean;
   onCreate: () => void;
   onEdit: (row: ClassRow) => void;
   onDelete: (row: ClassRow) => void;
@@ -203,11 +206,17 @@ function ClassesTableSection({
       <EmptyState
         icon={School}
         title="Không có lớp học nào"
-        description="Tạo lớp đầu tiên để bắt đầu quản lý học sinh và bài học."
+        description={
+          isTA
+            ? 'Hiện chưa có lớp học nào trong hệ thống.'
+            : 'Tạo lớp đầu tiên để bắt đầu quản lý học sinh và bài học.'
+        }
         action={
-          <Button onClick={onCreate} className="cursor-pointer">
-            <Plus /> Tạo lớp mới
-          </Button>
+          isTA ? undefined : (
+            <Button onClick={onCreate} className="cursor-pointer">
+              <Plus /> Tạo lớp mới
+            </Button>
+          )
         }
       />
     );
@@ -243,25 +252,29 @@ function ClassesTableSection({
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                 <div className="flex items-center justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    title="Học phí"
-                    className="cursor-pointer"
-                    onClick={() => router.push(`/admin/tuition/${row.id}`)}
-                  >
-                    <Wallet />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    title="Sửa"
-                    className="cursor-pointer"
-                    onClick={() => onEdit(row)}
-                  >
-                    <Pencil />
-                  </Button>
-                  {row.status === 'CLOSED' && (
+                  {!isTA && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Học phí"
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/tuition/${row.id}`)}
+                    >
+                      <Wallet />
+                    </Button>
+                  )}
+                  {!isTA && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Sửa"
+                      className="cursor-pointer"
+                      onClick={() => onEdit(row)}
+                    >
+                      <Pencil />
+                    </Button>
+                  )}
+                  {!isTA && row.status === 'CLOSED' && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -300,6 +313,7 @@ function ClassesPaginationSection({
 
 export default function ClassesPageClient({ urlState, classesPromise, allClasses }: Props) {
   const router = useRouter();
+  const isTA = useIsTeachingAssistant();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassRow | null>(null);
   const [deletingClass, setDeletingClass] = useState<ClassRow | null>(null);
@@ -348,7 +362,7 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
         <ClassesStatsSection promise={classesPromise} />
       </Suspense>
 
-      <AttendanceExportCard classes={allClasses} />
+      {!isTA && <AttendanceExportCard classes={allClasses} />}
 
       <Card className="gap-0 pb-0">
         <CardHeader className="flex flex-col gap-4 pb-4">
@@ -360,9 +374,11 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
                 <ClassesResultSummary promise={classesPromise} page={page} pageSize={pageSize} />
               </Suspense>
             </div>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              <Plus /> Tạo lớp
-            </Button>
+            {!isTA && (
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                <Plus /> Tạo lớp
+              </Button>
+            )}
           </div>
 
           {/* Thanh lọc: search gộp gõ-là-lọc + khoảng ngày trong popover + chips. */}
@@ -425,6 +441,7 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
               promise={classesPromise}
               isPending={filters.isPending}
               statusFilter={statusFilter}
+              isTA={isTA}
               onCreate={() => setCreateOpen(true)}
               onEdit={setEditingClass}
               onDelete={setDeletingClass}

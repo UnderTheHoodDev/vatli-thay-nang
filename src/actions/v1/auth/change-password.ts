@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { api } from '@/lib/axios';
 import { clearSessionCookieInAction } from '@/lib/server/cookies';
 import { extractErrors } from '@/lib/errors';
+import { roleHomePath } from '@/lib/auth/routes';
 import type { Role } from '@/types/auth';
 import type { IChangePasswordResult } from '@/types/actions/auth';
 
@@ -29,7 +30,7 @@ export async function changePasswordAction(args: Args): Promise<IChangePasswordR
       return {
         success: true,
         errors: [],
-        redirectTo: args.role === 'ADMIN' ? '/admin/accounts' : '/dashboard',
+        redirectTo: roleHomePath(args.role),
       };
     }
 

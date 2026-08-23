@@ -6,6 +6,7 @@ export const GENDER_OPTIONS = [
 
 export const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Admin' },
+  { value: 'TEACHING_ASSISTANT', label: 'Trợ giảng' },
   { value: 'STUDENT', label: 'Học sinh' },
 ] as const;
 

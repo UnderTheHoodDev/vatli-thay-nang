@@ -14,15 +14,17 @@
  */
 
 /** Nền đặc tương đương bg-muted/40 đè lên bg-card (nền header bảng). */
-const HEAD_BG = 'bg-[color-mix(in_srgb,var(--color-muted)_40%,var(--color-card))]';
+export const HEAD_BG = 'bg-[color-mix(in_srgb,var(--color-muted)_40%,var(--color-card))]';
 
 /** Bóng mép trái của cột ghim phải — báo còn nội dung khuất bên dưới. */
 const SHADOW_LEFT = 'shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]';
 /** Bóng mép phải của cột ghim trái. */
-const SHADOW_RIGHT = 'shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]';
+export const SHADOW_RIGHT = 'shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]';
 
-/** Đổi màu theo trạng thái hàng (yêu cầu TableRow có `group/r hover:bg-muted`). */
-const ROW_SYNC = 'group-hover/r:bg-muted group-data-[state=selected]/r:bg-muted';
+/** Đổi màu theo trạng thái hàng (yêu cầu TableRow có `group/r hover:bg-muted`).
+ * Bảng nào tự thêm biến thể trạng thái riêng (vd: dòng "dirty" ở học phí) thì
+ * ghép thêm `group-data-[<attr>]/r:bg-<color>` vào sau, không thay cái này. */
+export const ROW_SYNC = 'group-hover/r:bg-muted group-data-[state=selected]/r:bg-muted';
 
 export const STICKY_ACTION_HEAD = `sticky right-0 z-10 ${HEAD_BG} ${SHADOW_LEFT}`;
 export const STICKY_ACTION_CELL = `sticky right-0 z-10 bg-card transition-colors ${ROW_SYNC} ${SHADOW_LEFT}`;

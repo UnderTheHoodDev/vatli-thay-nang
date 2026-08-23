@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import {
   Users,
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/app/PageHeader';
+import { getCurrentSession } from '@/lib/server/session';
 import HelpSections, { type HelpSectionData } from './HelpSections';
 import { cn } from '@/lib/utils';
 
@@ -80,7 +82,10 @@ function Section({
   );
 }
 
-export default function AdminHelpPage() {
+export default async function AdminHelpPage() {
+  const session = await getCurrentSession();
+  if (session?.role === 'TEACHING_ASSISTANT') redirect('/admin/classes');
+
   const sections: HelpSectionData[] = [
     {
       id: 'nguoi-dung',

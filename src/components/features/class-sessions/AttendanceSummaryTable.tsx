@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle2, ClipboardX, MoreHorizontal, X } from 'lucide-react';
 import DataPagination from '@/components/app/DataPagination';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
 import {
   STICKY_ACTION_CELL,
@@ -13,6 +14,7 @@ import {
   STICKY_L10_HEAD,
   STICKY_ROW,
 } from '@/components/app/table-filters/sticky';
+import { cn } from '@/lib/utils';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +93,7 @@ interface BulkDialogState {
 }
 
 export default function AttendanceSummaryTable({ classSessionId, summary, onChanged }: Props) {
+  const isTA = useIsTeachingAssistant();
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [bulkDialog, setBulkDialog] = useState<BulkDialogState | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -205,68 +208,78 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
         placeholder="Tìm theo họ tên hoặc email…"
       />
 
-      {/* Bulk action bar */}
-      <div className="bg-muted/50 border-divider flex flex-wrap items-start gap-3 rounded-lg border p-3">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          <span className="text-foreground shrink-0 text-sm font-medium">
-            {selectedStudents.length > 0
-              ? `Đã chọn ${selectedStudents.length} học sinh:`
-              : 'Chưa chọn học sinh nào'}
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {selectedStudents.map((s) => (
-              <Badge
-                key={s.studentId}
-                variant="secondary"
-                className="cursor-pointer gap-1 pr-1"
-                onClick={() => toggleOne(s.studentId)}
-              >
-                {s.fullName ?? s.email}
-                <X className="size-3" />
-              </Badge>
-            ))}
+      {/* Bulk action bar — điểm danh thủ công, Trợ giảng không có quyền */}
+      {!isTA && (
+        <div className="bg-muted/50 border-divider flex flex-wrap items-start gap-3 rounded-lg border p-3">
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <span className="text-foreground shrink-0 text-sm font-medium">
+              {selectedStudents.length > 0
+                ? `Đã chọn ${selectedStudents.length} học sinh:`
+                : 'Chưa chọn học sinh nào'}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {selectedStudents.map((s) => (
+                <Badge
+                  key={s.studentId}
+                  variant="secondary"
+                  className="cursor-pointer gap-1 pr-1"
+                  onClick={() => toggleOne(s.studentId)}
+                >
+                  {s.fullName ?? s.email}
+                  <X className="size-3" />
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              variant="default"
+              disabled={selectedStudents.length === 0}
+              onClick={() => setBulkDialog({ mode: 'mark', students: selectedStudents })}
+            >
+              <CheckCircle2 className="size-4" />
+              Đánh dấu có mặt
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={selectedStudents.length === 0}
+              onClick={() => setBulkDialog({ mode: 'remove', students: selectedStudents })}
+            >
+              <ClipboardX className="size-4" />
+              Huỷ điểm danh
+            </Button>
+            {selectedStudents.length > 0 && (
+              <Button size="sm" variant="ghost" onClick={clearSelection}>
+                Bỏ chọn
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            size="sm"
-            variant="default"
-            disabled={selectedStudents.length === 0}
-            onClick={() => setBulkDialog({ mode: 'mark', students: selectedStudents })}
-          >
-            <CheckCircle2 className="size-4" />
-            Đánh dấu có mặt
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={selectedStudents.length === 0}
-            onClick={() => setBulkDialog({ mode: 'remove', students: selectedStudents })}
-          >
-            <ClipboardX className="size-4" />
-            Huỷ điểm danh
-          </Button>
-          {selectedStudents.length > 0 && (
-            <Button size="sm" variant="ghost" onClick={clearSelection}>
-              Bỏ chọn
-            </Button>
-          )}
-        </div>
-      </div>
+      )}
 
       <div className="border-divider overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className={`w-10 text-center ${STICKY_L0_HEAD}`}>
-                <Checkbox
-                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                  onCheckedChange={toggleAll}
-                  aria-label="Chọn tất cả"
-                />
-              </TableHead>
+              {!isTA && (
+                <TableHead className={`w-10 text-center ${STICKY_L0_HEAD}`}>
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                    onCheckedChange={toggleAll}
+                    aria-label="Chọn tất cả"
+                  />
+                </TableHead>
+              )}
               <TableHead
-                className={`w-52 min-w-52 ${STICKY_L10_HEAD} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+                className={cn(
+                  'w-52 min-w-52',
+                  // Không có cột checkbox (Trợ giảng) thì cột này là cột ghim trái ĐẦU
+                  // TIÊN — phải ghim ở left-0, không thì để hở 40px lẽ ra checkbox chiếm.
+                  isTA ? STICKY_L0_HEAD : STICKY_L10_HEAD,
+                  'shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]',
+                )}
               >
                 Họ tên học sinh
               </TableHead>
@@ -285,7 +298,11 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
               {sessions.map((s, idx) => (
                 <SessionColumnHead key={s.id} idx={idx} />
               ))}
-              <TableHead className={`w-16 text-center ${STICKY_ACTION_HEAD}`}>Hành động</TableHead>
+              {!isTA && (
+                <TableHead className={`w-16 text-center ${STICKY_ACTION_HEAD}`}>
+                  Hành động
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -302,21 +319,27 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                 <TableRow
                   key={row.studentId}
                   data-state={selectedIds.has(row.studentId) ? 'selected' : undefined}
-                  className={`cursor-pointer ${STICKY_ROW}`}
-                  onClick={() => toggleOne(row.studentId)}
+                  className={isTA ? STICKY_ROW : `cursor-pointer ${STICKY_ROW}`}
+                  onClick={isTA ? undefined : () => toggleOne(row.studentId)}
                 >
+                  {!isTA && (
+                    <TableCell
+                      className={`text-center ${STICKY_L0_CELL}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={selectedIds.has(row.studentId)}
+                        onCheckedChange={() => toggleOne(row.studentId)}
+                        aria-label={`Chọn ${row.fullName ?? row.email}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell
-                    className={`text-center ${STICKY_L0_CELL}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Checkbox
-                      checked={selectedIds.has(row.studentId)}
-                      onCheckedChange={() => toggleOne(row.studentId)}
-                      aria-label={`Chọn ${row.fullName ?? row.email}`}
-                    />
-                  </TableCell>
-                  <TableCell
-                    className={`text-foreground max-w-52 truncate font-medium ${STICKY_L10_CELL} shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]`}
+                    className={cn(
+                      'text-foreground max-w-52 truncate font-medium',
+                      isTA ? STICKY_L0_CELL : STICKY_L10_CELL,
+                      'shadow-[8px_0_8px_-8px_rgba(0,0,0,0.15)]',
+                    )}
                   >
                     {row.fullName ?? row.email}
                     {row.fullName && (
@@ -345,58 +368,60 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                     const log = row.logsBySession.get(s.id);
                     return <SessionColumnCells key={s.id} log={log} />;
                   })}
-                  <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
-                    <div className="flex items-center justify-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="cursor-pointer"
-                            title="Hành động"
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setDialog({ mode: 'mark', student: row })}
-                          >
-                            Đánh dấu có mặt
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setDialog({ mode: 'remove', student: row })}
-                          >
-                            Huỷ điểm danh
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setDialog({ mode: 'note', student: row })}
-                          >
-                            Thêm ghi chú
-                          </DropdownMenuItem>
-                          {row.leaveRequest && row.leaveRequest.status === 'SUBMITTED' && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() =>
-                                  setDialog({
-                                    mode: 'acknowledgeLeave',
-                                    student: row,
-                                  })
-                                }
-                              >
-                                Xác nhận nghỉ
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
+                  {!isTA && (
+                    <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
+                      <div className="flex items-center justify-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="cursor-pointer"
+                              title="Hành động"
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setDialog({ mode: 'mark', student: row })}
+                            >
+                              Đánh dấu có mặt
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setDialog({ mode: 'remove', student: row })}
+                            >
+                              Huỷ điểm danh
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setDialog({ mode: 'note', student: row })}
+                            >
+                              Thêm ghi chú
+                            </DropdownMenuItem>
+                            {row.leaveRequest && row.leaveRequest.status === 'SUBMITTED' && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    setDialog({
+                                      mode: 'acknowledgeLeave',
+                                      student: row,
+                                    })
+                                  }
+                                >
+                                  Xác nhận nghỉ
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

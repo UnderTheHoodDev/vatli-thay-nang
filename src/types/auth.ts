@@ -1,5 +1,5 @@
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
-export type Role = 'ADMIN' | 'STUDENT';
+export type Role = 'ADMIN' | 'STUDENT' | 'TEACHING_ASSISTANT';
 export type UserStatus = 'ACTIVATED' | 'UNACTIVATED' | 'DISABLED';
 
 export interface UserRow {

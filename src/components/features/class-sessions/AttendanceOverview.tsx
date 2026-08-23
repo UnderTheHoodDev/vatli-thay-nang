@@ -3,6 +3,7 @@
 import { CalendarOff, CheckCircle2, UserMinus, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatsCard from '@/components/app/StatsCard';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import ExportAttendanceButton from '@/components/features/class-sessions/ExportAttendanceButton';
 import type { AttendanceSummary } from '@/types/actions/attendance';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function AttendanceOverview({ classSessionId, counts }: Props) {
+  const isTA = useIsTeachingAssistant();
   const total = counts?.total ?? 0;
   const attended = counts?.attended ?? 0;
   const notAttended = counts?.notAttended ?? 0;
@@ -22,7 +24,7 @@ export default function AttendanceOverview({ classSessionId, counts }: Props) {
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle>Báo cáo tổng quan</CardTitle>
-          <ExportAttendanceButton classSessionId={classSessionId} />
+          {!isTA && <ExportAttendanceButton classSessionId={classSessionId} />}
         </div>
       </CardHeader>
       <CardContent className="pb-6">

@@ -1,7 +1,9 @@
+import { redirect } from 'next/navigation';
 import { listUsers } from '@/actions/v1/users/list-users';
 import { listProvinces } from '@/actions/v1/provinces';
 import { listClasses } from '@/actions/v1/classes/list-classes';
 import { ALL_VALUE } from '@/lib/constants';
+import { getCurrentSession } from '@/lib/server/session';
 import type { Gender, Role, UserStatus } from '@/types/auth';
 import UsersPageClient, { type UrlState } from '@/app/admin/users/UsersPageClient';
 
@@ -23,6 +25,9 @@ function readUrlState(sp: Record<string, string | undefined>): UrlState {
 }
 
 export default async function AccountsPage({ searchParams }: Props) {
+  const session = await getCurrentSession();
+  if (session?.role === 'TEACHING_ASSISTANT') redirect('/admin/classes');
+
   const sp = await searchParams;
   const urlState = readUrlState(sp);
 

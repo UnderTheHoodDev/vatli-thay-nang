@@ -8,7 +8,7 @@ import type { IUserProfile } from '@/types/actions/profile';
 export default function ProfileHeaderCard({ profile }: { profile: IUserProfile }) {
   const initial = (profile.fullName?.charAt(0) || profile.email.charAt(0)).toUpperCase();
   const roleLabel = ROLE_OPTIONS.find((o) => o.value === profile.role)?.label ?? profile.role;
-  const isAdmin = profile.role === 'ADMIN';
+  const isAdmin = profile.role !== 'STUDENT';
 
   return (
     <Card>

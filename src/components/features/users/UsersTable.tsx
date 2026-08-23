@@ -69,7 +69,9 @@ function genderBadge(g: Gender | null) {
 }
 
 function roleBadge(r: Role) {
-  return r === 'ADMIN' ? <Badge>Admin</Badge> : <Badge variant="secondary">Học sinh</Badge>;
+  if (r === 'ADMIN') return <Badge>Admin</Badge>;
+  if (r === 'TEACHING_ASSISTANT') return <Badge variant="warning">Trợ giảng</Badge>;
+  return <Badge variant="secondary">Học sinh</Badge>;
 }
 
 function statusBadge(s: UserStatus) {

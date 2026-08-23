@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
@@ -51,6 +52,7 @@ interface Props {
 
 export default function LeaveRequestsSection({ data, meta }: Props) {
   const router = useRouter();
+  const isTA = useIsTeachingAssistant();
   const [loadingId, setLoadingId] = useState<number | null>(null);
   // Lọc thuần client-side (data đã tải hết) — không cần debounce hay URL sync.
   const [q, setQ] = useState('');
@@ -192,7 +194,7 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          {row.status === 'SUBMITTED' ? (
+                          {row.status === 'SUBMITTED' && !isTA ? (
                             <Button
                               size="sm"
                               variant="outline"

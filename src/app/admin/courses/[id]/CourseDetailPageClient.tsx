@@ -7,6 +7,7 @@ import { ArrowLeft, BarChart3, Info, LayoutList, Users as UsersIcon } from 'luci
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import CourseInfoTab from '@/components/features/courses/CourseInfoTab';
 import CourseStructureTab from '@/components/features/courses/CourseStructureTab';
 import CourseEnrollmentsTab, {
@@ -14,6 +15,7 @@ import CourseEnrollmentsTab, {
 } from '@/components/features/courses/CourseEnrollmentsTab';
 import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
+import CourseTestsSection from '@/components/features/tests/CourseTestsSection';
 import type { CourseDetail } from '@/types/course-management';
 import type { ListCourseEnrollmentsResponse } from '@/actions/v1/courses/list-course-enrollments';
 
@@ -86,6 +88,7 @@ function EnrollmentsTabData({
 export default function CourseDetailPageClient({ course, urlState, enrollmentsPromise }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const isTA = useIsTeachingAssistant();
   const [isPending, startTransition] = useTransition();
 
   const [activeTab, setActiveTab] = useState<CourseDetailTab>(urlState.tab);
@@ -146,63 +149,69 @@ export default function CourseDetailPageClient({ course, urlState, enrollmentsPr
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
-        <TabsList className="max-w-full justify-start overflow-x-auto">
-          <TabsTrigger value="info" className="shrink-0 cursor-pointer">
-            <Info className="size-4" /> Thông tin
-          </TabsTrigger>
-          <TabsTrigger value="structure" className="shrink-0 cursor-pointer">
-            <LayoutList className="size-4" /> Nội dung
-          </TabsTrigger>
-          <TabsTrigger value="enrollments" className="shrink-0 cursor-pointer">
-            <UsersIcon className="size-4" /> Học sinh
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="shrink-0 cursor-pointer">
-            <BarChart3 className="size-4" /> Thống kê
-          </TabsTrigger>
-        </TabsList>
+      {isTA ? (
+        // Trợ giảng: chỉ để chấm bài — không cần tab Thông tin/Nội dung/Học sinh/Thống kê,
+        // chỉ hiện thẳng danh sách Bài kiểm tra (vốn nằm cuối tab Nội dung cho admin).
+        <CourseTestsSection courseId={course.id} />
+      ) : (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
+          <TabsList className="max-w-full justify-start overflow-x-auto">
+            <TabsTrigger value="info" className="shrink-0 cursor-pointer">
+              <Info className="size-4" /> Thông tin
+            </TabsTrigger>
+            <TabsTrigger value="structure" className="shrink-0 cursor-pointer">
+              <LayoutList className="size-4" /> Nội dung
+            </TabsTrigger>
+            <TabsTrigger value="enrollments" className="shrink-0 cursor-pointer">
+              <UsersIcon className="size-4" /> Học sinh
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="shrink-0 cursor-pointer">
+              <BarChart3 className="size-4" /> Thống kê
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="info">
-          <CourseInfoTab course={course} />
-        </TabsContent>
+          <TabsContent value="info">
+            <CourseInfoTab course={course} />
+          </TabsContent>
 
-        <TabsContent value="structure">
-          <CourseStructureTab course={course} />
-        </TabsContent>
+          <TabsContent value="structure">
+            <CourseStructureTab course={course} />
+          </TabsContent>
 
-        <TabsContent value="enrollments">
-          <Suspense
-            fallback={
-              <CourseEnrollmentsTab
+          <TabsContent value="enrollments">
+            <Suspense
+              fallback={
+                <CourseEnrollmentsTab
+                  courseId={course.id}
+                  search={{ email: urlState.email, fullName: urlState.fullName }}
+                  rows={[]}
+                  meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
+                  loading
+                  onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
+                  onPageChange={(p) => updateUrl({ page: p })}
+                  onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+                />
+              }
+            >
+              <EnrollmentsTabData
+                promise={enrollmentsPromise}
                 courseId={course.id}
                 search={{ email: urlState.email, fullName: urlState.fullName }}
-                rows={[]}
-                meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
-                loading
-                onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
-                onPageChange={(p) => updateUrl({ page: p })}
-                onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+                isPending={isPending}
+                handlers={{
+                  onSearchChange: (v) => updateUrl({ ...v, page: 1 }),
+                  onPageChange: (p) => updateUrl({ page: p }),
+                  onPageSizeChange: (s) => updateUrl({ pageSize: s, page: 1 }),
+                }}
               />
-            }
-          >
-            <EnrollmentsTabData
-              promise={enrollmentsPromise}
-              courseId={course.id}
-              search={{ email: urlState.email, fullName: urlState.fullName }}
-              isPending={isPending}
-              handlers={{
-                onSearchChange: (v) => updateUrl({ ...v, page: 1 }),
-                onPageChange: (p) => updateUrl({ page: p }),
-                onPageSizeChange: (s) => updateUrl({ pageSize: s, page: 1 }),
-              }}
-            />
-          </Suspense>
-        </TabsContent>
+            </Suspense>
+          </TabsContent>
 
-        <TabsContent value="stats">
-          <CourseStatsTab courseId={course.id} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="stats">
+            <CourseStatsTab courseId={course.id} />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

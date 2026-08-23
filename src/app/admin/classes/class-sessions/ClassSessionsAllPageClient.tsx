@@ -38,6 +38,7 @@ import { useTableFilters } from '@/components/app/table-filters/useTableFilters'
 import { STICKY_ACTION_CELL, STICKY_ACTION_HEAD } from '@/components/app/table-filters/sticky';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
@@ -244,6 +245,7 @@ function SessionsPaginationSection({
 }
 
 export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, classes }: Props) {
+  const isTA = useIsTeachingAssistant();
   const [createOpen, setCreateOpen] = useState(false);
   const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
@@ -279,9 +281,11 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
                 <SessionsResultSummary promise={sessionsPromise} page={page} pageSize={pageSize} />
               </Suspense>
             </div>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              Tạo buổi học
-            </Button>
+            {!isTA && (
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                Tạo buổi học
+              </Button>
+            )}
           </div>
 
           {/* Thanh lọc: search gộp gõ-là-lọc + khoảng ngày trong popover + chips. */}

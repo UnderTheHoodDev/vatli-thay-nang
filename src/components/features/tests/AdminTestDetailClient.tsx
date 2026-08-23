@@ -22,6 +22,7 @@ import { listSubmissions, type ListSubmissionsResponse } from '@/actions/v1/test
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +82,7 @@ function formatDateTime(iso: string | null): string {
  * nộp) nên render eager ở page.tsx, tách khỏi phần Suspense cho bảng/thống kê.
  */
 export function TestHeaderBar({ courseId, test }: { courseId: number; test: TestDetail }) {
+  const isTA = useIsTeachingAssistant();
   const [exporting, setExporting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const phase = PHASE[test.phase];
@@ -126,27 +128,29 @@ export function TestHeaderBar({ courseId, test }: { courseId: number; test: Test
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button onClick={() => setEditOpen(true)} className="cursor-pointer">
-          <Pencil /> Sửa
-        </Button>
-        <Button
-          variant="outline"
-          disabled={exporting}
-          onClick={() => void handleExport('csv')}
-          className="cursor-pointer"
-        >
-          <Download /> CSV
-        </Button>
-        <Button
-          variant="outline"
-          disabled={exporting}
-          onClick={() => void handleExport('xlsx')}
-          className="cursor-pointer"
-        >
-          <Download /> Excel
-        </Button>
-      </div>
+      {!isTA && (
+        <div className="flex gap-2">
+          <Button onClick={() => setEditOpen(true)} className="cursor-pointer">
+            <Pencil /> Sửa
+          </Button>
+          <Button
+            variant="outline"
+            disabled={exporting}
+            onClick={() => void handleExport('csv')}
+            className="cursor-pointer"
+          >
+            <Download /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            disabled={exporting}
+            onClick={() => void handleExport('xlsx')}
+            className="cursor-pointer"
+          >
+            <Download /> Excel
+          </Button>
+        </div>
+      )}
 
       {/* key theo editOpen để mỗi lần mở là remount → form nạp lại dữ liệu mới nhất
           (giống pattern key={editingId} ở CourseTestsSection). Lưu xong TestFormModal
@@ -170,6 +174,7 @@ export function TestHeaderBar({ courseId, test }: { courseId: number; test: Test
  * Render eager ở page.tsx cùng TestHeaderBar vì attachments đi kèm sẵn trong `test`.
  */
 export function TestAttachmentsCard({ attachments }: { attachments: TestFile[] }) {
+  const isTA = useIsTeachingAssistant();
   return (
     <Card>
       <CardHeader>
@@ -184,7 +189,13 @@ export function TestAttachmentsCard({ attachments }: { attachments: TestFile[] }
       <CardContent className="pb-6">
         {attachments.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Chưa đính kèm file đề — bấm <span className="font-medium">Sửa</span> để thêm.
+            {isTA ? (
+              'Chưa đính kèm file đề.'
+            ) : (
+              <>
+                Chưa đính kèm file đề — bấm <span className="font-medium">Sửa</span> để thêm.
+              </>
+            )}
           </p>
         ) : (
           // Đề nhiều trang ảnh rất dài — giới hạn chiều cao, cuộn trong card để phần

@@ -24,6 +24,7 @@ export interface UsersListStats {
   unactivated: number;
   disabled: number;
   admins: number;
+  teachingAssistants: number;
   students: number;
 }
 
@@ -61,6 +62,7 @@ export interface IAdminUpdateUserPayload {
   schoolName?: string;
   parentPhonenumber?: string;
   facebookLink?: string;
+  role?: Role;
 }
 
 export interface IBulkDeleteSkippedItem {

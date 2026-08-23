@@ -6,9 +6,11 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { ASSETS } from '@/constants/assets';
 import { MENU_ITEMS } from '@/constants/menu';
+import { roleHomePath } from '@/lib/auth/routes';
+import type { Role } from '@/types/auth';
 
 interface HeaderProps {
-  role?: 'ADMIN' | 'STUDENT' | null;
+  role?: Role | null;
 }
 
 export default function Header({ role }: HeaderProps) {
@@ -95,9 +97,9 @@ export default function Header({ role }: HeaderProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 + MENU_ITEMS.length * 0.07, ease: 'easeOut' }}
             >
-              {role === 'ADMIN' ? (
+              {role === 'ADMIN' || role === 'TEACHING_ASSISTANT' ? (
                 <Link
-                  href="/admin/accounts"
+                  href={roleHomePath(role)}
                   className="bg-purple font-paytone hover:bg-purple-dark inline-block rounded-full px-7 py-3 text-base text-white no-underline transition-all duration-200 hover:-translate-y-0.5"
                 >
                   Trang quản trị
