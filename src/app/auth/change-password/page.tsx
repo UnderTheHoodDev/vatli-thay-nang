@@ -7,7 +7,7 @@ export default async function ChangePasswordPage() {
   const session = await getCurrentSession();
   if (!session) redirect('/auth/login');
   if (session.hasPassword) {
-    redirect(session.role === 'ADMIN' ? '/admin/profile' : '/dashboard/profile');
+    redirect(session.role !== 'STUDENT' ? '/admin/profile' : '/dashboard/profile');
   }
 
   return (

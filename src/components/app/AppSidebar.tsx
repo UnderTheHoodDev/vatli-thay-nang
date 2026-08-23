@@ -50,6 +50,12 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Trợ giúp', href: '/admin/help', icon: CircleHelp, section: 'Tài khoản' },
 ];
 
+/** Trợ giảng: chỉ Lớp học/Buổi học (bật điểm danh) + Khóa học (chấm bài) — không có
+ * Người dùng/Học phí/Trợ giúp. */
+export const TEACHING_ASSISTANT_NAV: NavItem[] = ADMIN_NAV.filter(
+  (item) => item.label !== 'Người dùng' && item.label !== 'Học phí' && item.label !== 'Trợ giúp',
+);
+
 export const DASHBOARD_NAV: NavItem[] = [
   { label: 'Điểm danh', href: '/dashboard', icon: LayoutDashboard, section: 'Học tập' },
   { label: 'Khóa học', href: '/dashboard/courses', icon: BookOpen, section: 'Học tập' },

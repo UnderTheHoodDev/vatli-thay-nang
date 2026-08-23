@@ -14,6 +14,12 @@ import TableSkeleton from '@/components/app/TableSkeleton';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
+import {
+  SHADOW_RIGHT,
+  STICKY_ACTION_HEAD,
+  STICKY_L0_HEAD,
+  STICKY_L10_HEAD,
+} from '@/components/app/table-filters/sticky';
 import TuitionRow from './TuitionRow';
 import { cn } from '@/lib/utils';
 import type { TuitionListRow } from '@/types/actions/tuition';
@@ -42,8 +48,10 @@ function TuitionTableHead({ statusFilter }: { statusFilter?: TuitionStatusFilter
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
-        <TableHead className="w-12">STT</TableHead>
-        <TableHead>Họ và tên</TableHead>
+        <TableHead className={cn('w-10', STICKY_L0_HEAD)}>STT</TableHead>
+        <TableHead className={cn('w-48 min-w-48', STICKY_L10_HEAD, SHADOW_RIGHT)}>
+          Họ và tên
+        </TableHead>
         <TableHead>Email</TableHead>
         <TableHead className="text-right">Phải đóng</TableHead>
         <TableHead className="text-right">Đã đóng</TableHead>
@@ -55,7 +63,7 @@ function TuitionTableHead({ statusFilter }: { statusFilter?: TuitionStatusFilter
         <TableHead className="w-44">Ngày đóng</TableHead>
         <TableHead>Ghi chú</TableHead>
         <TableHead className="w-40">Sửa tay lúc</TableHead>
-        <TableHead className="w-28 text-right">Lưu</TableHead>
+        <TableHead className={cn('w-28 text-right', STICKY_ACTION_HEAD)}>Lưu</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -63,12 +71,14 @@ function TuitionTableHead({ statusFilter }: { statusFilter?: TuitionStatusFilter
 
 export function TuitionTableFallback() {
   return (
-    <Table>
-      <TuitionTableHead />
-      <TableBody>
-        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <Table>
+        <TuitionTableHead />
+        <TableBody>
+          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
@@ -101,7 +111,12 @@ export default function TuitionTable({
     );
   }
   return (
-    <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
+    <div
+      className={cn(
+        'overflow-x-auto transition-opacity',
+        isPending && 'pointer-events-none opacity-60',
+      )}
+    >
       <Table>
         <TuitionTableHead statusFilter={statusFilter} />
         <TableBody>

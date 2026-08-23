@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import EmptyState from '@/components/app/EmptyState';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import TableSkeleton from '@/components/app/TableSkeleton';
 import ColumnFilterHead, {
   type ColumnFilterOption,
@@ -63,6 +64,7 @@ export default function ClassStudentsTable({
   loading,
   statusFilter,
 }: Props) {
+  const isTA = useIsTeachingAssistant();
   const attendanceByStudent = useMemo(
     () => new Map((attendanceStats ?? []).map((s) => [s.studentId, s])),
     [attendanceStats],
@@ -98,7 +100,11 @@ export default function ClassStudentsTable({
       <EmptyState
         icon={UserPlus}
         title="Chưa có học sinh nào trong lớp"
-        description='Sử dụng nút "Thêm học sinh" ở trên để bắt đầu thêm học sinh vào lớp.'
+        description={
+          isTA
+            ? 'Lớp học này hiện chưa có học sinh nào.'
+            : 'Sử dụng nút "Thêm học sinh" ở trên để bắt đầu thêm học sinh vào lớp.'
+        }
       />
     );
   }
@@ -119,7 +125,7 @@ export default function ClassStudentsTable({
               <TableHead>Trạng thái</TableHead>
             )}
             <TableHead>Chuyên cần</TableHead>
-            <TableHead className="w-44 text-right">Hành động</TableHead>
+            {!isTA && <TableHead className="w-44 text-right">Hành động</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -146,53 +152,55 @@ export default function ClassStudentsTable({
                 <TableCell>
                   <AttendanceSummaryCell stats={attendanceByStudent.get(s.studentId)} />
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Sửa ngày vào học"
-                      className="cursor-pointer"
-                      disabled={pending}
-                      onClick={() => setEditingEnrollment(s)}
-                    >
-                      <CalendarCog />
-                    </Button>
-                    {s.status === 'STUDYING' ? (
+                {!isTA && (
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        title="Đánh dấu nghỉ học"
+                        title="Sửa ngày vào học"
                         className="cursor-pointer"
                         disabled={pending}
-                        onClick={() => setMarkingLeft(s)}
+                        onClick={() => setEditingEnrollment(s)}
                       >
-                        <UserMinus />
+                        <CalendarCog />
                       </Button>
-                    ) : (
+                      {s.status === 'STUDYING' ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title="Đánh dấu nghỉ học"
+                          className="cursor-pointer"
+                          disabled={pending}
+                          onClick={() => setMarkingLeft(s)}
+                        >
+                          <UserMinus />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title="Khôi phục trạng thái đang học"
+                          className="cursor-pointer"
+                          disabled={pending}
+                          onClick={() => setRestoring(s)}
+                        >
+                          <RotateCcw />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        title="Khôi phục trạng thái đang học"
-                        className="cursor-pointer"
+                        title="Xoá khỏi lớp"
+                        className="text-destructive hover:text-destructive cursor-pointer"
                         disabled={pending}
-                        onClick={() => setRestoring(s)}
+                        onClick={() => setTarget(s)}
                       >
-                        <RotateCcw />
+                        <Trash2 />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Xoá khỏi lớp"
-                      className="text-destructive hover:text-destructive cursor-pointer"
-                      disabled={pending}
-                      onClick={() => setTarget(s)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </TableCell>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

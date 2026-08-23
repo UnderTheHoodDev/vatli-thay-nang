@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -60,6 +61,7 @@ function formatRange(start: string, end: string): string {
  */
 export default function CourseTestsSection({ courseId }: Props) {
   const router = useRouter();
+  const isTA = useIsTeachingAssistant();
   const [tests, setTests] = useState<AdminTestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -109,15 +111,17 @@ export default function CourseTestsSection({ courseId }: Props) {
             Ra đề bằng ảnh/PDF, đặt lịch làm bài. Hết giờ là khoá nộp.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingId(undefined);
-            setFormOpen(true);
-          }}
-          className="cursor-pointer"
-        >
-          <Plus /> Tạo bài kiểm tra
-        </Button>
+        {!isTA && (
+          <Button
+            onClick={() => {
+              setEditingId(undefined);
+              setFormOpen(true);
+            }}
+            className="cursor-pointer"
+          >
+            <Plus /> Tạo bài kiểm tra
+          </Button>
+        )}
       </CardHeader>
 
       <CardContent className="pb-6">
@@ -138,17 +142,23 @@ export default function CourseTestsSection({ courseId }: Props) {
           <EmptyState
             icon={ClipboardList}
             title="Chưa có bài kiểm tra"
-            description="Tạo bài kiểm tra để học sinh làm bài trong khoảng thời gian bạn đặt."
+            description={
+              isTA
+                ? 'Khoá học này hiện chưa có bài kiểm tra nào.'
+                : 'Tạo bài kiểm tra để học sinh làm bài trong khoảng thời gian bạn đặt.'
+            }
             action={
-              <Button
-                onClick={() => {
-                  setEditingId(undefined);
-                  setFormOpen(true);
-                }}
-                className="cursor-pointer"
-              >
-                <Plus /> Tạo bài kiểm tra
-              </Button>
+              isTA ? undefined : (
+                <Button
+                  onClick={() => {
+                    setEditingId(undefined);
+                    setFormOpen(true);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Plus /> Tạo bài kiểm tra
+                </Button>
+              )
             }
           />
         ) : (
@@ -161,7 +171,7 @@ export default function CourseTestsSection({ courseId }: Props) {
                   <TableHead>Trạng thái</TableHead>
                   <TableHead className="text-center">Đã nộp / Tham gia</TableHead>
                   <TableHead className="text-center">Điểm tối đa</TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
+                  {!isTA && <TableHead className="text-right">Hành động</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -207,35 +217,37 @@ export default function CourseTestsSection({ courseId }: Props) {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">{t.maxScore}</TableCell>
-                      <TableCell>
-                        {/* Nút thao tác không được kích hoạt điều hướng của cả hàng. */}
-                        <div
-                          className="flex justify-end gap-1"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8 cursor-pointer"
-                            aria-label={`Sửa ${t.title}`}
-                            onClick={() => {
-                              setEditingId(t.id);
-                              setFormOpen(true);
-                            }}
+                      {!isTA && (
+                        <TableCell>
+                          {/* Nút thao tác không được kích hoạt điều hướng của cả hàng. */}
+                          <div
+                            className="flex justify-end gap-1"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-destructive size-8 cursor-pointer"
-                            aria-label={`Xoá ${t.title}`}
-                            onClick={() => setDeleteTarget(t)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8 cursor-pointer"
+                              aria-label={`Sửa ${t.title}`}
+                              onClick={() => {
+                                setEditingId(t.id);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive size-8 cursor-pointer"
+                              aria-label={`Xoá ${t.title}`}
+                              onClick={() => setDeleteTarget(t)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

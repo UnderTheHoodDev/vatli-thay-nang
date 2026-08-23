@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import PageHeader from '@/components/app/PageHeader';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import StatsCard from '@/components/app/StatsCard';
 import StatsGridSkeleton from '@/components/app/StatsGridSkeleton';
 import TablePagerFooter from '@/components/app/TablePagerFooter';
@@ -182,12 +183,14 @@ function CoursesTableSection({
   promise,
   isPending,
   headerFilters,
+  isTA,
   onCreate,
   onDeleteRow,
 }: {
   promise: Promise<ListCoursesResponse>;
   isPending: boolean;
   headerFilters: CoursesHeaderFilters;
+  isTA: boolean;
   onCreate: () => void;
   onDeleteRow: (row: CourseRow) => void;
 }) {
@@ -203,11 +206,17 @@ function CoursesTableSection({
       <EmptyState
         icon={BookOpen}
         title="Không có khóa học nào"
-        description="Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung."
+        description={
+          isTA
+            ? 'Hiện chưa có khóa học nào trong hệ thống.'
+            : 'Tạo khóa học đầu tiên để bắt đầu xây dựng nội dung.'
+        }
         action={
-          <Button onClick={onCreate} className="cursor-pointer">
-            <Plus /> Tạo khóa học
-          </Button>
+          isTA ? undefined : (
+            <Button onClick={onCreate} className="cursor-pointer">
+              <Plus /> Tạo khóa học
+            </Button>
+          )
         }
       />
     );
@@ -261,7 +270,7 @@ function CoursesTableSection({
               <TableCell className="text-center font-medium">{row.enrollmentCount ?? 0}</TableCell>
               <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                 <div className="flex items-center justify-end gap-1">
-                  {row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
+                  {!isTA && row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -305,6 +314,7 @@ export default function CoursesPageClient({
   instructorOptions,
 }: Props) {
   const router = useRouter();
+  const isTA = useIsTeachingAssistant();
   const [createOpen, setCreateOpen] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState<CourseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -360,7 +370,7 @@ export default function CoursesPageClient({
         <CoursesStatsSection promise={coursesPromise} />
       </Suspense>
 
-      <ScheduleSettingsCard settings={scheduleSettings} />
+      {!isTA && <ScheduleSettingsCard settings={scheduleSettings} />}
 
       <Card className="gap-0 pb-0">
         <CardHeader className="flex flex-col gap-4 pb-4">
@@ -372,9 +382,11 @@ export default function CoursesPageClient({
                 <CoursesResultSummary promise={coursesPromise} page={page} pageSize={pageSize} />
               </Suspense>
             </div>
-            <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
-              <Plus /> Tạo khóa học
-            </Button>
+            {!isTA && (
+              <Button onClick={() => setCreateOpen(true)} className="cursor-pointer">
+                <Plus /> Tạo khóa học
+              </Button>
+            )}
           </div>
 
           {/* Thanh lọc: search gộp gõ-là-lọc + chips (trạng thái/giảng viên lọc trên cột). */}
@@ -417,6 +429,7 @@ export default function CoursesPageClient({
               promise={coursesPromise}
               isPending={filters.isPending}
               headerFilters={headerFilters}
+              isTA={isTA}
               onCreate={() => setCreateOpen(true)}
               onDeleteRow={setDeletingCourse}
             />

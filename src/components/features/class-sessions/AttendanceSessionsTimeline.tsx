@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, Radio, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { handleActionResult } from '@/lib/actions';
 import { formatDateTimeShort } from '@/lib/format';
 import { closeAttendanceAction } from '@/actions/v1/attendance/close-attendance';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function AttendanceSessionsTimeline({ sessions, onChanged }: Props) {
+  const isTA = useIsTeachingAssistant();
   const [closingId, setClosingId] = useState<number | null>(null);
   const now = new Date();
 
@@ -65,7 +67,7 @@ export default function AttendanceSessionsTimeline({ sessions, onChanged }: Prop
                   Mở: {formatDateTimeShort(s.openedAt)} · Đóng: {formatDateTimeShort(s.closedAt)}
                 </div>
               </div>
-              {isActive && (
+              {isActive && !isTA && (
                 <Button
                   variant="outline"
                   size="sm"

@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getClass } from '@/actions/v1/classes/get-class';
 import { listTuition } from '@/actions/v1/tuition/list-tuition';
 import { vnCurrentYearMonth } from '@/lib/format';
+import { getCurrentSession } from '@/lib/server/session';
 import TuitionPageClient, { type TuitionUrlState } from './TuitionPageClient';
 
 interface Props {
@@ -22,6 +23,9 @@ function readUrlState(
 }
 
 export default async function TuitionByClassPage({ params, searchParams }: Props) {
+  const session = await getCurrentSession();
+  if (session?.role === 'TEACHING_ASSISTANT') redirect('/admin/classes');
+
   const { classId: raw } = await params;
   const classId = Number(raw);
   if (!Number.isInteger(classId) || classId <= 0) notFound();

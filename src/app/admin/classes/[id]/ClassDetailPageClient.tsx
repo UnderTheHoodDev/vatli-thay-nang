@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
@@ -138,6 +139,7 @@ export default function ClassDetailPageClient({
   sessionsPromise,
 }: Props) {
   const filters = useTableFilters({ urlState, defaults: DEFAULTS });
+  const isTA = useIsTeachingAssistant();
 
   const [activeTab, setActiveTab] = useState<ClassDetailTab>(urlState.tab);
   useEffect(() => {
@@ -192,11 +194,13 @@ export default function ClassDetailPageClient({
               <span>{classDetail.studentCount ?? 0} học sinh</span>
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="cursor-pointer">
-            <Link href={`/admin/tuition/${classDetail.id}`}>
-              <Wallet /> Học phí lớp
-            </Link>
-          </Button>
+          {!isTA && (
+            <Button asChild variant="outline" size="sm" className="cursor-pointer">
+              <Link href={`/admin/tuition/${classDetail.id}`}>
+                <Wallet /> Học phí lớp
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

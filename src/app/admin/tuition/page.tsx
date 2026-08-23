@@ -1,7 +1,9 @@
+import { redirect } from 'next/navigation';
 import { listClasses } from '@/actions/v1/classes/list-classes';
 import { listTuitionOverview } from '@/actions/v1/tuition/list-tuition-overview';
 import { listTuitionOverviewChart } from '@/actions/v1/tuition/list-tuition-overview-chart';
 import { shiftMonth, vnCurrentYearMonth } from '@/lib/format';
+import { getCurrentSession } from '@/lib/server/session';
 import TuitionOverviewPageClient, {
   type TuitionOverviewUrlState,
 } from './TuitionOverviewPageClient';
@@ -56,6 +58,9 @@ function readUrlState(
 }
 
 export default async function TuitionOverviewPage({ searchParams }: Props) {
+  const session = await getCurrentSession();
+  if (session?.role === 'TEACHING_ASSISTANT') redirect('/admin/classes');
+
   // "Bây giờ" chỉ được tính ở server rồi truyền xuống — xem doc ở src/lib/format.ts.
   const now = vnCurrentYearMonth();
   const defaultFrom = shiftMonth(now.year, now.month, -(DEFAULT_RANGE_MONTHS - 1));

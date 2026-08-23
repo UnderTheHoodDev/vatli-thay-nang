@@ -17,17 +17,26 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ActionButton } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
 import { toDateInputValue } from '@/lib/format';
+import { ROLE_OPTIONS } from '@/lib/constants';
 import { validateProfileContact } from '@/lib/validation';
 import { adminUpdateUserAction } from '@/actions/v1/users/admin-update-user';
 import ProfileContactFields, { type ProfileContactValues } from './ProfileContactFields';
-import type { Gender, Province, UserRow } from '@/types/auth';
+import type { Gender, Province, Role, UserRow } from '@/types/auth';
 import type { IAdminUpdateUserPayload } from '@/types/actions/users';
 
 interface FormState extends ProfileContactValues {
   birthday: string;
+  role: Role;
 }
 
 function toForm(user: UserRow): FormState {
@@ -39,6 +48,7 @@ function toForm(user: UserRow): FormState {
     schoolName: user.schoolName ?? '',
     parentPhonenumber: user.parentPhonenumber ?? '',
     facebookLink: user.facebookLink ?? '',
+    role: user.role,
   };
 }
 
@@ -84,6 +94,7 @@ export default function EditUserDialog({ user, provinces }: Props) {
       parentPhonenumber: form.parentPhonenumber.trim(),
       facebookLink: form.facebookLink.trim(),
       birthday: form.birthday || null,
+      role: form.role,
     };
     if (form.gender) payload.gender = form.gender as Gender;
     if (form.provinceId) payload.provinceId = Number(form.provinceId);
@@ -144,6 +155,25 @@ export default function EditUserDialog({ user, provinces }: Props) {
               onChange={(e) => update('birthday', e.target.value)}
               disabled={pending}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Vai trò</Label>
+            <Select
+              value={form.role}
+              onValueChange={(v) => update('role', v as Role)}
+              disabled={pending}
+            >
+              <SelectTrigger className="w-full cursor-pointer">
+                <SelectValue placeholder="Chọn vai trò" />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter className="gap-2 pt-2 sm:col-span-2">

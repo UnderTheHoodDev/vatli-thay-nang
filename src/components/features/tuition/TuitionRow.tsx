@@ -5,6 +5,13 @@ import { Check, Loader2, RotateCcw, Undo2 } from 'lucide-react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  SHADOW_RIGHT,
+  STICKY_ACTION_CELL,
+  STICKY_L0_CELL,
+  STICKY_L10_CELL,
+  STICKY_ROW,
+} from '@/components/app/table-filters/sticky';
 import TuitionStatusBadge from './TuitionStatusBadge';
 import { useTuitionDrafts, type TuitionDraft } from './TuitionDraftsProvider';
 import { handleActionErrors, handleActionResult } from '@/lib/actions';
@@ -100,10 +107,29 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
     }
   }
 
+  // Cell ghim có nền đục riêng (STICKY_*_CELL) nên không tự đổi màu amber theo hàng
+  // như các cell thường — đồng bộ qua group-data-dirty giống cách STICKY_ROW đã
+  // đồng bộ hover/selected (xem sticky.ts).
   return (
-    <TableRow className={cn(dirty && 'bg-amber-50 hover:bg-amber-50')}>
-      <TableCell className="text-muted-foreground">{index}</TableCell>
-      <TableCell className="text-foreground font-medium">{row.fullName ?? '—'}</TableCell>
+    <TableRow
+      data-dirty={dirty || undefined}
+      className={cn(STICKY_ROW, dirty && 'bg-amber-50 hover:bg-amber-50')}
+    >
+      <TableCell
+        className={cn('text-muted-foreground', STICKY_L0_CELL, 'group-data-dirty/r:bg-amber-50')}
+      >
+        {index}
+      </TableCell>
+      <TableCell
+        className={cn(
+          'text-foreground font-medium',
+          STICKY_L10_CELL,
+          SHADOW_RIGHT,
+          'group-data-dirty/r:bg-amber-50',
+        )}
+      >
+        {row.fullName ?? '—'}
+      </TableCell>
       <TableCell className="text-muted-foreground text-sm">{row.email}</TableCell>
 
       <TableCell className="p-2">
@@ -208,7 +234,9 @@ export default function TuitionRow({ index, classId, row, onSaved }: Props) {
         {row.isDueOverridden ? formatDateTime(row.updatedAt) : '—'}
       </TableCell>
 
-      <TableCell className="p-2 text-right">
+      <TableCell
+        className={cn('p-2 text-right', STICKY_ACTION_CELL, 'group-data-dirty/r:bg-amber-50')}
+      >
         <div className="flex items-center justify-end gap-1">
           {dirty && !saving && (
             <Button

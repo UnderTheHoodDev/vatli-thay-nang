@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DataPagination from '@/components/app/DataPagination';
+import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import ClassStudentsTable, { type ClassStudentsStatusFilter } from './ClassStudentsTable';
@@ -43,6 +44,7 @@ export default function ClassStudentsTab({
   onPageChange,
   onPageSizeChange,
 }: Props) {
+  const isTA = useIsTeachingAssistant();
   const { page, pageSize, total } = meta;
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
@@ -76,7 +78,7 @@ export default function ClassStudentsTab({
                 ))}
               </SelectContent>
             </Select>
-            <AddStudentsDialog classId={classId} />
+            {!isTA && <AddStudentsDialog classId={classId} />}
           </div>
         </div>
 
