@@ -122,13 +122,10 @@ export default function ClassGroupFormModal({
                     'flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border-2 p-2 transition-colors',
                     color === opt.value
                       ? 'border-purple'
-                      : 'border-transparent hover:border-input-border',
+                      : 'hover:border-input-border border-transparent',
                   )}
                 >
-                  <span
-                    className="size-6 rounded-full"
-                    style={{ backgroundColor: opt.text }}
-                  />
+                  <span className="size-6 rounded-full" style={{ backgroundColor: opt.text }} />
                   <span className="text-foreground text-xs">{opt.label}</span>
                 </button>
               ))}

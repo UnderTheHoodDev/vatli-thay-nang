@@ -80,13 +80,7 @@ export default function EnrollStudentsDialog({ courseId }: Props) {
   // latest, so a slow earlier page can't overwrite the rows of a newer one.
   const reqIdRef = useRef(0);
   const fetchPage = useCallback(
-    (
-      nextPage: number,
-      email: string,
-      fullName: string,
-      cId: number | null,
-      gId: number | null,
-    ) => {
+    (nextPage: number, email: string, fullName: string, cId: number | null, gId: number | null) => {
       const reqId = ++reqIdRef.current;
       startListTransition(async () => {
         const res = await listUsers({

@@ -156,7 +156,9 @@ export default function AddStudentsToGroupModal({ classId, group, open, onOpenCh
     startSubmitTransition(async () => {
       const calls = [];
       if (toAssign.length > 0) {
-        calls.push(assignClassGroupAction(classId, { studentIds: toAssign, classGroupId: group.id }));
+        calls.push(
+          assignClassGroupAction(classId, { studentIds: toAssign, classGroupId: group.id }),
+        );
       }
       if (toUnassign.length > 0) {
         calls.push(assignClassGroupAction(classId, { studentIds: toUnassign, classGroupId: null }));
@@ -282,7 +284,9 @@ export default function AddStudentsToGroupModal({ classId, group, open, onOpenCh
                           <ClassGroupBadge group={s.classGroup} className="shrink-0" />
                         )}
                         {wasOriginalMember && !isChecked && (
-                          <span className="text-destructive shrink-0 text-xs italic">Sẽ bỏ khỏi nhóm</span>
+                          <span className="text-destructive shrink-0 text-xs italic">
+                            Sẽ bỏ khỏi nhóm
+                          </span>
                         )}
                       </label>
                     </li>

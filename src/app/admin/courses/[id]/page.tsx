@@ -55,9 +55,7 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
       ? listCourseEnrollments(courseId, {
           q: urlState.q || undefined,
           status:
-            urlState.status === ALL_VALUE
-              ? undefined
-              : (urlState.status as CourseEnrollmentStatus),
+            urlState.status === ALL_VALUE ? undefined : (urlState.status as CourseEnrollmentStatus),
           classId: urlState.classId !== ALL_VALUE ? Number(urlState.classId) : undefined,
           enrolledFrom: urlState.enrolledFrom || undefined,
           enrolledTo: urlState.enrolledTo || undefined,

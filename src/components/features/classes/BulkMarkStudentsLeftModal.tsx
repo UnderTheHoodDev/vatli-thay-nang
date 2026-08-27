@@ -122,9 +122,7 @@ export default function BulkMarkStudentsLeftModal({
                 >
                   <span className="text-foreground">{student.fullName ?? student.email}</span>
                   {invalid && (
-                    <span className="text-destructive shrink-0 text-xs">
-                      Vào học sau ngày này
-                    </span>
+                    <span className="text-destructive shrink-0 text-xs">Vào học sau ngày này</span>
                   )}
                 </li>
               ))}

@@ -50,7 +50,18 @@ import { cn } from '@/lib/utils';
 import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
 import type { ClassGroupRow, ClassStudentListRow } from '@/types/actions/class-management';
 
-const SKELETON_COLUMNS = ['w-6', 'w-14', 'w-48', 'w-36', 'w-28', 'w-28', 'w-32', 'w-24', 'w-32', 'w-44'];
+const SKELETON_COLUMNS = [
+  'w-6',
+  'w-14',
+  'w-48',
+  'w-36',
+  'w-28',
+  'w-28',
+  'w-32',
+  'w-24',
+  'w-32',
+  'w-44',
+];
 
 /** Ngoài module — tránh bị tạo lại mỗi lần render. */
 function GroupMenuItems({
@@ -212,8 +223,7 @@ export default function ClassStudentsTable({
   // Trạng thái lẫn lộn (vừa đang học vừa đã nghỉ) -> không hành động nào rõ nghĩa, ẩn cả hai nút.
   const allSelectedStudying =
     selectedRows.length > 0 && selectedRows.every((s) => s.status === 'STUDYING');
-  const allSelectedLeft =
-    selectedRows.length > 0 && selectedRows.every((s) => s.status === 'LEFT');
+  const allSelectedLeft = selectedRows.length > 0 && selectedRows.every((s) => s.status === 'LEFT');
 
   function toggleAll(checked: boolean) {
     setSelected((prev) => {
@@ -548,8 +558,9 @@ export default function ClassStudentsTable({
           <AlertDialogHeader>
             <AlertDialogTitle>Khôi phục trạng thái đang học</AlertDialogTitle>
             <AlertDialogDescription>
-              Đưa <span className="text-foreground font-medium">{selectedRows.length} học sinh</span>{' '}
-              đã chọn về trạng thái đang học? Ngày nghỉ học đã ghi trước đó sẽ bị xoá.
+              Đưa{' '}
+              <span className="text-foreground font-medium">{selectedRows.length} học sinh</span> đã
+              chọn về trạng thái đang học? Ngày nghỉ học đã ghi trước đó sẽ bị xoá.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

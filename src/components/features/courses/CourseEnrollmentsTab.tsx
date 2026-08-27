@@ -378,7 +378,12 @@ export default function CourseEnrollmentsTab({
                   <TableHead className="w-14">ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Họ và tên</TableHead>
-                  <ColumnFilterHead label="Lớp" className="w-40" allLabel="Tất cả" {...classFilter} />
+                  <ColumnFilterHead
+                    label="Lớp"
+                    className="w-40"
+                    allLabel="Tất cả"
+                    {...classFilter}
+                  />
                   <ColumnFilterHead label="Trạng thái" className="w-32" {...statusFilter} />
                   <TableHead>Ngày ghi danh</TableHead>
                   <TableHead className="w-40 text-right">Hành động</TableHead>
@@ -497,8 +502,8 @@ export default function CourseEnrollmentsTab({
             <AlertDialogTitle>Xác nhận thu hồi hàng loạt</AlertDialogTitle>
             <AlertDialogDescription>
               Bạn có chắc muốn thu hồi ghi danh của{' '}
-              <span className="text-foreground font-medium">{selectedRows.length} học sinh</span>{' '}
-              đã chọn?
+              <span className="text-foreground font-medium">{selectedRows.length} học sinh</span> đã
+              chọn?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -555,8 +560,8 @@ export default function CourseEnrollmentsTab({
             <AlertDialogTitle>Khôi phục ghi danh hàng loạt</AlertDialogTitle>
             <AlertDialogDescription>
               Khôi phục ghi danh của{' '}
-              <span className="text-foreground font-medium">{selectedRows.length} học sinh</span>{' '}
-              đã chọn vào khóa học này?
+              <span className="text-foreground font-medium">{selectedRows.length} học sinh</span> đã
+              chọn vào khóa học này?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

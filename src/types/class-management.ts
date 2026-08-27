@@ -48,7 +48,10 @@ export const CLASS_GROUP_COLOR_META: Record<
 };
 
 export const CLASS_GROUP_COLOR_OPTIONS = (
-  Object.entries(CLASS_GROUP_COLOR_META) as [ClassGroupColor, (typeof CLASS_GROUP_COLOR_META)[ClassGroupColor]][]
+  Object.entries(CLASS_GROUP_COLOR_META) as [
+    ClassGroupColor,
+    (typeof CLASS_GROUP_COLOR_META)[ClassGroupColor],
+  ][]
 ).map(([value, meta]) => ({ value, ...meta }));
 
 export interface ClassRow {
