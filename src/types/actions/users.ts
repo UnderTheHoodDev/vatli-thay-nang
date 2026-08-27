@@ -12,6 +12,8 @@ export interface IListUsersParams {
   role?: Role;
   status?: UserStatus;
   classId?: number;
+  /** Chỉ có tác dụng khi truyền kèm classId. */
+  classGroupId?: number;
   notInClassId?: number;
   notInCourseId?: number;
   page?: number;

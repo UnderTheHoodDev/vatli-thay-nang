@@ -127,6 +127,8 @@ export interface CourseEnrollmentRow {
   status: CourseEnrollmentStatus;
   enrolledAt: string;
   revokedAt: string | null;
+  /** Các lớp học sinh đang học (STUDYING) — có thể ở nhiều lớp hoặc chưa ở lớp nào. */
+  classes: { id: number; name: string }[];
 }
 
 export const COURSE_STATUS_LABEL: Record<CourseStatus, string> = {

@@ -4,10 +4,12 @@ import {
   listCourseEnrollments,
   type ListCourseEnrollmentsResponse,
 } from '@/actions/v1/courses/list-course-enrollments';
+import { ALL_VALUE } from '@/lib/constants';
 import CourseDetailPageClient, {
   type CourseDetailTab,
   type CourseDetailUrlState,
 } from './CourseDetailPageClient';
+import type { CourseEnrollmentStatus } from '@/types/course-management';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -23,10 +25,15 @@ function readUrlState(sp: Record<string, string | undefined>): CourseDetailUrlSt
         : sp.tab === 'stats'
           ? 'stats'
           : 'info';
+  // Chỉ nhận giá trị hợp lệ — status lạ trên URL rơi về "tất cả".
+  const status: string = sp.status === 'ACTIVE' || sp.status === 'REVOKED' ? sp.status : ALL_VALUE;
   return {
     tab,
-    email: sp.email ?? '',
-    fullName: sp.fullName ?? '',
+    q: sp.q ?? '',
+    status,
+    classId: sp.classId ?? ALL_VALUE,
+    enrolledFrom: sp.enrolledFrom ?? '',
+    enrolledTo: sp.enrolledTo ?? '',
     page: Number(sp.page) || 1,
     pageSize: Number(sp.pageSize) || 20,
   };
@@ -46,8 +53,14 @@ export default async function CourseDetailPage({ params, searchParams }: Props) 
   const enrollmentsPromise: Promise<ListCourseEnrollmentsResponse> =
     urlState.tab === 'enrollments'
       ? listCourseEnrollments(courseId, {
-          email: urlState.email || undefined,
-          fullName: urlState.fullName || undefined,
+          q: urlState.q || undefined,
+          status:
+            urlState.status === ALL_VALUE
+              ? undefined
+              : (urlState.status as CourseEnrollmentStatus),
+          classId: urlState.classId !== ALL_VALUE ? Number(urlState.classId) : undefined,
+          enrolledFrom: urlState.enrolledFrom || undefined,
+          enrolledTo: urlState.enrolledTo || undefined,
           page: urlState.page,
           pageSize: urlState.pageSize,
         })
