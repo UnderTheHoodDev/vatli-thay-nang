@@ -68,9 +68,15 @@ export interface IUpdateCoursePayload {
 }
 
 export interface IListEnrollmentsParams {
+  /** Tìm gộp (OR): email, họ tên. */
+  q?: string;
   email?: string;
   fullName?: string;
   status?: CourseEnrollmentStatus;
+  /** Lọc học sinh thuộc lớp này (đang học). */
+  classId?: number;
+  enrolledFrom?: string;
+  enrolledTo?: string;
   page?: number;
   pageSize?: number;
 }

@@ -2,34 +2,41 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Info, Users as UsersIcon, Wallet } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Tags, Users as UsersIcon, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
+import ClassGroupsTab from '@/components/features/classes/ClassGroupsTab';
 import ClassInfoTab from '@/components/features/classes/ClassInfoTab';
 import ClassStudentsTab from '@/components/features/classes/ClassStudentsTab';
 import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import { useResolved } from '@/lib/actions';
-import { ALL_VALUE } from '@/lib/constants';
-import type { ClassStudentsStatusFilter } from '@/components/features/classes/ClassStudentsTable';
+import { ALL_VALUE, GROUP_UNASSIGNED_VALUE } from '@/lib/constants';
+import type {
+  ClassStudentsGroupFilter,
+  ClassStudentsStatusFilter,
+} from '@/components/features/classes/ClassStudentsTable';
 import type { ListAttendanceSummaryResponse } from '@/actions/v1/attendance/list-attendance-summary';
 import type { ListClassSessionsResponse } from '@/actions/v1/class-sessions/list-class-sessions';
 import type { ListClassStudentsResponse } from '@/actions/v1/classes/list-class-students';
+import type { ClassGroupRow } from '@/types/actions/class-management';
 import {
   CLASS_STUDENT_STATUS_LABEL,
   type ClassDetail,
   type ClassStatus,
 } from '@/types/class-management';
 
-export type ClassDetailTab = 'info' | 'students' | 'sessions';
+export type ClassDetailTab = 'info' | 'students' | 'sessions' | 'groups';
 
 export interface ClassDetailUrlState {
   tab: ClassDetailTab;
   /** Tìm gộp (OR): email, họ tên học sinh. */
   q: string;
   status: string;
+  /** ALL_VALUE | GROUP_UNASSIGNED_VALUE | "<classGroupId>". */
+  group: string;
   page: number;
   pageSize: number;
   [key: string]: string | number;
@@ -41,12 +48,14 @@ interface Props {
   studentsPromise: Promise<ListClassStudentsResponse>;
   attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
   sessionsPromise: Promise<ListClassSessionsResponse>;
+  groups: ClassGroupRow[];
 }
 
 const DEFAULTS: ClassDetailUrlState = {
   tab: 'info',
   q: '',
   status: ALL_VALUE,
+  group: ALL_VALUE,
   page: 1,
   pageSize: 50,
 };
@@ -64,6 +73,8 @@ interface StudentsSectionProps {
   classId: number;
   q: string;
   statusFilter: ClassStudentsStatusFilter;
+  groupFilter: ClassStudentsGroupFilter;
+  groups: ClassGroupRow[];
   studentsPromise: Promise<ListClassStudentsResponse>;
   attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
   isPending: boolean;
@@ -76,6 +87,8 @@ function StudentsSection({
   classId,
   q,
   statusFilter,
+  groupFilter,
+  groups,
   studentsPromise,
   attendanceSummaryPromise,
   isPending,
@@ -91,6 +104,8 @@ function StudentsSection({
       classId={classId}
       q={q}
       statusFilter={statusFilter}
+      groupFilter={groupFilter}
+      groups={groups}
       rows={rows}
       attendanceStats={attendanceStats}
       meta={meta}
@@ -137,6 +152,7 @@ export default function ClassDetailPageClient({
   studentsPromise,
   attendanceSummaryPromise,
   sessionsPromise,
+  groups,
 }: Props) {
   const filters = useTableFilters({ urlState, defaults: DEFAULTS });
   const isTA = useIsTeachingAssistant();
@@ -158,6 +174,14 @@ export default function ClassDetailPageClient({
     value: urlState.status,
     options: CLASS_STUDENT_STATUS_OPTIONS,
     onChange: (v) => filters.setValue('status', v),
+  };
+  const groupFilter: ClassStudentsGroupFilter = {
+    value: urlState.group,
+    options: [
+      ...groups.map((g) => ({ value: String(g.id), label: g.name })),
+      { value: GROUP_UNASSIGNED_VALUE, label: 'Chưa phân nhóm' },
+    ],
+    onChange: (v) => filters.setValue('group', v),
   };
   const q = filters.value('q');
   const onQChange = (v: string) => filters.setText('q', v);
@@ -209,6 +233,9 @@ export default function ClassDetailPageClient({
           <TabsTrigger value="info" className="cursor-pointer">
             <Info className="size-4" /> Thông tin
           </TabsTrigger>
+          <TabsTrigger value="groups" className="cursor-pointer">
+            <Tags className="size-4" /> Nhóm lớp
+          </TabsTrigger>
           <TabsTrigger value="students" className="cursor-pointer">
             <UsersIcon className="size-4" /> Học sinh
           </TabsTrigger>
@@ -219,6 +246,9 @@ export default function ClassDetailPageClient({
         <TabsContent value="info">
           <ClassInfoTab classDetail={classDetail} />
         </TabsContent>
+        <TabsContent value="groups">
+          <ClassGroupsTab classId={classDetail.id} groups={groups} />
+        </TabsContent>
         <TabsContent value="students">
           <Suspense
             fallback={
@@ -226,6 +256,8 @@ export default function ClassDetailPageClient({
                 classId={classDetail.id}
                 q={q}
                 statusFilter={statusFilter}
+                groupFilter={groupFilter}
+                groups={groups}
                 rows={[]}
                 attendanceStats={[]}
                 meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
@@ -240,6 +272,8 @@ export default function ClassDetailPageClient({
               classId={classDetail.id}
               q={q}
               statusFilter={statusFilter}
+              groupFilter={groupFilter}
+              groups={groups}
               studentsPromise={studentsPromise}
               attendanceSummaryPromise={attendanceSummaryPromise}
               isPending={filters.isPending}

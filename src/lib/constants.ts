@@ -19,3 +19,5 @@ export const STATUS_OPTIONS = [
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export const ALL_VALUE = '__ALL__';
+
+export const GROUP_UNASSIGNED_VALUE = '__UNASSIGNED__';

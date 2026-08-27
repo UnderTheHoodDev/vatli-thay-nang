@@ -1,21 +1,22 @@
 'use client';
 
-import { Suspense, use, useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, BarChart3, Info, LayoutList, Users as UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTableFilters } from '@/components/app/table-filters/useTableFilters';
 import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import CourseInfoTab from '@/components/features/courses/CourseInfoTab';
 import CourseStructureTab from '@/components/features/courses/CourseStructureTab';
 import CourseEnrollmentsTab, {
-  type EnrollmentSearchValues,
+  type CourseEnrollmentsStatusFilter,
 } from '@/components/features/courses/CourseEnrollmentsTab';
 import CourseStatsTab from '@/components/features/courses/CourseStatsTab';
 import CourseStatusBadge from '@/components/features/courses/CourseStatusBadge';
 import CourseTestsSection from '@/components/features/tests/CourseTestsSection';
+import { ALL_VALUE } from '@/lib/constants';
 import type { CourseDetail } from '@/types/course-management';
 import type { ListCourseEnrollmentsResponse } from '@/actions/v1/courses/list-course-enrollments';
 
@@ -23,10 +24,16 @@ export type CourseDetailTab = 'info' | 'structure' | 'enrollments' | 'stats';
 
 export interface CourseDetailUrlState {
   tab: CourseDetailTab;
-  email: string;
-  fullName: string;
+  /** Tìm gộp (OR): email, họ tên. */
+  q: string;
+  status: string;
+  /** ALL_VALUE | "<classId>". */
+  classId: string;
+  enrolledFrom: string;
+  enrolledTo: string;
   page: number;
   pageSize: number;
+  [key: string]: string | number;
 }
 
 interface Props {
@@ -35,21 +42,27 @@ interface Props {
   enrollmentsPromise: Promise<ListCourseEnrollmentsResponse>;
 }
 
-const DEFAULT_TAB: CourseDetailTab = 'info';
-const DEFAULT_PAGE_SIZE = 20;
-
-function buildUrlParams(state: CourseDetailUrlState): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (state.tab !== DEFAULT_TAB) sp.set('tab', state.tab);
-  if (state.email) sp.set('email', state.email);
-  if (state.fullName) sp.set('fullName', state.fullName);
-  if (state.page !== 1) sp.set('page', String(state.page));
-  if (state.pageSize !== DEFAULT_PAGE_SIZE) sp.set('pageSize', String(state.pageSize));
-  return sp;
-}
+const DEFAULTS: CourseDetailUrlState = {
+  tab: 'info',
+  q: '',
+  status: ALL_VALUE,
+  classId: ALL_VALUE,
+  enrolledFrom: '',
+  enrolledTo: '',
+  page: 1,
+  pageSize: 20,
+};
 
 interface EnrollmentsTabHandlers {
-  onSearchChange: (v: EnrollmentSearchValues) => void;
+  onQChange: (q: string) => void;
+  statusFilter: CourseEnrollmentsStatusFilter;
+  classId: string;
+  onClassIdChange: (v: string) => void;
+  enrolledFrom: string;
+  enrolledTo: string;
+  onEnrolledFromChange: (v: string) => void;
+  onEnrolledToChange: (v: string) => void;
+  onClearFilters: () => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
@@ -57,13 +70,13 @@ interface EnrollmentsTabHandlers {
 function EnrollmentsTabData({
   promise,
   courseId,
-  search,
+  q,
   isPending,
   handlers,
 }: {
   promise: Promise<ListCourseEnrollmentsResponse>;
   courseId: number;
-  search: EnrollmentSearchValues;
+  q: string;
   isPending: boolean;
   handlers: EnrollmentsTabHandlers;
 }) {
@@ -76,7 +89,7 @@ function EnrollmentsTabData({
   return (
     <CourseEnrollmentsTab
       courseId={courseId}
-      search={search}
+      q={q}
       rows={data}
       meta={meta}
       loading={isPending}
@@ -86,10 +99,8 @@ function EnrollmentsTabData({
 }
 
 export default function CourseDetailPageClient({ course, urlState, enrollmentsPromise }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
   const isTA = useIsTeachingAssistant();
-  const [isPending, startTransition] = useTransition();
+  const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const [activeTab, setActiveTab] = useState<CourseDetailTab>(urlState.tab);
   useEffect(() => {
@@ -97,23 +108,50 @@ export default function CourseDetailPageClient({ course, urlState, enrollmentsPr
     setActiveTab(urlState.tab);
   }, [urlState.tab]);
 
-  const updateUrl = useCallback(
-    (next: Partial<CourseDetailUrlState>) => {
-      const merged = { ...urlState, ...next };
-      const params = buildUrlParams(merged);
-      const query = params.toString();
-      startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
-      });
-    },
-    [router, pathname, urlState],
-  );
-
   function handleTabChange(v: string) {
     const tab = v as CourseDetailTab;
     setActiveTab(tab);
-    updateUrl({ tab, page: 1 });
+    filters.setValue('tab', tab);
   }
+
+  const statusFilter: CourseEnrollmentsStatusFilter = {
+    value: urlState.status,
+    options: [
+      { value: 'ACTIVE', label: 'Đang học' },
+      { value: 'REVOKED', label: 'Đã thu hồi' },
+    ],
+    onChange: (v) => filters.setValue('status', v),
+  };
+  const q = filters.value('q');
+  const onQChange = (v: string) => filters.setText('q', v);
+  const onPageChange = (p: number) => filters.setPaging({ page: p });
+  const onPageSizeChange = (s: number) => filters.setPaging({ pageSize: s, page: 1 });
+  const onClassIdChange = (v: string) => filters.setValue('classId', v);
+  const onEnrolledFromChange = (v: string) => filters.setValue('enrolledFrom', v);
+  const onEnrolledToChange = (v: string) => filters.setValue('enrolledTo', v);
+  // Xoá các bộ lọc ghi danh, giữ nguyên tab đang xem (khác filters.clearAll — reset cả tab).
+  const onClearFilters = () =>
+    filters.push({
+      q: '',
+      status: ALL_VALUE,
+      classId: ALL_VALUE,
+      enrolledFrom: '',
+      enrolledTo: '',
+    });
+
+  const enrollmentsHandlers: EnrollmentsTabHandlers = {
+    onQChange,
+    statusFilter,
+    classId: urlState.classId,
+    onClassIdChange,
+    enrolledFrom: urlState.enrolledFrom,
+    enrolledTo: urlState.enrolledTo,
+    onEnrolledFromChange,
+    onEnrolledToChange,
+    onClearFilters,
+    onPageChange,
+    onPageSizeChange,
+  };
 
   return (
     <div className="space-y-6">
@@ -183,26 +221,20 @@ export default function CourseDetailPageClient({ course, urlState, enrollmentsPr
               fallback={
                 <CourseEnrollmentsTab
                   courseId={course.id}
-                  search={{ email: urlState.email, fullName: urlState.fullName }}
+                  q={q}
                   rows={[]}
                   meta={{ total: 0, page: urlState.page, pageSize: urlState.pageSize }}
                   loading
-                  onSearchChange={(v) => updateUrl({ ...v, page: 1 })}
-                  onPageChange={(p) => updateUrl({ page: p })}
-                  onPageSizeChange={(s) => updateUrl({ pageSize: s, page: 1 })}
+                  {...enrollmentsHandlers}
                 />
               }
             >
               <EnrollmentsTabData
                 promise={enrollmentsPromise}
                 courseId={course.id}
-                search={{ email: urlState.email, fullName: urlState.fullName }}
-                isPending={isPending}
-                handlers={{
-                  onSearchChange: (v) => updateUrl({ ...v, page: 1 }),
-                  onPageChange: (p) => updateUrl({ page: p }),
-                  onPageSizeChange: (s) => updateUrl({ pageSize: s, page: 1 }),
-                }}
+                q={q}
+                isPending={filters.isPending}
+                handlers={enrollmentsHandlers}
               />
             </Suspense>
           </TabsContent>

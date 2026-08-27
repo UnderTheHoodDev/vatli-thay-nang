@@ -1,5 +1,11 @@
 import type { ListMeta } from '@/types/auth';
-import type { ClassRow, ClassStatus, ClassStudentStatus } from '@/types/class-management';
+import type {
+  ClassGroup,
+  ClassGroupColor,
+  ClassRow,
+  ClassStatus,
+  ClassStudentStatus,
+} from '@/types/class-management';
 
 export interface IListClassesParams {
   /** Tìm gộp (OR): tên lớp, mã lớp. */
@@ -51,6 +57,7 @@ export interface ClassStudentListRow {
   enrollmentDate: string | null;
   leftAt: string | null;
   status: ClassStudentStatus;
+  classGroup: ClassGroup | null;
   createdAt: string;
 }
 
@@ -66,8 +73,35 @@ export interface IListClassStudentsParams {
   email?: string;
   fullName?: string;
   status?: ClassStudentStatus;
+  /** Lọc theo 1 nhóm cụ thể. Loại trừ lẫn nhau với unassignedGroup. */
+  classGroupId?: number;
+  /** true = chỉ lấy học sinh chưa phân nhóm. */
+  unassignedGroup?: boolean;
   page?: number;
   pageSize?: number;
+}
+
+export interface ClassGroupRow extends ClassGroup {
+  studentCount: number;
+}
+
+export interface IListClassGroupsResult {
+  data: ClassGroupRow[];
+}
+
+export interface ICreateClassGroupPayload {
+  name: string;
+  color: ClassGroupColor;
+}
+
+export interface IUpdateClassGroupPayload {
+  name?: string;
+  color?: ClassGroupColor;
+}
+
+export interface IAssignClassGroupPayload {
+  studentIds: number[];
+  classGroupId: number | null;
 }
 
 export interface IListClassStudentsResult {
