@@ -100,7 +100,7 @@ export default function StudentAttendancePanel({
           <span className="font-medium">Xin nghỉ</span> nếu bạn không thể tham gia.
         </p>
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
+      <CardContent className="space-y-4 pb-4 sm:pb-6">
         {/* Nút hành động đưa lên đầu cho dễ thấy */}
         <div className="flex flex-wrap items-center gap-2">
           {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (

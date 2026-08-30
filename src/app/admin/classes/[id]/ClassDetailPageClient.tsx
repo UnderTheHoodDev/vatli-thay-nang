@@ -189,7 +189,7 @@ export default function ClassDetailPageClient({
   const onPageSizeChange = (s: number) => filters.setPaging({ pageSize: s, page: 1 });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-2">
         <Button
           asChild
@@ -229,7 +229,7 @@ export default function ClassDetailPageClient({
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-4">
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="info" className="cursor-pointer">
             <Info className="size-4" /> Thông tin
           </TabsTrigger>

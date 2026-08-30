@@ -70,7 +70,7 @@ export default function ClassGroupsTab({ classId, groups }: Props) {
           </Button>
         )}
       </CardHeader>
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         {groups.length === 0 ? (
           <EmptyState
             icon={Tags}

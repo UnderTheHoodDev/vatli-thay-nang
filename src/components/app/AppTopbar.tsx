@@ -53,7 +53,7 @@ export default function AppTopbar({ email, role }: Props) {
   const profileHref = isStudent ? '/dashboard/profile' : '/admin/profile';
 
   return (
-    <header className="border-divider bg-background/85 sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur md:px-6">
+    <header className="border-divider bg-background/85 sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur md:px-6 lg:px-8">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:-ml-1" />
       </div>

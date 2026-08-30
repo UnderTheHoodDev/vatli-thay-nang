@@ -37,7 +37,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={`${paytoneOne.variable} ${cabin.variable} ${openSans.variable}`}>
-      <body className="bg-light-bg font-cabin overflow-x-hidden text-[#333]">
+      {/* suppressHydrationWarning: một số extension trình duyệt (vd Grammarly) tự
+          chèn thuộc tính vào <body> (cz-shortcut-listen=...) trước khi React
+          hydrate — không phải lỗi code, chỉ cảnh báo giả trên đúng node này. */}
+      <body
+        className="bg-light-bg font-cabin overflow-x-hidden text-[#333]"
+        suppressHydrationWarning
+      >
         <NextTopLoader color="#723bcf" showSpinner={false} />
         <TooltipProvider delayDuration={150}>
           <UploadProviders>{children}</UploadProviders>

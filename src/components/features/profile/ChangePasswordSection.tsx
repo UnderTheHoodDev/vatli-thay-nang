@@ -70,7 +70,7 @@ export default function ChangePasswordSection({ role }: Props) {
           Mật khẩu cần có ít nhất 1 chữ hoa, 1 số, độ dài tối thiểu 8 ký tự.
         </p>
       </CardHeader>
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:max-w-md">
           <FormTextField
             id="oldPassword"

@@ -45,7 +45,7 @@ export default function MyAttendanceSummaryCard({ stats }: Props) {
           Chuyên cần của tôi
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 pb-6 sm:grid-cols-4">
+      <CardContent className="grid grid-cols-2 gap-4 pb-4 sm:grid-cols-4 sm:pb-6">
         {ITEMS.map(({ key, label, icon: Icon, tone }) => (
           <div
             key={key}

@@ -5,7 +5,7 @@ import ProfileSkeleton from '@/components/features/profile/ProfileSkeleton';
 /** Route-level loading.tsx dùng chung cho /admin/profile và /dashboard/profile. */
 export default function ProfileLoadingContent() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="space-y-1">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-72 max-w-full" />
@@ -18,7 +18,7 @@ export default function ProfileLoadingContent() {
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-72 max-w-full" />
         </CardHeader>
-        <CardContent className="space-y-4 pb-6 md:max-w-md">
+        <CardContent className="space-y-4 pb-4 sm:pb-6 md:max-w-md">
           <div className="space-y-1.5">
             <Skeleton className="h-3.5 w-32" />
             <Skeleton className="h-9 w-full" />

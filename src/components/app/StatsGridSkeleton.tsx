@@ -12,9 +12,9 @@ export default function StatsGridSkeleton({ count, className }: Props) {
     <div className={cn('grid gap-3', className)}>
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="gap-3">
-          <CardContent className="pt-6 pb-6">
+          <CardContent className="py-4 sm:py-5">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Skeleton className="h-3 w-24" />
                 <Skeleton className="h-7 w-10" />
               </div>

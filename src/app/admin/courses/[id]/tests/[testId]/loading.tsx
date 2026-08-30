@@ -31,7 +31,7 @@ export default function AdminTestDetailLoading() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i}>
-            <CardContent className="flex items-start justify-between gap-3 py-6">
+            <CardContent className="flex items-start justify-between gap-3 py-4 sm:py-6">
               <div className="min-w-0 space-y-2">
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-7 w-16" />
@@ -46,7 +46,7 @@ export default function AdminTestDetailLoading() {
         <CardHeader>
           <Skeleton className="h-5 w-24" />
         </CardHeader>
-        <CardContent className="pb-6">
+        <CardContent className="pb-4 sm:pb-6">
           <Skeleton className="h-[260px] w-full" />
         </CardContent>
       </Card>
@@ -59,7 +59,7 @@ export default function AdminTestDetailLoading() {
             <Skeleton className="h-9 w-full sm:w-44" />
           </div>
         </CardHeader>
-        <CardContent className="pb-6">
+        <CardContent className="pb-4 sm:pb-6">
           <Table>
             <TableHeader>
               <TableRow>

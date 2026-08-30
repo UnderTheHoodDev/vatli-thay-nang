@@ -76,7 +76,7 @@ function Section({
         <p className="text-muted-foreground text-sm">{intro}</p>
       </CardHeader>
       <CardContent>
-        <ol className="space-y-6">{children}</ol>
+        <ol className="space-y-4 sm:space-y-6">{children}</ol>
       </CardContent>
     </Card>
   );
@@ -673,7 +673,7 @@ export default async function AdminHelpPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Trợ giúp sử dụng"
         description="Hướng dẫn sử dụng từng chức năng trong hệ thống — chọn 1 mục ở menu bên trái để xem hướng dẫn."

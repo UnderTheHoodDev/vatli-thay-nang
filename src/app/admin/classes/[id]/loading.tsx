@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function ClassDetailLoading() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-2">
         <Skeleton className="h-8 w-40" />
         <div className="space-y-1">
@@ -30,7 +30,7 @@ export default function ClassDetailLoading() {
         <CardHeader>
           <Skeleton className="h-5 w-36" />
         </CardHeader>
-        <CardContent className="space-y-6 pb-6">
+        <CardContent className="space-y-6 pb-4 sm:pb-6">
           <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-start gap-3">

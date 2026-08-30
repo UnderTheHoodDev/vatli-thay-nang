@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getCurrentSession } from '@/lib/server/session';
 import AppSidebar, { ADMIN_NAV, TEACHING_ASSISTANT_NAV } from '@/components/app/AppSidebar';
@@ -10,18 +9,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getCurrentSession();
   if (!session) redirect('/auth/login');
   if (!session.hasPassword) redirect('/auth/change-password');
-  // ADMIN và TEACHING_ASSISTANT dùng chung shell này; STUDENT bị đá về /dashboard.
   if (session.role === 'STUDENT') redirect('/dashboard');
 
   const navItems = session.role === 'ADMIN' ? ADMIN_NAV : TEACHING_ASSISTANT_NAV;
 
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false';
-
   return (
     <RoleProvider role={session.role}>
       <div className="font-opensans bg-muted/40 min-h-svh">
-        <SidebarProvider defaultOpen={defaultOpen}>
+        <SidebarProvider defaultOpen>
           <AppSidebar title="Lớp học Vật Lí Thầy Năng" items={navItems} />
           <SidebarInset className="bg-muted/40 min-w-0">
             <AppTopbar email={session.email} role={session.role} />

@@ -124,7 +124,7 @@ export default function CourseTestsSection({ courseId }: Props) {
         )}
       </CardHeader>
 
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         {loading ? (
           <div className="space-y-2" role="status" aria-label="Đang tải danh sách bài kiểm tra">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -162,98 +162,96 @@ export default function CourseTestsSection({ courseId }: Props) {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên</TableHead>
-                  <TableHead>Thời gian</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="text-center">Đã nộp / Tham gia</TableHead>
-                  <TableHead className="text-center">Điểm tối đa</TableHead>
-                  {!isTA && <TableHead className="text-right">Hành động</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tests.map((t) => {
-                  const phase = PHASE_LABEL[t.phase];
-                  return (
-                    <TableRow
-                      key={t.id}
-                      onClick={() => router.push(`/admin/courses/${courseId}/tests/${t.id}`)}
-                      className="group hover:bg-muted/50 cursor-pointer transition-colors"
-                    >
-                      <TableCell className="font-medium">
-                        {/* Link thật trên tiêu đề để bàn phím / mở tab mới vẫn dùng được;
-                            bấm chỗ khác trên hàng chỉ là lối tắt cho chuột. stopPropagation
-                            để không điều hướng hai lần. */}
-                        <Link
-                          href={`/admin/courses/${courseId}/tests/${t.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="group-hover:text-purple focus-visible:ring-purple/40 rounded-sm outline-none hover:underline focus-visible:ring-2"
-                        >
-                          {t.title}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {formatRange(t.startTime, t.endTime)}
-                      </TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tên</TableHead>
+                <TableHead>Thời gian</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-center">Đã nộp / Tham gia</TableHead>
+                <TableHead className="text-center">Điểm tối đa</TableHead>
+                {!isTA && <TableHead className="text-right">Hành động</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tests.map((t) => {
+                const phase = PHASE_LABEL[t.phase];
+                return (
+                  <TableRow
+                    key={t.id}
+                    onClick={() => router.push(`/admin/courses/${courseId}/tests/${t.id}`)}
+                    className="group hover:bg-muted/50 cursor-pointer transition-colors"
+                  >
+                    <TableCell className="font-medium">
+                      {/* Link thật trên tiêu đề để bàn phím / mở tab mới vẫn dùng được;
+                          bấm chỗ khác trên hàng chỉ là lối tắt cho chuột. stopPropagation
+                          để không điều hướng hai lần. */}
+                      <Link
+                        href={`/admin/courses/${courseId}/tests/${t.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="group-hover:text-purple focus-visible:ring-purple/40 rounded-sm outline-none hover:underline focus-visible:ring-2"
+                      >
+                        {t.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatRange(t.startTime, t.endTime)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={phase.variant}>{phase.text}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="mx-auto w-24 space-y-1">
+                        <span className="block text-xs tabular-nums">
+                          {t.submissionCount} / {t.participantCount}
+                        </span>
+                        <Progress
+                          value={
+                            t.participantCount > 0
+                              ? (t.submissionCount / t.participantCount) * 100
+                              : 0
+                          }
+                          className="h-1.5"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">{t.maxScore}</TableCell>
+                    {!isTA && (
                       <TableCell>
-                        <Badge variant={phase.variant}>{phase.text}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="mx-auto w-24 space-y-1">
-                          <span className="block text-xs tabular-nums">
-                            {t.submissionCount} / {t.participantCount}
-                          </span>
-                          <Progress
-                            value={
-                              t.participantCount > 0
-                                ? (t.submissionCount / t.participantCount) * 100
-                                : 0
-                            }
-                            className="h-1.5"
-                          />
+                        {/* Nút thao tác không được kích hoạt điều hướng của cả hàng. */}
+                        <div
+                          className="flex justify-end gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8 cursor-pointer"
+                            aria-label={`Sửa ${t.title}`}
+                            onClick={() => {
+                              setEditingId(t.id);
+                              setFormOpen(true);
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive size-8 cursor-pointer"
+                            aria-label={`Xoá ${t.title}`}
+                            onClick={() => setDeleteTarget(t)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">{t.maxScore}</TableCell>
-                      {!isTA && (
-                        <TableCell>
-                          {/* Nút thao tác không được kích hoạt điều hướng của cả hàng. */}
-                          <div
-                            className="flex justify-end gap-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="size-8 cursor-pointer"
-                              aria-label={`Sửa ${t.title}`}
-                              onClick={() => {
-                                setEditingId(t.id);
-                                setFormOpen(true);
-                              }}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="text-destructive size-8 cursor-pointer"
-                              aria-label={`Xoá ${t.title}`}
-                              onClick={() => setDeleteTarget(t)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                    )}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
 

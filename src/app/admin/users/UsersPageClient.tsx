@@ -244,7 +244,7 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Quản lý người dùng"
         description="Thêm, kích hoạt và quản lý tài khoản học sinh, quản trị viên."
@@ -320,7 +320,7 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense
             fallback={
               <UsersTable rows={[]} provinces={provinces} loading headerFilters={headerFilters} />

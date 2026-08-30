@@ -121,12 +121,12 @@ export default function LearnClient({ course, initialNodeId, initialTab }: Props
       </div>
 
       {/* Segmented control: nội dung khóa học ↔ bài kiểm tra */}
-      <div className="bg-muted inline-flex rounded-lg p-1.5">
+      <div className="bg-muted inline-flex max-w-full overflow-x-auto rounded-lg p-1.5">
         <button
           type="button"
           onClick={() => changeTab('content')}
           className={cn(
-            'flex h-9 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium transition',
+            'flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium whitespace-nowrap transition',
             tab === 'content' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground',
           )}
         >
@@ -136,7 +136,7 @@ export default function LearnClient({ course, initialNodeId, initialTab }: Props
           type="button"
           onClick={() => changeTab('exams')}
           className={cn(
-            'flex h-9 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium transition',
+            'flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-4 text-[0.95rem] font-medium whitespace-nowrap transition',
             tab === 'exams' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground',
           )}
         >
@@ -327,7 +327,7 @@ function CourseOverview({ course }: { course: CourseDetail }) {
       <CardHeader>
         <CardTitle>Về khóa học này</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 pb-6">
+      <CardContent className="space-y-6 pb-4 sm:pb-6">
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div className="flex items-center gap-2">
             <GraduationCap className="text-muted-foreground size-4" />

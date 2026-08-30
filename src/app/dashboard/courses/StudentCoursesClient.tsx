@@ -24,28 +24,33 @@ interface Props {
   coursesPromise: Promise<ListCoursesResponse>;
 }
 
-function CoursesGridFallback() {
+export function CoursesGridFallback() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="gap-0 overflow-hidden p-0">
-          <Skeleton className="aspect-video w-full rounded-none" />
-          <CardHeader className="pt-4 pb-2">
-            <Skeleton className="h-5 w-3/4" />
-            <div className="mt-1 flex items-center gap-2">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-5 w-20" />
+        // Cây DOM khớp đúng từng cấp với thẻ khoá học thật bên dưới (div bọc thay
+        // cho <Link>) — đổi sang dữ liệu thật không nhảy layout.
+        <div key={i} className="rounded-xl">
+          <Card className="h-full gap-0 overflow-hidden p-0">
+            <div className="bg-muted relative aspect-video w-full overflow-hidden">
+              <Skeleton className="size-full rounded-none" />
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3 pb-5">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-2/3" />
-            <div className="flex items-center justify-between gap-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-          </CardContent>
-        </Card>
+            <CardHeader className="pt-4 pb-2">
+              <Skeleton className="h-6 w-3/4" />
+              <div className="mt-1 flex items-center gap-2">
+                <Skeleton className="h-5 w-24" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 pb-5">
+              {/* 1 khối duy nhất khớp cây DOM với <p> thật (line-clamp-2, cao 40px). */}
+              <Skeleton className="h-10 w-full" />
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       ))}
     </div>
   );
@@ -82,7 +87,7 @@ function CoursesGridSection({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {rows.map((row) => (
           <Link
             key={row.id}
@@ -166,9 +171,8 @@ export default function StudentCoursesClient({ urlState, coursesPromise }: Props
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Khóa học" description="Khám phá các khóa học vật lí dành cho bạn." />
-
       <Suspense fallback={<CoursesGridFallback />}>
         <CoursesGridSection promise={coursesPromise} onPageChange={(p) => updateUrl({ page: p })} />
       </Suspense>

@@ -66,7 +66,7 @@ export default function AttendanceSection({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pb-6">
+      <CardContent className="space-y-6 pb-4 sm:pb-6">
         <section className="space-y-3">
           <h3 className="text-foreground text-sm font-semibold">Các phiên điểm danh</h3>
           {attendanceSessions.length === 0 ? (

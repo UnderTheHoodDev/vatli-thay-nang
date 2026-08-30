@@ -68,7 +68,7 @@ export default function CourseInfoTab({ course }: Props) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
           <CardTitle className="min-w-0 truncate">Thông tin khóa học</CardTitle>
@@ -82,7 +82,7 @@ export default function CourseInfoTab({ course }: Props) {
             <Pencil /> Chỉnh sửa
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6 pb-6">
+        <CardContent className="space-y-6 pb-4 sm:pb-6">
           {course.thumbnailUrl && (
             <div className="border-divider overflow-hidden rounded-lg border">
               {/* eslint-disable-next-line @next/next/no-img-element */}

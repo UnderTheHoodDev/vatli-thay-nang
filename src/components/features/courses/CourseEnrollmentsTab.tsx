@@ -356,7 +356,7 @@ export default function CourseEnrollmentsTab({
           </div>
         )}
       </CardHeader>
-      <CardContent className="px-3 pb-0">
+      <CardContent className="px-4 pb-4 sm:px-3">
         {!loading && rows.length === 0 && !hasActiveFilter ? (
           <EmptyState
             icon={UserPlus}
@@ -364,104 +364,97 @@ export default function CourseEnrollmentsTab({
             description='Dùng nút "Thêm học sinh" để ghi danh học sinh vào khóa học.'
           />
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-8">
-                    <Checkbox
-                      checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                      onCheckedChange={(checked) => toggleAll(checked === true)}
-                      aria-label="Chọn tất cả học sinh trong trang"
-                    />
-                  </TableHead>
-                  <TableHead className="w-14">ID</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Họ và tên</TableHead>
-                  <ColumnFilterHead
-                    label="Lớp"
-                    className="w-40"
-                    allLabel="Tất cả"
-                    {...classFilter}
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-8 max-sm:pl-0!">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                    onCheckedChange={(checked) => toggleAll(checked === true)}
+                    aria-label="Chọn tất cả học sinh trong trang"
                   />
-                  <ColumnFilterHead label="Trạng thái" className="w-32" {...statusFilter} />
-                  <TableHead>Ngày ghi danh</TableHead>
-                  <TableHead className="w-40 text-right">Hành động</TableHead>
+                </TableHead>
+                <TableHead className="w-14">ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Họ và tên</TableHead>
+                <ColumnFilterHead label="Lớp" className="w-40" allLabel="Tất cả" {...classFilter} />
+                <ColumnFilterHead label="Trạng thái" className="w-32" {...statusFilter} />
+                <TableHead>Ngày ghi danh</TableHead>
+                <TableHead className="w-40 text-right">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="text-muted-foreground py-10 text-center text-sm"
+                  >
+                    Không có học sinh nào khớp bộ lọc hiện tại.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-                ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-muted-foreground py-10 text-center text-sm"
-                    >
-                      Không có học sinh nào khớp bộ lọc hiện tại.
+              ) : (
+                rows.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="max-sm:pl-0!">
+                      <Checkbox
+                        checked={selected.has(e.studentId)}
+                        onCheckedChange={(checked) => toggleOne(e.studentId, checked === true)}
+                        aria-label={`Chọn ${e.fullName ?? e.email}`}
+                      />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{e.studentId}</TableCell>
+                    <TableCell className="text-foreground font-medium">{e.email}</TableCell>
+                    <TableCell>{e.fullName ?? '—'}</TableCell>
+                    <TableCell>
+                      {e.classes.length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {e.classes.map((c) => (
+                            <Badge key={c.id} variant="secondary">
+                              {c.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={e.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                        {e.status === 'ACTIVE' ? 'Đang học' : 'Đã thu hồi'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(e.enrolledAt)}</TableCell>
+                    <TableCell className="text-right">
+                      {e.status === 'ACTIVE' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive cursor-pointer"
+                          onClick={() => setTarget(e)}
+                          disabled={pending}
+                        >
+                          <Trash2 /> Thu hồi
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="cursor-pointer"
+                          onClick={() => setRestoring(e)}
+                          disabled={pending}
+                        >
+                          <RotateCcw /> Khôi phục
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  rows.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selected.has(e.studentId)}
-                          onCheckedChange={(checked) => toggleOne(e.studentId, checked === true)}
-                          aria-label={`Chọn ${e.fullName ?? e.email}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{e.studentId}</TableCell>
-                      <TableCell className="text-foreground font-medium">{e.email}</TableCell>
-                      <TableCell>{e.fullName ?? '—'}</TableCell>
-                      <TableCell>
-                        {e.classes.length === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {e.classes.map((c) => (
-                              <Badge key={c.id} variant="secondary">
-                                {c.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={e.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                          {e.status === 'ACTIVE' ? 'Đang học' : 'Đã thu hồi'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(e.enrolledAt)}</TableCell>
-                      <TableCell className="text-right">
-                        {e.status === 'ACTIVE' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-destructive hover:text-destructive cursor-pointer"
-                            onClick={() => setTarget(e)}
-                            disabled={pending}
-                          >
-                            <Trash2 /> Thu hồi
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="cursor-pointer"
-                            onClick={() => setRestoring(e)}
-                            disabled={pending}
-                          >
-                            <RotateCcw /> Khôi phục
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
       <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />

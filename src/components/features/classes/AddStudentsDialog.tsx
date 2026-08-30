@@ -97,6 +97,32 @@ export default function AddStudentsDialog({ classId }: Props) {
     });
   }
 
+  const pageIds = rows.map((u) => u.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const someOnPageSelected = pageIds.some((id) => selected.has(id));
+
+  // Callback ref (not a deps-gated effect): trang tải xong remount checkbox với
+  // indeterminate=false, callback ref chạy lại đúng lúc để cập nhật.
+  const setSelectAllRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node) node.indeterminate = someOnPageSelected && !allOnPageSelected;
+    },
+    [someOnPageSelected, allOnPageSelected],
+  );
+
+  function toggleSelectAllPage() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function clearAll() {
+    setSelected(new Set());
+  }
+
   function submit() {
     if (selected.size === 0) return;
     const ids = [...selected];
@@ -153,16 +179,42 @@ export default function AddStudentsDialog({ classId }: Props) {
           </div>
         </form>
 
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-muted-foreground text-sm">
-            {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
-          </span>
-          <Badge variant={selected.size > 0 ? 'default' : 'secondary'}>
-            Đã chọn {selected.size} học sinh
-          </Badge>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-muted-foreground text-sm">
+              {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
+            </span>
+            {rows.length > 0 && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-sm">
+                <input
+                  ref={setSelectAllRef}
+                  type="checkbox"
+                  checked={allOnPageSelected}
+                  onChange={toggleSelectAllPage}
+                  className="accent-primary size-4 cursor-pointer"
+                  aria-label="Chọn tất cả học sinh trong trang"
+                />
+                <span className="text-foreground font-medium">Chọn tất cả trong trang</span>
+              </label>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {selected.size > 0 && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-muted-foreground hover:text-foreground cursor-pointer text-xs underline"
+              >
+                Bỏ chọn tất cả
+              </button>
+            )}
+            <Badge variant={selected.size > 0 ? 'default' : 'secondary'}>
+              Đã chọn {selected.size} học sinh
+            </Badge>
+          </div>
         </div>
 
-        <div className="border-divider bg-background max-h-96 min-h-56 overflow-y-auto rounded-lg border">
+        <div className="border-divider bg-background max-h-96 min-h-56 [scrollbar-width:none] overflow-y-auto rounded-lg border [&::-webkit-scrollbar]:hidden">
           {loading ? (
             <ul className="divide-divider divide-y">
               {Array.from({ length: MODAL_PAGE_SIZE }).map((_, i) => (

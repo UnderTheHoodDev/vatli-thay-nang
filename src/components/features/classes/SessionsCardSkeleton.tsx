@@ -21,7 +21,7 @@ export default function SessionsCardSkeleton() {
           <Skeleton className="h-9 w-24" />
         </div>
       </CardHeader>
-      <CardContent className="px-3 pb-6">
+      <CardContent className="px-3 pb-4 sm:pb-6">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">

@@ -27,7 +27,7 @@ export default function AttendanceOverview({ classSessionId, counts }: Props) {
           {!isTA && <ExportAttendanceButton classSessionId={classSessionId} />}
         </div>
       </CardHeader>
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatsCard label="Tổng học sinh" value={total} icon={Users} tone="primary" />
           <StatsCard label="Đã điểm danh" value={attended} icon={CheckCircle2} tone="success" />

@@ -94,9 +94,9 @@ export default function ProfileInfoSection({ profile, provinces }: Props) {
         <CardTitle>Thông tin chi tiết</CardTitle>
         <p className="text-muted-foreground mt-1 text-sm">Thông tin liên hệ và hồ sơ học sinh.</p>
       </CardHeader>
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         {!editing ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <dl className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
               <ViewField label="Họ và tên" value={profile.fullName} />
               <ViewField label="Giới tính" value={genderLabel} />

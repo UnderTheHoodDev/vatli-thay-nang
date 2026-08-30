@@ -290,7 +290,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             tệp vẫn lên tới R2 nhưng không còn ai giữ nó — quay lại thấy form trống như
             chưa từng chọn, còn tệp thì nằm lại đó không ai dọn.
           */}
-            <TabsList>
+            <TabsList className="max-w-full justify-start overflow-x-auto">
               <TabsTrigger value="paper" disabled={uploading} className="cursor-pointer">
                 <FileText /> Đề bài
               </TabsTrigger>
@@ -345,7 +345,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
               {hasResult ? (
                 <div className="space-y-4">
                   <Card>
-                    <CardContent className="space-y-3 py-6">
+                    <CardContent className="space-y-3 py-4 sm:py-6">
                       <p className="text-muted-foreground text-sm">Điểm của bạn</p>
                       <p className="text-3xl font-semibold">
                         {test.myScore}
@@ -364,7 +364,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
 
                   {test.mySubmission?.feedback && (
                     <Card>
-                      <CardContent className="space-y-2 py-6">
+                      <CardContent className="space-y-2 py-4 sm:py-6">
                         <p className="text-muted-foreground text-sm">Nhận xét của giáo viên</p>
                         <p className="text-sm whitespace-pre-wrap">{test.mySubmission.feedback}</p>
                       </CardContent>
@@ -373,7 +373,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
 
                   {test.mySubmission && (
                     <Card>
-                      <CardContent className="space-y-3 py-6">
+                      <CardContent className="space-y-3 py-4 sm:py-6">
                         <p className="text-sm font-medium">Bài làm của bạn</p>
                         {test.mySubmission.note && (
                           <div className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
@@ -586,7 +586,7 @@ function SubmitTab({
 
   return (
     <Card>
-      <CardContent className="space-y-4 py-6">
+      <CardContent className="space-y-4 py-4 sm:py-6">
         {mySubmission && (
           <p className="bg-muted rounded-md p-3 text-sm">
             Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong>. Có thể nộp
@@ -658,7 +658,7 @@ function StatsTab({
     <div className="space-y-4">
       {ended && (
         <Card>
-          <CardContent className="py-6">
+          <CardContent className="py-4 sm:py-6">
             <p className="mb-2 text-sm font-medium">
               Phổ điểm cả lớp
               {participants.myScore !== null && (
@@ -685,7 +685,7 @@ function StatsTab({
       )}
 
       <Card>
-        <CardContent className="py-6">
+        <CardContent className="py-4 sm:py-6">
           <p className="mb-3 text-sm font-medium">Tình hình nộp bài của lớp</p>
           <ul className="divide-divide divide-y text-sm">
             {participants.data.map((p, i) => (

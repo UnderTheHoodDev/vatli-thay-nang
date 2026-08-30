@@ -231,7 +231,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
               ))}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Button
               size="sm"
               variant="default"
@@ -259,7 +259,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
         </div>
       )}
 
-      <div className="border-divider overflow-x-auto rounded-md border">
+      <div className="border-divider rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">

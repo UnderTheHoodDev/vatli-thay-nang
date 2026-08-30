@@ -10,7 +10,7 @@ export default function AttendanceSummaryCardSkeleton() {
           <Skeleton className="h-5 w-40" />
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 pb-6 sm:grid-cols-4">
+      <CardContent className="grid grid-cols-2 gap-4 pb-4 sm:grid-cols-4 sm:pb-6">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">
             <Skeleton className="size-10 shrink-0 rounded-lg" />

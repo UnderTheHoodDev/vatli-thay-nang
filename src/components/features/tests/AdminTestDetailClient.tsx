@@ -186,7 +186,7 @@ export function TestAttachmentsCard({ attachments }: { attachments: TestFile[] }
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="pb-6">
+      <CardContent className="pb-4 sm:pb-6">
         {attachments.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             {isTA ? (
@@ -306,7 +306,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
         <CardHeader>
           <CardTitle>Phổ điểm</CardTitle>
         </CardHeader>
-        <CardContent className="pb-6">
+        <CardContent className="pb-4 sm:pb-6">
           <ScoreDistributionChart
             distribution={stats.distribution}
             maxScore={test.maxScore}
@@ -353,102 +353,97 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="pb-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
+        <CardContent className="pb-4 sm:pb-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Họ tên</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Nộp lúc</TableHead>
+                <TableHead className="text-center">Điểm</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRows.length === 0 && (
                 <TableRow>
-                  <TableHead>Họ tên</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Nộp lúc</TableHead>
-                  <TableHead className="text-center">Điểm</TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
+                  <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-sm">
+                    {rows.length === 0 ? 'Chưa có học sinh nào' : 'Không có kết quả phù hợp'}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRows.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-muted-foreground py-8 text-center text-sm"
-                    >
-                      {rows.length === 0 ? 'Chưa có học sinh nào' : 'Không có kết quả phù hợp'}
+              )}
+              {filteredRows.map((r) => {
+                const needsGrade = r.status === 'SUBMITTED';
+                return (
+                  <TableRow
+                    key={r.studentId}
+                    className={cn(
+                      'hover:bg-muted/40 border-l-2 border-l-transparent transition-colors',
+                      // Bài đã nộp chờ chấm là việc admin cần làm — kẻ viền trái để mắt
+                      // rơi ngay vào hàng đó thay vì lướt hết cột trạng thái.
+                      needsGrade && 'border-l-yellow-400 bg-yellow-50/60',
+                    )}
+                  >
+                    <TableCell className="font-medium">
+                      {r.fullName ?? '—'}
+                      {r.leftCourse && (
+                        <Badge variant="outline" className="ml-2">
+                          Đã rời khóa
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatDateTime(r.submittedAt)}
+                      {/* Chỉ suy ra "đã sửa" khi bài CHƯA chấm: updatedAt của bài nộp bị
+                        chạm mỗi lần ghi, kể cả lúc admin chấm điểm — bài đã chấm thì
+                        updatedAt là thời điểm chấm, so với submittedAt sẽ luôn lệch và
+                        báo "đã sửa" cho một học sinh không hề sửa gì. */}
+                      {r.status === 'SUBMITTED' &&
+                        r.submittedAt &&
+                        r.updatedAt &&
+                        r.updatedAt !== r.submittedAt && (
+                          <span className="ml-1 text-xs">(đã sửa)</span>
+                        )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {r.score === null ? (
+                        <span className="text-muted-foreground">Chưa chấm</span>
+                      ) : (
+                        <strong>
+                          {r.score}/{test.maxScore}
+                        </strong>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {r.status !== 'NOT_SUBMITTED' && (
+                        <Button
+                          size="sm"
+                          // Bài chờ chấm dùng nút primary để nổi bật việc cần làm; bài đã
+                          // chấm rồi chỉ là xem lại nên giữ outline cho nhẹ mắt.
+                          variant={needsGrade ? 'default' : 'outline'}
+                          className="cursor-pointer"
+                          onClick={() =>
+                            setQueue({
+                              ids: gradable.map((g) => g.studentId),
+                              pos: gradable.findIndex((g) => g.studentId === r.studentId),
+                            })
+                          }
+                        >
+                          <ClipboardCheck />
+                          {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
-                )}
-                {filteredRows.map((r) => {
-                  const needsGrade = r.status === 'SUBMITTED';
-                  return (
-                    <TableRow
-                      key={r.studentId}
-                      className={cn(
-                        'hover:bg-muted/40 border-l-2 border-l-transparent transition-colors',
-                        // Bài đã nộp chờ chấm là việc admin cần làm — kẻ viền trái để mắt
-                        // rơi ngay vào hàng đó thay vì lướt hết cột trạng thái.
-                        needsGrade && 'border-l-yellow-400 bg-yellow-50/60',
-                      )}
-                    >
-                      <TableCell className="font-medium">
-                        {r.fullName ?? '—'}
-                        {r.leftCourse && (
-                          <Badge variant="outline" className="ml-2">
-                            Đã rời khóa
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {formatDateTime(r.submittedAt)}
-                        {/* Chỉ suy ra "đã sửa" khi bài CHƯA chấm: updatedAt của bài nộp bị
-                          chạm mỗi lần ghi, kể cả lúc admin chấm điểm — bài đã chấm thì
-                          updatedAt là thời điểm chấm, so với submittedAt sẽ luôn lệch và
-                          báo "đã sửa" cho một học sinh không hề sửa gì. */}
-                        {r.status === 'SUBMITTED' &&
-                          r.submittedAt &&
-                          r.updatedAt &&
-                          r.updatedAt !== r.submittedAt && (
-                            <span className="ml-1 text-xs">(đã sửa)</span>
-                          )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {r.score === null ? (
-                          <span className="text-muted-foreground">Chưa chấm</span>
-                        ) : (
-                          <strong>
-                            {r.score}/{test.maxScore}
-                          </strong>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {r.status !== 'NOT_SUBMITTED' && (
-                          <Button
-                            size="sm"
-                            // Bài chờ chấm dùng nút primary để nổi bật việc cần làm; bài đã
-                            // chấm rồi chỉ là xem lại nên giữ outline cho nhẹ mắt.
-                            variant={needsGrade ? 'default' : 'outline'}
-                            className="cursor-pointer"
-                            onClick={() =>
-                              setQueue({
-                                ids: gradable.map((g) => g.studentId),
-                                pos: gradable.findIndex((g) => g.studentId === r.studentId),
-                              })
-                            }
-                          >
-                            <ClipboardCheck />
-                            {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -494,7 +489,7 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="flex items-start justify-between gap-3 py-6">
+      <CardContent className="flex items-start justify-between gap-3 py-4 sm:py-6">
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             {title}

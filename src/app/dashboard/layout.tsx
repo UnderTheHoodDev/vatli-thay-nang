@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getCurrentSession } from '@/lib/server/session';
 import AppSidebar, { DASHBOARD_NAV } from '@/components/app/AppSidebar';
@@ -12,12 +11,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!session.hasPassword) redirect('/auth/change-password');
   if (session.role !== 'STUDENT') redirect(roleHomePath(session.role));
 
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false';
-
   return (
     <div className="font-opensans bg-muted/40 min-h-svh">
-      <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarProvider defaultOpen={false}>
         <AppSidebar title="Lớp học Vật Lí Thầy Năng" items={DASHBOARD_NAV} />
         <SidebarInset className="bg-muted/40 min-w-0">
           <AppTopbar email={session.email} role={session.role} />

@@ -168,14 +168,12 @@ function CoursesTableHead({ headerFilters }: { headerFilters: CoursesHeaderFilte
 
 function CoursesTableFallback({ headerFilters }: { headerFilters: CoursesHeaderFilters }) {
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <CoursesTableHead headerFilters={headerFilters} />
-        <TableBody>
-          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-        </TableBody>
-      </Table>
-    </div>
+    <Table>
+      <CoursesTableHead headerFilters={headerFilters} />
+      <TableBody>
+        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+      </TableBody>
+    </Table>
   );
 }
 
@@ -360,7 +358,7 @@ export default function CoursesPageClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Quản lý khóa học"
         description="Tạo, quản lý nội dung và học sinh ghi danh các khóa học."
@@ -423,7 +421,7 @@ export default function CoursesPageClient({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense fallback={<CoursesTableFallback headerFilters={headerFilters} />}>
             <CoursesTableSection
               promise={coursesPromise}

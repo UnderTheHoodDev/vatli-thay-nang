@@ -33,7 +33,7 @@ export default function LearnLoading() {
             <CardHeader>
               <Skeleton className="h-5 w-40" />
             </CardHeader>
-            <CardContent className="space-y-6 pb-6">
+            <CardContent className="space-y-6 pb-4 sm:pb-6">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-2">
