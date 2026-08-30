@@ -97,6 +97,28 @@ export default function AddStudentsDialog({ classId }: Props) {
     });
   }
 
+  const pageIds = rows.map((u) => u.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const someOnPageSelected = pageIds.some((id) => selected.has(id));
+
+  // Callback ref (not a deps-gated effect): trang tải xong remount checkbox với
+  // indeterminate=false, callback ref chạy lại đúng lúc để cập nhật.
+  const setSelectAllRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node) node.indeterminate = someOnPageSelected && !allOnPageSelected;
+    },
+    [someOnPageSelected, allOnPageSelected],
+  );
+
+  function toggleSelectAllPage() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
   function submit() {
     if (selected.size === 0) return;
     const ids = [...selected];
@@ -162,7 +184,7 @@ export default function AddStudentsDialog({ classId }: Props) {
           </Badge>
         </div>
 
-        <div className="border-divider bg-background max-h-96 min-h-56 overflow-y-auto rounded-lg border">
+        <div className="border-divider bg-background max-h-96 min-h-56 [scrollbar-width:none] overflow-y-auto rounded-lg border [&::-webkit-scrollbar]:hidden">
           {loading ? (
             <ul className="divide-divider divide-y">
               {Array.from({ length: MODAL_PAGE_SIZE }).map((_, i) => (
@@ -181,32 +203,45 @@ export default function AddStudentsDialog({ classId }: Props) {
               className="py-6"
             />
           ) : (
-            <ul className="divide-divider divide-y">
-              {rows.map((u) => {
-                const isChecked = selected.has(u.id);
-                return (
-                  <li key={u.id}>
-                    <label
-                      className={cn(
-                        'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
-                        isChecked ? 'bg-primary/5' : 'hover:bg-muted',
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggle(u.id)}
-                        className="accent-primary size-4 cursor-pointer"
-                      />
-                      <span className="min-w-0 flex-1 truncate">
-                        <span className="text-foreground font-medium">{u.fullName ?? '—'}</span>
-                        <span className="text-muted-foreground ml-2">{u.email}</span>
-                      </span>
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              <label className="bg-muted/40 border-divider sticky top-0 z-10 flex cursor-pointer items-center gap-3 border-b px-4 py-2.5">
+                <input
+                  ref={setSelectAllRef}
+                  type="checkbox"
+                  checked={allOnPageSelected}
+                  onChange={toggleSelectAllPage}
+                  className="accent-primary size-4 cursor-pointer"
+                  aria-label="Chọn tất cả học sinh trong trang"
+                />
+                <span className="text-foreground text-sm font-medium">Chọn tất cả trong trang</span>
+              </label>
+              <ul className="divide-divider divide-y">
+                {rows.map((u) => {
+                  const isChecked = selected.has(u.id);
+                  return (
+                    <li key={u.id}>
+                      <label
+                        className={cn(
+                          'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
+                          isChecked ? 'bg-primary/5' : 'hover:bg-muted',
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggle(u.id)}
+                          className="accent-primary size-4 cursor-pointer"
+                        />
+                        <span className="min-w-0 flex-1 truncate">
+                          <span className="text-foreground font-medium">{u.fullName ?? '—'}</span>
+                          <span className="text-muted-foreground ml-2">{u.email}</span>
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </div>
 
