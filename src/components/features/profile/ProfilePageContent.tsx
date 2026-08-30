@@ -9,7 +9,7 @@ import type { SessionInfo } from '@/types/auth';
  * layout bọc ngoài (admin/dashboard shell), nên gộp về đây thay vì 2 bản y hệt. */
 export default function ProfilePageContent({ session }: { session: SessionInfo }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Thông tin cá nhân"
         description="Quản lý thông tin tài khoản và bảo mật của bạn."

@@ -12,7 +12,7 @@ export default function ProfileHeaderCard({ profile }: { profile: IUserProfile }
 
   return (
     <Card>
-      <CardContent className="flex flex-col items-start gap-4 py-6 sm:flex-row sm:items-center">
+      <CardContent className="flex flex-col items-start gap-4 py-4 sm:flex-row sm:items-center sm:py-6">
         <Avatar className="size-16">
           <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-medium">
             {initial}

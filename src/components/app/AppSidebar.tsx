@@ -139,7 +139,7 @@ export default function AppSidebar({ title, items }: Props) {
           <Fragment key={section}>
             {idx > 0 && <SidebarSeparator className="bg-sidebar-border" />}
             <SidebarGroup>
-              <SidebarGroupLabel className="text-sidebar-foreground/60">
+              <SidebarGroupLabel className="text-sidebar-foreground/60 text-sm">
                 {section}
               </SidebarGroupLabel>
               <SidebarGroupContent>

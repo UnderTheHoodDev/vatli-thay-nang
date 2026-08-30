@@ -71,7 +71,7 @@ export default function ClassSessionsTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="gap-0 pb-0">
         <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -84,7 +84,7 @@ export default function ClassSessionsTab({
                   : `Hiển thị ${start}–${end} trên tổng ${total} buổi học`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
             <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
               <SelectTrigger className="w-24 cursor-pointer">
@@ -108,7 +108,7 @@ export default function ClassSessionsTab({
             )}
           </div>
         </CardHeader>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">

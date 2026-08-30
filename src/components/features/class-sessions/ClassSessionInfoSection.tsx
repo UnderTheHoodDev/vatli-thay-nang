@@ -49,7 +49,7 @@ export default function ClassSessionInfoSection({ classSession }: Props) {
       <CardHeader>
         <CardTitle>Thông tin buổi học</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 pb-6">
+      <CardContent className="space-y-6 pb-4 sm:pb-6">
         <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
           {fields.map(({ label, value, icon: Icon }) => (
             <div key={label} className="flex items-start gap-3">

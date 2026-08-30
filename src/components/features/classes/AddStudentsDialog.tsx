@@ -180,9 +180,24 @@ export default function AddStudentsDialog({ classId }: Props) {
         </form>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-muted-foreground text-sm">
-            {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-muted-foreground text-sm">
+              {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
+            </span>
+            {rows.length > 0 && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-sm">
+                <input
+                  ref={setSelectAllRef}
+                  type="checkbox"
+                  checked={allOnPageSelected}
+                  onChange={toggleSelectAllPage}
+                  className="accent-primary size-4 cursor-pointer"
+                  aria-label="Chọn tất cả học sinh trong trang"
+                />
+                <span className="text-foreground font-medium">Chọn tất cả trong trang</span>
+              </label>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             {selected.size > 0 && (
               <button
@@ -218,45 +233,32 @@ export default function AddStudentsDialog({ classId }: Props) {
               className="py-6"
             />
           ) : (
-            <>
-              <label className="bg-muted/40 border-divider sticky top-0 z-10 flex cursor-pointer items-center gap-3 border-b px-4 py-2.5">
-                <input
-                  ref={setSelectAllRef}
-                  type="checkbox"
-                  checked={allOnPageSelected}
-                  onChange={toggleSelectAllPage}
-                  className="accent-primary size-4 cursor-pointer"
-                  aria-label="Chọn tất cả học sinh trong trang"
-                />
-                <span className="text-foreground text-sm font-medium">Chọn tất cả trong trang</span>
-              </label>
-              <ul className="divide-divider divide-y">
-                {rows.map((u) => {
-                  const isChecked = selected.has(u.id);
-                  return (
-                    <li key={u.id}>
-                      <label
-                        className={cn(
-                          'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
-                          isChecked ? 'bg-primary/5' : 'hover:bg-muted',
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggle(u.id)}
-                          className="accent-primary size-4 cursor-pointer"
-                        />
-                        <span className="min-w-0 flex-1 truncate">
-                          <span className="text-foreground font-medium">{u.fullName ?? '—'}</span>
-                          <span className="text-muted-foreground ml-2">{u.email}</span>
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
+            <ul className="divide-divider divide-y">
+              {rows.map((u) => {
+                const isChecked = selected.has(u.id);
+                return (
+                  <li key={u.id}>
+                    <label
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors',
+                        isChecked ? 'bg-primary/5' : 'hover:bg-muted',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggle(u.id)}
+                        className="accent-primary size-4 cursor-pointer"
+                      />
+                      <span className="min-w-0 flex-1 truncate">
+                        <span className="text-foreground font-medium">{u.fullName ?? '—'}</span>
+                        <span className="text-muted-foreground ml-2">{u.email}</span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
 

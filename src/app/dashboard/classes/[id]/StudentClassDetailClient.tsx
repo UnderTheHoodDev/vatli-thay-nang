@@ -226,7 +226,7 @@ export default function StudentClassDetailClient({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Button
         asChild
         variant="ghost"

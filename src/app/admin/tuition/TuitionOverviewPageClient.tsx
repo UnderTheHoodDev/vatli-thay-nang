@@ -318,7 +318,7 @@ export default function TuitionOverviewPageClient({
   const monthLabel = `${urlState.fromMonth}/${urlState.fromYear} – ${urlState.toMonth}/${urlState.toYear}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Học phí"
         description="Tổng quan tình hình thu học phí của tất cả các lớp."
@@ -328,7 +328,7 @@ export default function TuitionOverviewPageClient({
         <CardHeader>
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
-        <CardContent className="pb-6">
+        <CardContent className="pb-4">
           <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
             <div className="flex flex-col gap-2">
               <Label>Lớp</Label>
@@ -359,13 +359,13 @@ export default function TuitionOverviewPageClient({
           </div>
         </CardContent>
 
-        <CardContent className="border-divider border-t pt-6 pb-6">
+        <CardContent className="border-divider border-t pt-4 pb-4">
           <Suspense fallback={<StatsGridSkeleton count={4} className={CHART_STATS_GRID} />}>
             <ChartStatsSection promise={chartPromise} />
           </Suspense>
         </CardContent>
 
-        <CardContent className="border-divider border-t pt-6 pb-6">
+        <CardContent className="border-divider border-t pt-4 pb-4">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div>
               <h3 className="text-foreground text-base font-semibold tracking-tight">
@@ -450,7 +450,7 @@ export default function TuitionOverviewPageClient({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="border-divider border-t px-6 py-4">
+        <CardContent className="border-divider border-t py-4">
           <Suspense fallback={<Skeleton className="h-9 w-full" />}>
             <ExcelCardSection
               classesPromise={classesPromise}
@@ -460,7 +460,7 @@ export default function TuitionOverviewPageClient({
             />
           </Suspense>
         </CardContent>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense fallback={<OverviewTableFallback />}>
             <OverviewTableSection promise={overviewPromise} />
           </Suspense>

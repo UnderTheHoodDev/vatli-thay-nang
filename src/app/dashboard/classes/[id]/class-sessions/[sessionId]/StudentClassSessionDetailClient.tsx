@@ -49,7 +49,7 @@ function AttendancePanelSection({
 export function AttendancePanelSkeleton() {
   return (
     <Card>
-      <CardContent className="space-y-3 py-6">
+      <CardContent className="space-y-3 py-4 sm:py-6">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-24 w-full" />
       </CardContent>
@@ -67,7 +67,7 @@ export default function StudentClassSessionDetailClient({
     CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-2">
         <Button
           asChild

@@ -64,7 +64,7 @@ export function AttendanceSectionsSkeleton() {
   return (
     <>
       <Card>
-        <CardContent className="flex flex-wrap gap-6 py-6">
+        <CardContent className="flex flex-wrap gap-6 py-4 sm:py-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <Skeleton className="h-3 w-16" />
@@ -74,7 +74,7 @@ export function AttendanceSectionsSkeleton() {
         </CardContent>
       </Card>
       <Card>
-        <CardContent className="space-y-3 py-6">
+        <CardContent className="space-y-3 py-4 sm:py-6">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-24 w-full" />
         </CardContent>
@@ -86,7 +86,7 @@ export function AttendanceSectionsSkeleton() {
 export function LeaveRequestsSkeleton() {
   return (
     <Card>
-      <CardContent className="space-y-3 py-6">
+      <CardContent className="space-y-3 py-4 sm:py-6">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-16 w-full" />
       </CardContent>
@@ -106,7 +106,7 @@ export default function ClassSessionDetailPageClient({
     CLASS_SESSION_STATUS_MAP[getEffectiveStatus(classSession.startTime, classSession.endTime)];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-2">
         <Button
           asChild

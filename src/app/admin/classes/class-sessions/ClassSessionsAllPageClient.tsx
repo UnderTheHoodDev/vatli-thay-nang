@@ -268,7 +268,7 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
   const dateFilterCount = (urlState.startDate ? 1 : 0) + (urlState.endDate ? 1 : 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Danh sách buổi học" description="Tổng hợp tất cả buổi học trên mọi lớp." />
 
       <Card className="gap-0 pb-0">
@@ -342,7 +342,7 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense fallback={<SessionsTableFallback classCodeFilter={classCodeFilter} />}>
             <SessionsTableSection
               promise={sessionsPromise}

@@ -27,7 +27,7 @@ async function ClassesSection({
   const activeClassNames = classesRes.data.filter((c) => c.status === 'ACTIVE').map((c) => c.name);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {tuitionReminder && activeClassNames.length > 0 && (
         <TuitionReminderBanner
           month={tuitionReminder.month}
@@ -36,7 +36,7 @@ async function ClassesSection({
         />
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <StatsCard
           label="Lớp đang học"
           value={activeCount}
@@ -59,7 +59,7 @@ async function ClassesSection({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {classesRes.data.map((row) => {
               const hasActive = row.activeAttendanceSessionId != null;
               return (
@@ -80,7 +80,7 @@ async function ClassesSection({
                     }
                   >
                     <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
                             <School className="size-5" />
@@ -92,7 +92,10 @@ async function ClassesSection({
                             </code>
                           </div>
                         </div>
-                        <Badge variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                        <Badge
+                          variant={row.status === 'ACTIVE' ? 'success' : 'secondary'}
+                          className="shrink-0 whitespace-nowrap"
+                        >
                           {row.status === 'ACTIVE' ? 'Đang học' : 'Đã đóng'}
                         </Badge>
                       </div>
@@ -145,7 +148,7 @@ export default async function DashboardPage() {
   const displayName = session?.fullName?.trim() || session?.email?.split('@')[0] || 'bạn';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <GradientHeroCard>
         <CardContent className="relative flex flex-col gap-3 py-7 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">

@@ -234,7 +234,7 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
   const monthLabel = `Tháng ${urlState.month}/${urlState.year}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-2">
         <Button
           asChild
@@ -269,8 +269,8 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
         <CardHeader>
           <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
-        <CardContent className="pb-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <CardContent className="pb-4 sm:pb-6">
+          <div className="flex flex-col flex-wrap gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-1.5">
               <Label>Tháng</Label>
               <MonthPicker
@@ -328,7 +328,7 @@ function TuitionPageBody({ classDetail, urlState, currentYear, tuitionPromise }:
             placeholder="Tìm theo họ tên hoặc email học sinh…"
           />
         </CardHeader>
-        <CardContent className="px-3 pb-4">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense fallback={<TuitionTableFallback />}>
             <TuitionTableSection
               classId={classDetail.id}

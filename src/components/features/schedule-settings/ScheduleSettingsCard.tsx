@@ -109,7 +109,7 @@ export default function ScheduleSettingsCard({ settings }: Props) {
             <Pencil /> Chỉnh sửa
           </Button>
         </CardHeader>
-        <CardContent className="flex flex-col items-start gap-4 pb-6 sm:flex-row sm:items-center">
+        <CardContent className="flex flex-col items-start gap-4 pb-4 sm:flex-row sm:items-center sm:pb-6">
           {settings?.imageUrl ? (
             <button
               type="button"

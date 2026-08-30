@@ -99,7 +99,7 @@ export default function ClassStudentsTab({
           isPending={loading}
         />
       </CardHeader>
-      <CardContent className="px-3 pb-0">
+      <CardContent className="px-4 pb-4 sm:px-3">
         <ClassStudentsTable
           classId={classId}
           rows={rows}

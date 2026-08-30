@@ -6,7 +6,7 @@ import SessionsCardSkeleton from '@/components/features/classes/SessionsCardSkel
 
 export default function ClassDetailLoading() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Skeleton className="h-8 w-36" />
 
       <GradientHeroCard>

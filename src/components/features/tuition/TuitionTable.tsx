@@ -71,14 +71,12 @@ function TuitionTableHead({ statusFilter }: { statusFilter?: TuitionStatusFilter
 
 export function TuitionTableFallback() {
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TuitionTableHead />
-        <TableBody>
-          <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-        </TableBody>
-      </Table>
-    </div>
+    <Table>
+      <TuitionTableHead />
+      <TableBody>
+        <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+      </TableBody>
+    </Table>
   );
 }
 

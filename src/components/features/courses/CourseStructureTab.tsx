@@ -417,12 +417,12 @@ export default function CourseStructureTab({ course }: Props) {
           </div>
         </CardHeader>
         {pendingCount > 0 && (
-          <div className="mx-6 mb-2 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          <div className="mx-4 mb-2 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 sm:mx-6 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
             <Loader2 className="size-4 animate-spin" />
             {pendingCount} video đang tải lên / xử lý — trạng thái sẽ tự cập nhật khi hoàn tất.
           </div>
         )}
-        <CardContent className="pb-6">
+        <CardContent className="pb-4 sm:pb-6">
           <input ref={fileInputRef} type="file" multiple hidden onChange={onPicked} />
           <div
             onDragOver={(e) => onFileDragOver(e, 'root')}

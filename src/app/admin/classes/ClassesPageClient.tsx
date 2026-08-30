@@ -352,7 +352,7 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
   const dateFilterCount = (urlState.createdFrom ? 1 : 0) + (urlState.createdTo ? 1 : 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Quản lý lớp học"
         description="Tạo, theo dõi và quản lý các lớp học vật lí của bạn."
@@ -435,7 +435,7 @@ export default function ClassesPageClient({ urlState, classesPromise, allClasses
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-3 pb-0">
+        <CardContent className="px-4 pb-4 sm:px-3">
           <Suspense fallback={<ClassesTableFallback statusFilter={statusFilter} />}>
             <ClassesTableSection
               promise={classesPromise}

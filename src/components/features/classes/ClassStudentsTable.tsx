@@ -313,157 +313,155 @@ export default function ClassStudentsTable({
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
-              {!isTA && (
-                <TableHead className="w-8">
-                  <Checkbox
-                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                    onCheckedChange={(checked) => toggleAll(checked === true)}
-                    aria-label="Chọn tất cả học sinh trong trang"
-                  />
-                </TableHead>
-              )}
-              <TableHead className="w-14">ID</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Họ và tên</TableHead>
-              <TableHead>Ngày vào học</TableHead>
-              <TableHead>Ngày nghỉ học</TableHead>
-              {groupFilter ? (
-                <ColumnFilterHead label="Nhóm" {...groupFilter} />
-              ) : (
-                <TableHead>Nhóm</TableHead>
-              )}
-              {statusFilter ? (
-                <ColumnFilterHead label="Trạng thái" {...statusFilter} />
-              ) : (
-                <TableHead>Trạng thái</TableHead>
-              )}
-              <TableHead>Chuyên cần</TableHead>
-              {!isTA && <TableHead className="w-44 text-right">Hành động</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableSkeleton columnWidths={SKELETON_COLUMNS} />
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columnCount}
-                  className="text-muted-foreground py-10 text-center text-sm"
-                >
-                  Không có học sinh nào khớp bộ lọc hiện tại.
-                </TableCell>
-              </TableRow>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            {!isTA && (
+              <TableHead className="w-8 max-sm:pl-0!">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => toggleAll(checked === true)}
+                  aria-label="Chọn tất cả học sinh trong trang"
+                />
+              </TableHead>
+            )}
+            <TableHead className="w-14">ID</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Họ và tên</TableHead>
+            <TableHead>Ngày vào học</TableHead>
+            <TableHead>Ngày nghỉ học</TableHead>
+            {groupFilter ? (
+              <ColumnFilterHead label="Nhóm" {...groupFilter} />
             ) : (
-              rows.map((s) => (
-                <TableRow key={s.studentId} className={cn(s.status === 'LEFT' && 'opacity-60')}>
-                  {!isTA && (
-                    <TableCell>
-                      <Checkbox
-                        checked={selected.has(s.studentId)}
-                        onCheckedChange={(checked) => toggleOne(s.studentId, checked === true)}
-                        aria-label={`Chọn ${s.fullName ?? s.email}`}
-                      />
-                    </TableCell>
+              <TableHead>Nhóm</TableHead>
+            )}
+            {statusFilter ? (
+              <ColumnFilterHead label="Trạng thái" {...statusFilter} />
+            ) : (
+              <TableHead>Trạng thái</TableHead>
+            )}
+            <TableHead>Chuyên cần</TableHead>
+            {!isTA && <TableHead className="w-44 text-right">Hành động</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableSkeleton columnWidths={SKELETON_COLUMNS} />
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columnCount}
+                className="text-muted-foreground py-10 text-center text-sm"
+              >
+                Không có học sinh nào khớp bộ lọc hiện tại.
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((s) => (
+              <TableRow key={s.studentId} className={cn(s.status === 'LEFT' && 'opacity-60')}>
+                {!isTA && (
+                  <TableCell className="max-sm:pl-0!">
+                    <Checkbox
+                      checked={selected.has(s.studentId)}
+                      onCheckedChange={(checked) => toggleOne(s.studentId, checked === true)}
+                      aria-label={`Chọn ${s.fullName ?? s.email}`}
+                    />
+                  </TableCell>
+                )}
+                <TableCell className="text-muted-foreground">{s.studentId}</TableCell>
+                <TableCell className="text-foreground font-medium">{s.email}</TableCell>
+                <TableCell>{s.fullName ?? '—'}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">
+                  {formatDate(s.enrollmentDate ?? s.createdAt)}
+                  {!s.enrollmentDate && (
+                    <span className="text-muted-foreground ml-1 text-xs">(theo ngày thêm)</span>
                   )}
-                  <TableCell className="text-muted-foreground">{s.studentId}</TableCell>
-                  <TableCell className="text-foreground font-medium">{s.email}</TableCell>
-                  <TableCell>{s.fullName ?? '—'}</TableCell>
-                  <TableCell className="text-sm whitespace-nowrap">
-                    {formatDate(s.enrollmentDate ?? s.createdAt)}
-                    {!s.enrollmentDate && (
-                      <span className="text-muted-foreground ml-1 text-xs">(theo ngày thêm)</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                    {formatDate(s.leftAt)}
-                  </TableCell>
-                  <TableCell>
-                    {isTA ? (
-                      <ClassGroupBadge group={s.classGroup} />
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild disabled={groupPending}>
-                          <button
-                            type="button"
-                            className="cursor-pointer rounded-full disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <ClassGroupBadge group={s.classGroup} />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          <GroupMenuItems
-                            groups={groups}
-                            onPick={(id) => assignOne(s.studentId, id)}
-                          />
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <ClassStudentStatusBadge status={s.status} />
-                  </TableCell>
-                  <TableCell>
-                    <AttendanceSummaryCell stats={attendanceByStudent.get(s.studentId)} />
-                  </TableCell>
-                  {!isTA && (
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                  {formatDate(s.leftAt)}
+                </TableCell>
+                <TableCell>
+                  {isTA ? (
+                    <ClassGroupBadge group={s.classGroup} />
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild disabled={groupPending}>
+                        <button
+                          type="button"
+                          className="cursor-pointer rounded-full disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <ClassGroupBadge group={s.classGroup} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <GroupMenuItems
+                          groups={groups}
+                          onPick={(id) => assignOne(s.studentId, id)}
+                        />
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <ClassStudentStatusBadge status={s.status} />
+                </TableCell>
+                <TableCell>
+                  <AttendanceSummaryCell stats={attendanceByStudent.get(s.studentId)} />
+                </TableCell>
+                {!isTA && (
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Sửa ngày vào học"
+                        className="cursor-pointer"
+                        disabled={pending}
+                        onClick={() => setEditingEnrollment(s)}
+                      >
+                        <CalendarCog />
+                      </Button>
+                      {s.status === 'STUDYING' ? (
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          title="Sửa ngày vào học"
+                          title="Đánh dấu nghỉ học"
                           className="cursor-pointer"
                           disabled={pending}
-                          onClick={() => setEditingEnrollment(s)}
+                          onClick={() => setMarkingLeft(s)}
                         >
-                          <CalendarCog />
+                          <UserMinus />
                         </Button>
-                        {s.status === 'STUDYING' ? (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Đánh dấu nghỉ học"
-                            className="cursor-pointer"
-                            disabled={pending}
-                            onClick={() => setMarkingLeft(s)}
-                          >
-                            <UserMinus />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Khôi phục trạng thái đang học"
-                            className="cursor-pointer"
-                            disabled={pending}
-                            onClick={() => setRestoring(s)}
-                          >
-                            <RotateCcw />
-                          </Button>
-                        )}
+                      ) : (
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          title="Xoá khỏi lớp"
-                          className="text-destructive hover:text-destructive cursor-pointer"
+                          title="Khôi phục trạng thái đang học"
+                          className="cursor-pointer"
                           disabled={pending}
-                          onClick={() => setTarget(s)}
+                          onClick={() => setRestoring(s)}
                         >
-                          <Trash2 />
+                          <RotateCcw />
                         </Button>
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Xoá khỏi lớp"
+                        className="text-destructive hover:text-destructive cursor-pointer"
+                        disabled={pending}
+                        onClick={() => setTarget(s)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       <AlertDialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
         <AlertDialogContent>

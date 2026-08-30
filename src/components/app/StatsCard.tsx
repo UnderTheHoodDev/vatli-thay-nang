@@ -30,7 +30,7 @@ export default function StatsCard({
 }: Props) {
   return (
     <Card className={cn('gap-3', className)}>
-      <CardContent className="pt-6 pb-6">
+      <CardContent className="py-4 sm:py-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <p className="text-foreground/60 text-[0.8rem] font-medium tracking-wide uppercase">

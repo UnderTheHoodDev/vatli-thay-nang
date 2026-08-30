@@ -119,7 +119,7 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
           Danh sách yêu cầu xin nghỉ của học sinh trong buổi học này
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
+      <CardContent className="space-y-4 pb-4 sm:pb-6">
         <TableSearchInput
           value={q}
           onChange={handleQChange}
@@ -134,7 +134,7 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
           />
         ) : (
           <>
-            <div className="border-divider overflow-x-auto rounded-md border">
+            <div className="border-divider rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
