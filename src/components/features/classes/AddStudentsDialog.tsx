@@ -119,6 +119,10 @@ export default function AddStudentsDialog({ classId }: Props) {
     });
   }
 
+  function clearAll() {
+    setSelected(new Set());
+  }
+
   function submit() {
     if (selected.size === 0) return;
     const ids = [...selected];
@@ -175,13 +179,24 @@ export default function AddStudentsDialog({ classId }: Props) {
           </div>
         </form>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-muted-foreground text-sm">
             {total === 0 ? 'Không có học sinh' : `Tìm thấy ${total} học sinh`}
           </span>
-          <Badge variant={selected.size > 0 ? 'default' : 'secondary'}>
-            Đã chọn {selected.size} học sinh
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            {selected.size > 0 && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-muted-foreground hover:text-foreground cursor-pointer text-xs underline"
+              >
+                Bỏ chọn tất cả
+              </button>
+            )}
+            <Badge variant={selected.size > 0 ? 'default' : 'secondary'}>
+              Đã chọn {selected.size} học sinh
+            </Badge>
+          </div>
         </div>
 
         <div className="border-divider bg-background max-h-96 min-h-56 [scrollbar-width:none] overflow-y-auto rounded-lg border [&::-webkit-scrollbar]:hidden">
