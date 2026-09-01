@@ -56,9 +56,8 @@ export default function DeleteUserButton({ userId, email }: Props) {
         <AlertDialogHeader>
           <AlertDialogTitle>Xoá tài khoản {email}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Chỉ xoá được nếu tài khoản chưa có dữ liệu học tập/học phí/giảng dạy nào. Nếu đã có, hệ
-            thống sẽ báo lỗi — hãy dùng &quot;Vô hiệu hoá&quot; thay vì xoá. Hành động này không thể
-            hoàn tác.
+            Tài khoản học sinh và toàn bộ dữ liệu học tập, học phí, điểm danh, tiến độ và bài làm
+            của học sinh sẽ bị xoá vĩnh viễn. Hành động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

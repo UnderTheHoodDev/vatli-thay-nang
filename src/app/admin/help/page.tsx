@@ -156,9 +156,9 @@ export default async function AdminHelpPage() {
             <p>
               Nút <strong>&quot;Sửa&quot;</strong> mở hộp thoại chỉnh thông tin cá nhân (họ tên,
               giới tính, ngày sinh, tỉnh, trường, SĐT phụ huynh, Facebook) — email và mật khẩu không
-              đổi được ở đây. Nút <strong>&quot;Xoá&quot;</strong> xoá hẳn tài khoản, nhưng hệ thống
-              sẽ chặn và báo lỗi nếu tài khoản đã có dữ liệu học tập/học phí/giảng dạy — trường hợp
-              đó hãy dùng <strong>&quot;Vô hiệu hóa&quot;</strong> thay vì xoá.
+              đổi được ở đây. Nút <strong>&quot;Xoá&quot;</strong> chỉ có trên tài khoản học sinh và
+              xoá vĩnh viễn tài khoản cùng dữ liệu học tập, học phí, điểm danh, tiến độ và bài làm
+              của học sinh đó.
             </p>
             <Shot
               src="nguoi-dung/05-sua-xoa.png"
@@ -171,8 +171,8 @@ export default async function AdminHelpPage() {
             <p>
               Tick chọn nhiều dòng (hoặc tick ô đầu bảng để chọn tất cả) rồi bấm{' '}
               <strong>&quot;Xoá đã chọn&quot;</strong> để xoá hàng loạt cùng lúc. Mỗi tài khoản được
-              xét độc lập — dòng nào không xoá được (đã có dữ liệu, hoặc không còn tồn tại) sẽ tự
-              động bị bỏ qua, hệ thống báo rõ số lượng và lý do thay vì chặn luôn cả lượt.
+              xét độc lập — học sinh được xoá cùng dữ liệu liên quan; tài khoản không phải học sinh,
+              tài khoản đang thao tác hoặc không còn tồn tại sẽ tự động bị bỏ qua.
             </p>
             <Shot
               src="nguoi-dung/06-xoa-hang-loat.png"
