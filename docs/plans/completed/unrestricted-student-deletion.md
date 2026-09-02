@@ -149,9 +149,9 @@ Out of scope:
 - [x] Run required repository-wide static validation in both repositories.
 - [x] Inspect both diffs for unrelated changes or accidental shared-data
   deletion.
-- [ ] Apply the migration to an isolated database and run the real admin UI
+- [x] Apply the migration to an isolated database and run the real admin UI
   deletion flow against representative student data.
-- [ ] Record verified results and move this plan to `docs/plans/completed/`.
+- [x] Record verified results and move this plan to `docs/plans/completed/`.
 
 ## Decisions
 
@@ -201,13 +201,16 @@ Out of scope:
 
 ## Result
 
-Implementation is complete in both working trees. Backend focused and full
-Jest runs pass with 9 tests; Prisma schema validation, backend ESLint,
-TypeScript, formatting, and build pass. Frontend ESLint, formatting,
-TypeScript, and production build pass, with one pre-existing `VideoPlayer`
-hook-dependency warning.
+Implementation and validation are complete. Backend focused and full Jest runs
+pass with 9 tests; Prisma schema validation, backend ESLint, TypeScript,
+formatting, and build pass. Frontend ESLint, formatting, TypeScript, and
+production build pass, with one pre-existing `VideoPlayer` hook-dependency
+warning.
 
-The plan remains active because no isolated database migration or real admin UI
-deletion was run. The backend repository has no checked-in operational runbook,
-and this task did not authorize using a production-like database. Runtime proof
-and migration rehearsal remain required before deployment.
+The migration and real admin deletion flow were exercised against an isolated
+Docker PostgreSQL database. A related-data student was deleted successfully
+through the UI. A second database-backed API fixture covered a student referenced
+as another user's leave reviewer and submission grader: the target was deleted,
+both shared records remained, their actor fields were cleared, and the second
+student remained. The final parallel Standards and Spec reviews reported no
+actionable findings.
