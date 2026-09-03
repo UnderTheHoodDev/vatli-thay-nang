@@ -25,7 +25,7 @@ export default function ActivationForm({ token, email }: Props) {
         }
       });
       if (succeeded) {
-        toast.success('Kích hoạt tài khoản thành công. Vui lòng đặt mật khẩu.');
+        toast.success('Xác thực thành công. Vui lòng đặt mật khẩu để hoàn tất kích hoạt.');
       }
     });
   }

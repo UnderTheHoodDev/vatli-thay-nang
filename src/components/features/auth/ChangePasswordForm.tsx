@@ -45,7 +45,7 @@ export default function ChangePasswordForm({ role }: Props) {
         }
       });
       if (succeeded) {
-        toast.success('Đặt mật khẩu thành công');
+        toast.success('Kích hoạt tài khoản thành công');
       }
     });
   }

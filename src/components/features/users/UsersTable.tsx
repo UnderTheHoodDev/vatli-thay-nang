@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Mail, Power, RotateCw, ShieldOff, Users as UsersIcon } from 'lucide-react';
+import { Mail, Power, RotateCw, ShieldOff, Users as UsersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -100,8 +100,10 @@ interface ActivationAction {
   title?: string;
 }
 
-// activationTokenValid đến từ BE (kiểm tra Redis trực tiếp — nguồn sự thật
-// duy nhất) chứ không đoán bằng activationEmailSentAt + TTL ở FE.
+// Admin có thể gửi lại activation link bất cứ lúc nào, kể cả khi token hiện
+// tại chưa hết hạn — token cũ đơn giản bị thay bằng token mới (issueActivationLink
+// ở BE tự thu hồi token cũ). Nút "Gửi lại" vì vậy luôn bấm được, không khoá theo
+// activationTokenValid nữa.
 function activationAction(u: UserRow): ActivationAction {
   if (u.status === 'ACTIVATED') {
     return { icon: ShieldOff, label: 'Vô hiệu hóa', variant: 'destructive', sentBefore: false };
@@ -110,16 +112,6 @@ function activationAction(u: UserRow): ActivationAction {
     return { icon: Power, label: 'Kích hoạt lại', variant: 'success', sentBefore: false };
   }
   if (u.activationEmailSentAt) {
-    if (u.activationTokenValid) {
-      return {
-        icon: Check,
-        label: 'Đã gửi',
-        variant: 'outline',
-        sentBefore: true,
-        disabled: true,
-        title: `Đã gửi lúc ${formatDateTime(u.activationEmailSentAt)}`,
-      };
-    }
     return {
       icon: RotateCw,
       label: 'Gửi lại',
