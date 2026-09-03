@@ -69,7 +69,7 @@ export interface IAdminUpdateUserPayload {
 
 export interface IBulkDeleteSkippedItem {
   id: number;
-  reason: 'notFound' | 'hasData';
+  reason: 'notFound' | 'selfDelete' | 'protectedRole';
 }
 
 export interface IBulkDeleteResult {

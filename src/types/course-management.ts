@@ -43,7 +43,7 @@ export interface CourseRow {
   startDate: string | null;
   endDate: string | null;
   enrollmentDeadline: string | null;
-  instructor: CourseInstructor;
+  instructor: CourseInstructor | null;
   enrollmentCount: number;
   isEnrolled?: boolean;
 }

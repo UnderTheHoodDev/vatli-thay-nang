@@ -40,11 +40,13 @@ export default function BulkDeleteUsersButton({ selectedIds, onDone }: Props) {
         toast.success(`Đã xoá ${deleted} tài khoản`);
       }
       if (skipped.length > 0) {
-        const hasDataCount = skipped.filter((s) => s.reason === 'hasData').length;
         const notFoundCount = skipped.filter((s) => s.reason === 'notFound').length;
+        const selfDeleteCount = skipped.filter((s) => s.reason === 'selfDelete').length;
+        const protectedRoleCount = skipped.filter((s) => s.reason === 'protectedRole').length;
         const parts: string[] = [];
-        if (hasDataCount) parts.push(`${hasDataCount} đã có dữ liệu`);
         if (notFoundCount) parts.push(`${notFoundCount} không còn tồn tại`);
+        if (selfDeleteCount) parts.push(`${selfDeleteCount} là tài khoản đang thao tác`);
+        if (protectedRoleCount) parts.push(`${protectedRoleCount} không phải học sinh`);
         toast.error(`Bỏ qua ${skipped.length} tài khoản (${parts.join(', ')})`);
       }
 
@@ -68,9 +70,9 @@ export default function BulkDeleteUsersButton({ selectedIds, onDone }: Props) {
         <AlertDialogHeader>
           <AlertDialogTitle>Xoá {selectedIds.length} tài khoản đã chọn?</AlertDialogTitle>
           <AlertDialogDescription>
-            Chỉ xoá được tài khoản chưa có dữ liệu học tập/học phí/giảng dạy nào — tài khoản nào đã
-            có dữ liệu sẽ tự động bị bỏ qua, hệ thống sẽ báo rõ số lượng bị bỏ qua. Hành động này
-            không thể hoàn tác.
+            Các tài khoản học sinh được chọn cùng toàn bộ dữ liệu liên quan sẽ bị xoá vĩnh viễn. Tài
+            khoản không phải học sinh, tài khoản đang thao tác hoặc không còn tồn tại sẽ bị bỏ qua.
+            Hành động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

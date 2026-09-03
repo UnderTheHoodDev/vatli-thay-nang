@@ -320,7 +320,7 @@ export default function UsersTable({
                         </TooltipContent>
                       </Tooltip>
                       <EditUserDialog user={u} provinces={provinces} />
-                      <DeleteUserButton userId={u.id} email={u.email} />
+                      {u.role === 'STUDENT' && <DeleteUserButton userId={u.id} email={u.email} />}
                     </div>
                   </TableCell>
                 </TableRow>
