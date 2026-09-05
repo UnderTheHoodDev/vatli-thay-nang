@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { loginAction } from '@/actions/v1/auth/login';
@@ -96,6 +97,11 @@ export default function LoginForm() {
           error={errors.password}
           invalid={credentialsInvalid}
         />
+        <div className="flex justify-end">
+          <Link href="/auth/forgot-password" className="text-purple text-sm hover:underline">
+            Quên mật khẩu?
+          </Link>
+        </div>
         <ActionButton
           type="submit"
           className="w-full"
