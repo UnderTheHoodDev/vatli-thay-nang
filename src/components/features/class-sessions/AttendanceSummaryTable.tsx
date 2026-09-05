@@ -4,7 +4,9 @@ import { useMemo, useState } from 'react';
 import { CheckCircle2, ClipboardX, MoreHorizontal, X } from 'lucide-react';
 import DataPagination from '@/components/app/DataPagination';
 import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
-import ColumnFilterHead from '@/components/app/table-filters/ColumnFilterHead';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
 import {
   STICKY_ACTION_CELL,
   STICKY_ACTION_HEAD,
@@ -74,6 +76,24 @@ const PLACEHOLDER_STUDENT: AttendanceSummaryStudent = {
   attendances: [],
 };
 
+type AttendanceStatus = 'ATTENDED' | 'ON_LEAVE' | 'NOT_ATTENDED';
+
+// Thứ tự ưu tiên có mặt > xin nghỉ > vắng khớp resolveAttendanceStatus của BE,
+// nên cột này không lệch với thẻ "Báo cáo tổng quan" ngay phía trên và với file
+// Excel xuất ra.
+const ATTENDANCE_STATUS_META: Record<
+  AttendanceStatus,
+  { label: string; variant: 'success' | 'warning' | 'destructive' }
+> = {
+  ATTENDED: { label: 'Đã điểm danh', variant: 'success' },
+  ON_LEAVE: { label: 'Xin nghỉ', variant: 'warning' },
+  NOT_ATTENDED: { label: 'Chưa điểm danh', variant: 'destructive' },
+};
+
+const ATTENDANCE_STATUS_OPTIONS: ColumnFilterOption[] = (
+  Object.keys(ATTENDANCE_STATUS_META) as AttendanceStatus[]
+).map((value) => ({ value, label: ATTENDANCE_STATUS_META[value].label }));
+
 interface Props {
   classSessionId: number;
   summary: AttendanceSummary | null;
@@ -99,7 +119,7 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   // Lọc client-side: dữ liệu đã tải trọn buổi học nên gõ là lọc ngay, không cần debounce.
   const [search, setSearch] = useState('');
-  const [leaveFilter, setLeaveFilter] = useState(ALL_VALUE);
+  const [statusFilter, setStatusFilter] = useState(ALL_VALUE);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
 
@@ -112,7 +132,9 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
       for (const log of s.attendances) {
         logsBySession.set(log.attendanceSessionId, log);
       }
-      return { ...s, logsBySession };
+      const status: AttendanceStatus =
+        s.attendances.length > 0 ? 'ATTENDED' : s.leaveRequest ? 'ON_LEAVE' : 'NOT_ATTENDED';
+      return { ...s, logsBySession, status };
     });
   }, [summary]);
 
@@ -121,20 +143,18 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
     return studentRows.filter((r) => {
       const matchQ =
         !q || (r.fullName ?? '').toLowerCase().includes(q) || r.email.toLowerCase().includes(q);
-      const matchLeave =
-        leaveFilter === ALL_VALUE ||
-        (leaveFilter === 'NONE' ? !r.leaveRequest : r.leaveRequest?.status === leaveFilter);
-      return matchQ && matchLeave;
+      const matchStatus = statusFilter === ALL_VALUE || r.status === statusFilter;
+      return matchQ && matchStatus;
     });
-  }, [studentRows, search, leaveFilter]);
+  }, [studentRows, search, statusFilter]);
 
   const handleSearchChange = (v: string) => {
     setSearch(v);
     setPage(1);
   };
 
-  const handleLeaveFilterChange = (v: string) => {
-    setLeaveFilter(v);
+  const handleStatusFilterChange = (v: string) => {
+    setStatusFilter(v);
     setPage(1);
   };
 
@@ -284,15 +304,11 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                 Họ tên học sinh
               </TableHead>
               <ColumnFilterHead
-                label="Xin nghỉ"
-                className="w-25 text-center"
-                value={leaveFilter}
-                options={[
-                  { value: 'ACKNOWLEDGED', label: 'Đã duyệt' },
-                  { value: 'SUBMITTED', label: 'Chờ duyệt' },
-                  { value: 'NONE', label: 'Không xin nghỉ' },
-                ]}
-                onChange={handleLeaveFilterChange}
+                label="Trạng thái"
+                className="w-33 min-w-33 text-center"
+                value={statusFilter}
+                options={ATTENDANCE_STATUS_OPTIONS}
+                onChange={handleStatusFilterChange}
               />
               <TableHead className="min-w-45">Lý do nghỉ</TableHead>
               {sessions.map((s, idx) => (
@@ -347,15 +363,16 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                     )}
                   </TableCell>
                   <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                    {row.leaveRequest ? (
-                      row.leaveRequest.status === 'ACKNOWLEDGED' ? (
-                        <Badge variant="success">Đã duyệt</Badge>
-                      ) : (
-                        <Badge variant="warning">Chờ duyệt</Badge>
-                      )
-                    ) : (
-                      <span className="text-muted-foreground text-xs">—</span>
-                    )}
+                    <div className="flex flex-col items-center gap-0.5">
+                      <Badge variant={ATTENDANCE_STATUS_META[row.status].variant}>
+                        {ATTENDANCE_STATUS_META[row.status].label}
+                      </Badge>
+                      {row.status === 'ON_LEAVE' && (
+                        <span className="text-muted-foreground text-[10px]">
+                          {row.leaveRequest?.status === 'ACKNOWLEDGED' ? 'Đã duyệt' : 'Chờ duyệt'}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     {row.leaveRequest ? (
