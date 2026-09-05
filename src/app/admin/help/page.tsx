@@ -548,7 +548,7 @@ export default async function AdminHelpPage() {
               <strong>&quot;Bài kiểm tra&quot;</strong> (cuối tab Nội dung): ra đề bằng ảnh/PDF, đặt
               khung giờ làm bài — hết giờ hệ thống tự khoá nộp. Bấm{' '}
               <strong>&quot;Tạo bài kiểm tra&quot;</strong> rồi nhập Tên, Bắt đầu/Kết thúc, Điểm tối
-              đa và tải đề bài lên (tối đa 30 tệp, mỗi tệp 20 MB). Phần &quot;Mô tả / hướng
+              đa và tải đề bài lên (tối đa 30 tệp, mỗi tệp 50 MB). Phần &quot;Mô tả / hướng
               dẫn&quot; chỉ hiện với học sinh SAU KHI bài đã bắt đầu, nên có thể viết luôn đề bài
               dạng chữ vào đây nếu không cần ảnh/PDF.
             </p>
