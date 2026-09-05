@@ -45,9 +45,9 @@ export default function ForgotPasswordForm() {
           <MailCheck className="text-purple size-10" />
           <h1 className="font-paytone text-purple text-2xl">Gửi mail thành công</h1>
           <p className="text-sm text-gray-500">
-            Nếu <span className="text-foreground font-medium">{trimmedEmail}</span> là email của
-            một tài khoản đã kích hoạt, chúng tôi đã gửi tới đó một link đặt lại mật khẩu. Link có
-            hiệu lực trong vòng 1 ngày.
+            Nếu <span className="text-foreground font-medium">{trimmedEmail}</span> là email của một
+            tài khoản đã kích hoạt, chúng tôi đã gửi tới đó một link đặt lại mật khẩu. Link có hiệu
+            lực trong vòng 1 ngày.
           </p>
         </div>
 
