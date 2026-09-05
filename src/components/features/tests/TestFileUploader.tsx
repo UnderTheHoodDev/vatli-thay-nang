@@ -24,7 +24,7 @@ interface Props {
 }
 
 const MAX_FILES = 30;
-const MAX_SIZE = 20 * 1024 * 1024;
+const MAX_SIZE = 50 * 1024 * 1024;
 
 // Khớp whitelist BE (storage.constants.ts). SVG bị loại ở cả hai phía: là active
 // content, render inline được thì chạy được script.
