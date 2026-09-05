@@ -21,6 +21,12 @@ export const VALIDATION_MESSAGES = {
   FACEBOOK_LINK_INVALID: 'Link Facebook không hợp lệ',
 } as const;
 
+export function validateNewPassword(password: string, confirmPassword: string): string | null {
+  if (!PASSWORD_REGEX.test(password)) return VALIDATION_MESSAGES.PASSWORD_INVALID;
+  if (password !== confirmPassword) return VALIDATION_MESSAGES.PASSWORD_MISMATCH;
+  return null;
+}
+
 export function isValidUrl(value: string): boolean {
   try {
     const url = new URL(value);

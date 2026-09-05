@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButton, FormTextField, PasswordFields } from '@/components/ui/custom';
 import { handleActionResult } from '@/lib/actions';
-import { PASSWORD_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
+import { validateNewPassword, VALIDATION_MESSAGES } from '@/lib/validation';
 import { changePasswordAction } from '@/actions/v1/auth/change-password';
 import type { Role } from '@/types/auth';
 
@@ -29,16 +29,13 @@ export default function ChangePasswordSection({ role }: Props) {
       toast.error(VALIDATION_MESSAGES.CURRENT_PASSWORD_REQUIRED);
       return;
     }
-    if (!PASSWORD_REGEX.test(password)) {
-      toast.error(VALIDATION_MESSAGES.PASSWORD_INVALID);
-      return;
-    }
     if (password === currentPassword) {
       toast.error(VALIDATION_MESSAGES.PASSWORD_SAME_AS_CURRENT);
       return;
     }
-    if (password !== confirmPassword) {
-      toast.error(VALIDATION_MESSAGES.PASSWORD_MISMATCH);
+    const invalid = validateNewPassword(password, confirmPassword);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 

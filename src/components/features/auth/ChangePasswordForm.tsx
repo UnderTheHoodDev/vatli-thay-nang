@@ -4,7 +4,7 @@ import { FormEvent, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { changePasswordAction } from '@/actions/v1/auth/change-password';
-import { PASSWORD_REGEX, VALIDATION_MESSAGES } from '@/lib/validation';
+import { validateNewPassword } from '@/lib/validation';
 import { handleActionResult } from '@/lib/actions';
 import { PasswordFields, ActionButton } from '@/components/ui/custom';
 import type { Role } from '@/types/auth';
@@ -22,12 +22,9 @@ export default function ChangePasswordForm({ role }: Props) {
   function handleChangePassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!PASSWORD_REGEX.test(password)) {
-      toast.error(VALIDATION_MESSAGES.PASSWORD_INVALID);
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error(VALIDATION_MESSAGES.PASSWORD_MISMATCH);
+    const invalid = validateNewPassword(password, confirmPassword);
+    if (invalid) {
+      toast.error(invalid);
       return;
     }
 
