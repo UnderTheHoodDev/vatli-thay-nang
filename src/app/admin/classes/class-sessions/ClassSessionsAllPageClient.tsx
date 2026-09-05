@@ -4,7 +4,7 @@ import { Suspense, use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, Pencil } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -38,12 +39,14 @@ import { useTableFilters } from '@/components/app/table-filters/useTableFilters'
 import { STICKY_ACTION_CELL, STICKY_ACTION_HEAD } from '@/components/app/table-filters/sticky';
 import AttendanceToggle from '@/components/features/class-sessions/AttendanceToggle';
 import ClassSessionFormModal from '@/components/features/class-sessions/ClassSessionFormModal';
+import DeleteClassSessionButton from '@/components/features/class-sessions/DeleteClassSessionButton';
 import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { CLASS_SESSION_STATUS_MAP, getEffectiveStatus } from '@/lib/class-sessions';
 import { formatDateTime } from '@/lib/format';
 import type { ClassRow } from '@/types/class-management';
+import type { ClassSessionListRowWithClass } from '@/types/actions/class-management';
 import type { ListAllClassSessionsResponse } from '@/actions/v1/class-sessions/list-all-class-sessions';
 
 export interface UrlState {
@@ -134,10 +137,14 @@ function SessionsTableSection({
   promise,
   isPending,
   classCodeFilter,
+  canManage,
+  onEdit,
 }: {
   promise: Promise<ListAllClassSessionsResponse>;
   isPending: boolean;
   classCodeFilter: ClassCodeHeaderFilter;
+  canManage: boolean;
+  onEdit: (row: ClassSessionListRowWithClass) => void;
 }) {
   const router = useRouter();
   const { data: rows, errors } = use(promise);
@@ -157,74 +164,101 @@ function SessionsTableSection({
   }
 
   return (
-    <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
-      <Table>
-        <SessionsTableHead classCodeFilter={classCodeFilter} />
-        <TableBody>
-          {rows.map((row) => {
-            const statusInfo =
-              CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.startTime, row.endTime)];
-            return (
-              <TableRow
-                key={row.id}
-                onClick={() =>
-                  router.push(
-                    `/admin/classes/${row.classId}/class-sessions/${row.id}?from=sessions-list`,
-                  )
-                }
-                className="group/r hover:bg-muted cursor-pointer transition-colors"
-              >
-                <TableCell className="text-muted-foreground">{row.id}</TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <Link
-                    href={`/admin/classes/${row.classId}`}
-                    className="hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                      {row.classCode}
-                    </code>
-                  </Link>
-                </TableCell>
-                <TableCell className="text-foreground font-medium">{row.title}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {formatDateTime(row.startTime)}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {formatDateTime(row.endTime)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                </TableCell>
-                <TableCell className="text-center font-semibold">
-                  <span
-                    className={
-                      (row.totalStudents ?? 0) > 0 &&
-                      (row.attendedCount ?? 0) >= (row.totalStudents ?? 0)
-                        ? 'text-emerald-600'
-                        : (row.attendedCount ?? 0) === 0
-                          ? 'text-muted-foreground'
-                          : 'text-amber-600'
-                    }
-                  >
-                    {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
-                  </span>
-                </TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
-                  <AttendanceToggle
-                    classSessionId={row.id}
-                    startTime={row.startTime}
-                    endTime={row.endTime}
-                    activeAttendanceSession={row.activeAttendanceSession ?? null}
-                    onChanged={() => router.refresh()}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <TooltipProvider delayDuration={300}>
+      <div className={cn('transition-opacity', isPending && 'pointer-events-none opacity-60')}>
+        <Table>
+          <SessionsTableHead classCodeFilter={classCodeFilter} />
+          <TableBody>
+            {rows.map((row) => {
+              const statusInfo =
+                CLASS_SESSION_STATUS_MAP[getEffectiveStatus(row.startTime, row.endTime)];
+              return (
+                <TableRow
+                  key={row.id}
+                  onClick={() =>
+                    router.push(
+                      `/admin/classes/${row.classId}/class-sessions/${row.id}?from=sessions-list`,
+                    )
+                  }
+                  className="group/r hover:bg-muted cursor-pointer transition-colors"
+                >
+                  <TableCell className="text-muted-foreground">{row.id}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Link
+                      href={`/admin/classes/${row.classId}`}
+                      className="hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <code className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                        {row.classCode}
+                      </code>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-foreground font-medium">{row.title}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDateTime(row.startTime)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDateTime(row.endTime)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    <span
+                      className={
+                        (row.totalStudents ?? 0) > 0 &&
+                        (row.attendedCount ?? 0) >= (row.totalStudents ?? 0)
+                          ? 'text-emerald-600'
+                          : (row.attendedCount ?? 0) === 0
+                            ? 'text-muted-foreground'
+                            : 'text-amber-600'
+                      }
+                    >
+                      {row.attendedCount ?? 0}/{row.totalStudents ?? 0}
+                    </span>
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
+                    <div className="flex items-center gap-1.5">
+                      <AttendanceToggle
+                        classSessionId={row.id}
+                        startTime={row.startTime}
+                        endTime={row.endTime}
+                        activeAttendanceSession={row.activeAttendanceSession ?? null}
+                        onChanged={() => router.refresh()}
+                      />
+                      {canManage && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon-sm"
+                                variant="outline"
+                                className="cursor-pointer"
+                                aria-label="Sửa buổi học"
+                                onClick={() => onEdit(row)}
+                              >
+                                <Pencil />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Sửa buổi học</TooltipContent>
+                          </Tooltip>
+                          <DeleteClassSessionButton
+                            sessionId={row.id}
+                            classId={row.classId}
+                            title={row.title}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -247,6 +281,7 @@ function SessionsPaginationSection({
 export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, classes }: Props) {
   const isTA = useIsTeachingAssistant();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<ClassSessionListRowWithClass | null>(null);
   const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
   const { page, pageSize } = urlState;
@@ -348,6 +383,8 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
               promise={sessionsPromise}
               isPending={filters.isPending}
               classCodeFilter={classCodeFilter}
+              canManage={!isTA}
+              onEdit={setEditingSession}
             />
           </Suspense>
         </CardContent>
@@ -367,6 +404,18 @@ export default function ClassSessionsAllPageClient({ urlState, sessionsPromise, 
         mode="create"
         classes={classes}
       />
+
+      {editingSession && (
+        <ClassSessionFormModal
+          open={!!editingSession}
+          onOpenChange={(open) => {
+            if (!open) setEditingSession(null);
+          }}
+          mode="edit"
+          classId={editingSession.classId}
+          initialData={editingSession}
+        />
+      )}
     </div>
   );
 }
