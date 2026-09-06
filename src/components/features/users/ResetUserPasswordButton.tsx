@@ -50,10 +50,10 @@ export default function ResetUserPasswordButton({ userId, email }: Props) {
     }
   }
 
-  function close() {
-    setOpen(false);
+  function openDialog() {
     setNewPassword(null);
     setCopied(false);
+    setOpen(true);
   }
 
   return (
@@ -61,8 +61,8 @@ export default function ResetUserPasswordButton({ userId, email }: Props) {
       open={open}
       onOpenChange={(o) => {
         if (pending) return;
-        if (o) setOpen(true);
-        else close();
+        if (o) openDialog();
+        else setOpen(false);
       }}
     >
       <Tooltip>
@@ -72,7 +72,7 @@ export default function ResetUserPasswordButton({ userId, email }: Props) {
             variant="outline"
             className="cursor-pointer"
             aria-label="Đặt lại mật khẩu"
-            onClick={() => setOpen(true)}
+            onClick={openDialog}
           >
             <KeyRound />
           </Button>
@@ -102,7 +102,7 @@ export default function ResetUserPasswordButton({ userId, email }: Props) {
               </Button>
             </div>
             <AlertDialogFooter>
-              <AlertDialogAction className="cursor-pointer" onClick={close}>
+              <AlertDialogAction className="cursor-pointer" onClick={() => setOpen(false)}>
                 Đóng
               </AlertDialogAction>
             </AlertDialogFooter>
