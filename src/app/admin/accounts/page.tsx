@@ -56,6 +56,7 @@ export default async function AccountsPage({ searchParams }: Props) {
       usersPromise={usersPromise}
       provinces={provinces}
       classes={classes}
+      currentUserId={session?.userId}
     />
   );
 }
