@@ -316,7 +316,7 @@ export default function UsersTable({
                         </TooltipContent>
                       </Tooltip>
                       <EditUserDialog user={u} provinces={provinces} />
-                      {u.status !== 'UNACTIVATED' && u.id !== currentUserId && (
+                      {u.status === 'ACTIVATED' && u.id !== currentUserId && (
                         <ResetUserPasswordButton userId={u.id} email={u.email} />
                       )}
                       {u.role === 'STUDENT' && <DeleteUserButton userId={u.id} email={u.email} />}
