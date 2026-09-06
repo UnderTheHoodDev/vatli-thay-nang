@@ -58,6 +58,7 @@ interface Props {
   usersPromise: Promise<IListUsersResult>;
   provinces: Province[];
   classes: ClassOption[];
+  currentUserId?: number;
 }
 
 const DEFAULTS: UrlState = {
@@ -122,6 +123,7 @@ function UsersTableSection({
   onToggleRow,
   onToggleAll,
   headerFilters,
+  currentUserId,
 }: {
   promise: Promise<IListUsersResult>;
   provinces: Province[];
@@ -129,6 +131,7 @@ function UsersTableSection({
   selectedIds: Set<number>;
   onToggleRow: (id: number, checked: boolean) => void;
   onToggleAll: (ids: number[], checked: boolean) => void;
+  currentUserId?: number;
   headerFilters: UsersHeaderFilters;
 }) {
   const { data: rows } = use(promise);
@@ -141,6 +144,7 @@ function UsersTableSection({
       onToggleRow={onToggleRow}
       onToggleAll={onToggleAll}
       headerFilters={headerFilters}
+      currentUserId={currentUserId}
     />
   );
 }
@@ -161,7 +165,13 @@ function UsersPaginationSection({
   return <TablePagerFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />;
 }
 
-export default function UsersPageClient({ urlState, usersPromise, provinces, classes }: Props) {
+export default function UsersPageClient({
+  urlState,
+  usersPromise,
+  provinces,
+  classes,
+  currentUserId,
+}: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const filters = useTableFilters({ urlState, defaults: DEFAULTS });
 
@@ -334,6 +344,7 @@ export default function UsersPageClient({ urlState, usersPromise, provinces, cla
               onToggleRow={toggleRow}
               onToggleAll={toggleAll}
               headerFilters={headerFilters}
+              currentUserId={currentUserId}
             />
           </Suspense>
         </CardContent>

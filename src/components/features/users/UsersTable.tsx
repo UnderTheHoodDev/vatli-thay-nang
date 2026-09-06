@@ -34,6 +34,7 @@ import {
   STICKY_ROW,
 } from '@/components/app/table-filters/sticky';
 import DeleteUserButton from './DeleteUserButton';
+import ResetUserPasswordButton from './ResetUserPasswordButton';
 import EditUserDialog from './EditUserDialog';
 import { setUserStatusAction } from '@/actions/v1/users/set-user-status';
 import type { Gender, Province, Role, UserRow, UserStatus } from '@/types/auth';
@@ -146,6 +147,8 @@ interface Props {
   onToggleAll?: (ids: number[], checked: boolean) => void;
   /** Không truyền = header tĩnh (dùng ở ngữ cảnh không có URL filter). */
   headerFilters?: UsersHeaderFilters;
+  /** Ẩn nút đặt lại mật khẩu trên chính hàng của người đang đăng nhập. */
+  currentUserId?: number;
 }
 
 export default function UsersTable({
@@ -156,6 +159,7 @@ export default function UsersTable({
   onToggleRow,
   onToggleAll,
   headerFilters,
+  currentUserId,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -312,6 +316,9 @@ export default function UsersTable({
                         </TooltipContent>
                       </Tooltip>
                       <EditUserDialog user={u} provinces={provinces} />
+                      {u.status === 'ACTIVATED' && u.id !== currentUserId && (
+                        <ResetUserPasswordButton userId={u.id} email={u.email} />
+                      )}
                       {u.role === 'STUDENT' && <DeleteUserButton userId={u.id} email={u.email} />}
                     </div>
                   </TableCell>
