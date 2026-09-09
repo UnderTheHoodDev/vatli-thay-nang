@@ -10,7 +10,6 @@ import {
   Download,
   FileText,
   Pencil,
-  Search,
   Sparkles,
   Target,
   Users,
@@ -25,14 +24,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import ColumnFilterHead, {
+  type ColumnFilterOption,
+} from '@/components/app/table-filters/ColumnFilterHead';
+import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
+import { ALL_VALUE } from '@/lib/constants';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -71,7 +68,9 @@ const STATUS: Record<
   GRADED: { text: 'Đã chấm', variant: 'success' },
 };
 
-type StatusFilter = 'ALL' | SubmissionRow['status'];
+const SUBMISSION_STATUS_OPTIONS: ColumnFilterOption[] = (
+  Object.keys(STATUS) as SubmissionRow['status'][]
+).map((value) => ({ value, label: STATUS[value].text }));
 
 function formatDateTime(iso: string | null): string {
   return iso ? formatDateTimeFull(iso) : '—';
@@ -214,7 +213,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
   const [rows, setRows] = useState(submissions.data);
   const [stats, setStats] = useState(submissions.stats);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState(ALL_VALUE);
 
   // Hàng đợi chấm bài = danh sách studentId ĐÓNG BĂNG lúc mở panel, cùng vị trí hiện tại.
   //
@@ -241,7 +240,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+      if (statusFilter !== ALL_VALUE && r.status !== statusFilter) return false;
       if (!q) return true;
       return (r.fullName ?? '').toLowerCase().includes(q) || r.email.toLowerCase().includes(q);
     });
@@ -329,29 +328,12 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
               </Button>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo họ tên hoặc email…"
-                aria-label="Tìm theo họ tên hoặc email"
-                className="pl-9"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-              <SelectTrigger aria-label="Lọc theo trạng thái" className="sm:w-44">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
-                <SelectItem value="NOT_SUBMITTED">Chưa nộp</SelectItem>
-                <SelectItem value="SUBMITTED">Đã nộp</SelectItem>
-                <SelectItem value="GRADED">Đã chấm</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <TableSearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Tìm theo họ tên hoặc email…"
+            aria-label="Tìm theo họ tên hoặc email"
+          />
         </CardHeader>
         <CardContent className="pb-4 sm:pb-6">
           <Table>
@@ -359,7 +341,12 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
               <TableRow>
                 <TableHead>Họ tên</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Trạng thái</TableHead>
+                <ColumnFilterHead
+                  label="Trạng thái"
+                  value={statusFilter}
+                  options={SUBMISSION_STATUS_OPTIONS}
+                  onChange={setStatusFilter}
+                />
                 <TableHead>Nộp lúc</TableHead>
                 <TableHead className="text-center">Điểm</TableHead>
                 <TableHead className="text-right">Hành động</TableHead>
