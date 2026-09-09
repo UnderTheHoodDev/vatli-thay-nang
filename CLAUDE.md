@@ -95,7 +95,7 @@ shadcn/ui (`components.json`, style **new-york**, base color **slate**, lucide i
 - `src/lib/utils.ts` → `cn()` (clsx + tailwind-merge).
 - File/video uploads go through the backend's presigned-URL flow (`actions/v1/storage/get-upload-url.ts`, `actions/v1/bunny/get-tus-upload.ts`) — no direct Bunny SDK usage on the frontend.
 - Assets: `src/constants/assets.ts` (`ASSETS` const). Some files in `public/assets/` have Vietnamese-named originals plus ASCII-safe copies (e.g. `anh-ao-den.png`); prefer ASCII paths.
-- `next.config.ts` sets `Referrer-Policy: no-referrer` on `/auth/activation` so activation tokens in URLs don't leak via Referer.
+- `next.config.ts` sets `Referrer-Policy: no-referrer` on `/auth/:path*` so tokens in URLs don't leak via Referer. It deliberately does **not** set `output: 'standalone'` — that is for self-hosting, and on Vercel it breaks the build (`ENOENT .next/next-server.js.nft.json` from Vercel's `onBuildComplete` adapter).
 
 ## Environment variables
 
