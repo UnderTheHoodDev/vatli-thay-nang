@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Package manager is **pnpm**.
 
 - `pnpm dev` — start dev server with Turbopack (localhost:3000)
-- `pnpm build` — production build (`output: 'standalone'` in `next.config.ts`)
+- `pnpm build` — production build
 - `pnpm lint` — ESLint (`eslint ./src`)
 - `pnpm format` / `pnpm format:check` — Prettier (`./src`)
 - No test runner configured yet
@@ -105,7 +105,7 @@ See `.env.example`:
 
 ## Deploy
 
-Vercel, auto-deploys `main` to `vatli-thay-nang.vercel.app`. Build uses `output: 'standalone'`.
+Vercel, auto-deploys `main` to `vatli-thay-nang.vercel.app`.
 
 ### Vercel best practices
 

@@ -268,7 +268,7 @@ function CoursesTableSection({
               <TableCell className="text-center font-medium">{row.enrollmentCount ?? 0}</TableCell>
               <TableCell onClick={(e) => e.stopPropagation()} className={STICKY_ACTION_CELL}>
                 <div className="flex items-center justify-end gap-1">
-                  {!isTA && row.status !== 'PUBLISHED' && (row.enrollmentCount ?? 0) === 0 && (
+                  {!isTA && row.status !== 'PUBLISHED' && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -454,10 +454,26 @@ export default function CoursesPageClient({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xoá khóa học</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc muốn xoá khóa học{' '}
-              <span className="text-foreground font-medium">{deletingCourse?.title}</span>? Thao tác
-              này không thể hoàn tác.
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Xoá vĩnh viễn khóa học{' '}
+                  <span className="text-foreground font-medium">{deletingCourse?.title}</span> và
+                  toàn bộ dữ liệu liên quan. Thao tác này không thể hoàn tác.
+                </p>
+                <ul className="list-inside list-disc space-y-0.5 text-sm">
+                  <li>Ghi danh của học sinh</li>
+                  <li>Nội dung khóa học, tệp đính kèm và video</li>
+                  <li>Bài kiểm tra, đề bài, bài nộp và điểm của học sinh</li>
+                  <li>Tiến độ xem video</li>
+                </ul>
+                {(deletingCourse?.enrollmentCount ?? 0) > 0 && (
+                  <p className="text-destructive font-medium">
+                    Khóa học đang có {deletingCourse?.enrollmentCount} học sinh ghi danh — dữ liệu
+                    học tập của họ trong khóa này sẽ mất theo.
+                  </p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
