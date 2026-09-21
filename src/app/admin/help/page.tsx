@@ -523,8 +523,9 @@ export default async function AdminHelpPage() {
               Tab <strong>Nội dung</strong> tổ chức kiểu Google Drive: bấm{' '}
               <strong>&quot;Thư mục&quot;</strong> để tạo chương, <strong>&quot;Tệp&quot;</strong>{' '}
               để tải lên bài học (video/tài liệu) — hoặc kéo-thả tệp/video thẳng vào một thư mục để
-              tải lên ngay. Kéo icon <strong>⠿</strong> để sắp xếp lại thứ tự, dùng menu{' '}
-              <strong>&quot;…&quot;</strong> ở mỗi mục để đổi tên/xoá/di chuyển.
+              tải lên ngay. Kéo icon <strong>⠿</strong> để đổi thứ tự trong cùng thư mục; muốn
+              chuyển sang thư mục khác thì dùng menu <strong>&quot;⋮&quot;</strong> →{' '}
+              <strong>Di chuyển</strong> rồi chọn thư mục đích. Menu này cũng dùng để đổi tên/xoá.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Shot

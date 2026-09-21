@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, FileText, Folder, Lock, PlayCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Folder, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { fileKindStyle } from './node-kind';
 import { BUNNY_STATUS_META } from '@/types/course-management';
 import type { CourseDetail, CourseNodeTree } from '@/types/course-management';
 
@@ -153,6 +154,8 @@ function SidebarNode({
 
   // FILE
   const isVideo = node.fileKind === 'VIDEO';
+  const kind = fileKindStyle(node.fileKind);
+  const KindIcon = kind.icon;
   const active = node.id === activeNodeId;
   const statusMeta =
     isVideo && node.bunnyStatus
@@ -173,15 +176,10 @@ function SidebarNode({
           !isEnrolled && 'opacity-60',
         )}
       >
-        {isVideo ? (
-          <PlayCircle
-            className={cn('size-4 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
-          />
-        ) : (
-          <FileText
-            className={cn('size-4 shrink-0', active ? 'text-purple' : 'text-muted-foreground')}
-          />
-        )}
+        <KindIcon
+          aria-label={kind.label}
+          className={cn('size-4 shrink-0', active ? 'text-purple' : kind.iconClass)}
+        />
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
         {showProcessing && (
           <Badge variant={statusMeta!.variant} className="px-1 py-0 text-[10px]">

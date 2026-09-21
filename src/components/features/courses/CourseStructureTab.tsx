@@ -7,8 +7,8 @@ import {
   ChevronRight,
   Eye,
   FileText,
-  Film,
   Folder,
+  FolderInput,
   FolderPlus,
   FolderTree,
   GripVertical,
@@ -23,13 +23,19 @@ import {
 import {
   DndContext,
   PointerSensor,
-  pointerWithin,
+  closestCenter,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
-  type DragOverEvent,
+  type Modifier,
 } from '@dnd-kit/core';
-import { SortableContext, arrayMove, useSortable } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,12 +63,13 @@ import { handleActionResult, handleActionErrors } from '@/lib/actions';
 import { useUploadManager } from './UploadManagerProvider';
 import { getBunnyTusUploadAction } from '@/actions/v1/bunny/get-tus-upload';
 import { reorderCourseNodesAction } from '@/actions/v1/course-nodes/reorder-course-nodes';
-import { moveCourseNodeAction } from '@/actions/v1/course-nodes/move-course-node';
 import { deleteCourseNodeAction } from '@/actions/v1/course-nodes/delete-course-node';
 import { getCourseVideoStatusAction } from '@/actions/v1/courses/get-video-status';
 import CourseTestsSection from '@/components/features/tests/CourseTestsSection';
 import NodeFormModal, { type NodeFormMode } from './NodeFormModal';
 import NodeContentViewer from './NodeContentViewer';
+import MoveNodeDialog from './MoveNodeDialog';
+import { FILE_KIND_STYLE, fileKindStyle } from './node-kind';
 import { useCourseFileUpload } from './useCourseFileUpload';
 import {
   BUNNY_STATUS_META,
@@ -151,19 +158,32 @@ function replaceChildren(
   });
 }
 
-function collectDescendantIds(node: CourseNodeTree, acc: Set<number>) {
-  acc.add(node.id);
-  for (const c of node.children ?? []) collectDescendantIds(c, acc);
+/** id các thư mục tổ tiên của `id` (không gồm chính nó), từ trong ra ngoài. */
+function ancestorIds(nodes: CourseNodeTree[], id: number): number[] {
+  const out: number[] = [];
+  let cur = findNode(nodes, id)?.parentId ?? null;
+  while (cur != null) {
+    out.push(cur);
+    cur = findNode(nodes, cur)?.parentId ?? null;
+  }
+  return out;
 }
 
-function visibleIds(nodes: CourseNodeTree[], expanded: Set<number>, acc: number[]) {
-  for (const n of nodes) {
-    acc.push(n.id);
-    if (n.type === 'FOLDER' && expanded.has(n.id) && n.children) {
-      visibleIds(n.children, expanded, acc);
-    }
-  }
-}
+/**
+ * Kéo thả chỉ đổi thứ tự trong cùng thư mục: đích thả hợp lệ chỉ là anh em cùng cha.
+ * Chuyển sang thư mục khác đi qua menu "Di chuyển…" — tránh lỡ tay thả nhầm vào trong.
+ */
+const siblingsOnly: CollisionDetection = (args) => {
+  const parentId = args.active.data.current?.parentId;
+  return closestCenter({
+    ...args,
+    droppableContainers: args.droppableContainers.filter(
+      (c) => c.data.current?.parentId === parentId,
+    ),
+  });
+};
+
+const lockToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 interface Props {
   course: CourseDetail;
@@ -228,15 +248,16 @@ export default function CourseStructureTab({ course }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [preview, setPreview] = useState<CourseNodeTree | null>(null);
 
-  // ===== DnD (sắp xếp/di chuyển node — dnd-kit pointer) =====
-  const [dropFolderId, setDropFolderId] = useState<number | null>(null);
+  const [moveTarget, setMoveTarget] = useState<CourseNodeTree | null>(null);
+
+  // ===== DnD: chỉ sắp xếp trong cùng thư mục (dnd-kit pointer) =====
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // ===== Upload kiểu Drive: chọn/kéo file → tạo node + upload nền NGAY =====
   const { addFiles } = useCourseFileUpload(course.id);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pickParentRef = useRef<number | null>(null);
-  // Highlight vùng thả file OS (tách khỏi dropFolderId của dnd-kit). 'root' = gốc.
+  // Highlight vùng thả file từ máy (khác kéo thả sắp xếp của dnd-kit). 'root' = gốc.
   const [fileDropId, setFileDropId] = useState<number | 'root' | null>(null);
 
   function openPicker(parentId: number | null) {
@@ -278,12 +299,6 @@ export default function CourseStructureTab({ course }: Props) {
     if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFileDropId(null);
   }
 
-  const sortableIds = useMemo(() => {
-    const acc: number[] = [];
-    visibleIds(displayNodes, expanded, acc);
-    return acc;
-  }, [displayNodes, expanded]);
-
   function toggle(id: number) {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -293,59 +308,14 @@ export default function CourseStructureTab({ course }: Props) {
     });
   }
 
-  function isInvalidDrop(activeId: number, overId: number): boolean {
-    const activeNode = findNode(nodes, activeId);
-    if (!activeNode) return true;
-    const descendants = new Set<number>();
-    collectDescendantIds(activeNode, descendants);
-    return descendants.has(overId);
-  }
-
-  function handleDragOver(e: DragOverEvent) {
-    const { active, over } = e;
-    if (!over) {
-      setDropFolderId(null);
-      return;
-    }
-    const activeId = Number(active.id);
-    const overId = Number(over.id);
-    const overNode = findNode(displayNodes, overId);
-    if (overNode?.type === 'FOLDER' && !isInvalidDrop(activeId, overId)) {
-      setDropFolderId(overId);
-    } else {
-      setDropFolderId(null);
-    }
-  }
-
   function handleDragEnd(e: DragEndEvent) {
-    setDropFolderId(null);
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    const activeId = Number(active.id);
-    const overId = Number(over.id);
-    const activeNode = findNode(nodes, activeId);
-    const overNode = findNode(nodes, overId);
-    if (!activeNode || !overNode) return;
-
-    if (isInvalidDrop(activeId, overId)) {
-      handleActionErrors(['Không thể di chuyển thư mục vào chính nó hoặc thư mục con.']);
-      return;
-    }
-
-    // Thả LÊN folder → chuyển VÀO folder đó (cuối danh sách).
-    if (overNode.type === 'FOLDER') {
-      if (activeNode.parentId === overNode.id) return; // đã ở trong folder
-      moveInto(activeNode, overNode.id);
-      return;
-    }
-
-    // Thả lên 1 tệp → cùng cha thì reorder, khác cha thì chuyển sang folder của tệp đó.
-    const targetParentId = overNode.parentId;
-    if (activeNode.parentId === targetParentId) {
-      reorderSameParent(targetParentId, activeId, overId);
-    } else {
-      moveInto(activeNode, targetParentId);
-    }
+    const activeNode = findNode(nodes, Number(active.id));
+    const overNode = findNode(nodes, Number(over.id));
+    // siblingsOnly chỉ trả anh em cùng cha; vẫn chặn phòng cây vừa đổi giữa lúc kéo.
+    if (!activeNode || !overNode || activeNode.parentId !== overNode.parentId) return;
+    reorderSameParent(activeNode.parentId, activeNode.id, overNode.id);
   }
 
   function reorderSameParent(parentId: number | null, activeId: number, overId: number) {
@@ -368,15 +338,14 @@ export default function CourseStructureTab({ course }: Props) {
     });
   }
 
-  function moveInto(activeNode: CourseNodeTree, newParentId: number | null) {
-    // Ra gốc → OMIT newParentId (BE: bỏ trống = root), tránh null qua @Min(1).
-    const payload = newParentId != null ? { newParentId } : {};
-    startTransition(async () => {
-      const res = await moveCourseNodeAction(activeNode.id, course.id, payload);
-      if (res.errors.length) handleActionErrors(res.errors);
-      // Chuyển cha → refresh để lấy thứ tự/cấu trúc chuẩn từ server.
-      router.refresh();
-    });
+  function handleMoved(destinationId: number | null) {
+    // Mở sẵn thư mục đích để admin thấy ngay mục vừa chuyển nằm ở đâu.
+    if (destinationId != null) {
+      setExpanded(
+        (prev) => new Set([...prev, destinationId, ...ancestorIds(nodes, destinationId)]),
+      );
+    }
+    router.refresh();
   }
 
   async function confirmDelete() {
@@ -398,9 +367,8 @@ export default function CourseStructureTab({ course }: Props) {
           <div>
             <CardTitle>Nội dung khóa học</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              Tổ chức theo thư mục (như Google Drive).{' '}
-              <strong>Kéo tệp/video thả vào thư mục</strong> để tải lên ngay, hoặc kéo node để sắp
-              xếp.
+              Kéo tệp/video từ máy thả vào thư mục để tải lên ngay. Kéo biểu tượng ⠿ để đổi thứ tự
+              trong cùng thư mục; chuyển sang thư mục khác bằng menu <strong>⋮ → Di chuyển</strong>.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -448,11 +416,14 @@ export default function CourseStructureTab({ course }: Props) {
               <DndContext
                 id="course-structure-dnd"
                 sensors={sensors}
-                collisionDetection={pointerWithin}
-                onDragOver={handleDragOver}
+                collisionDetection={siblingsOnly}
+                modifiers={[lockToVerticalAxis]}
                 onDragEnd={handleDragEnd}
               >
-                <SortableContext items={sortableIds}>
+                <SortableContext
+                  items={displayNodes.map((n) => n.id)}
+                  strategy={verticalListSortingStrategy}
+                >
                   <ul className="space-y-1">
                     {displayNodes.map((node) => (
                       <NodeRow
@@ -462,7 +433,6 @@ export default function CourseStructureTab({ course }: Props) {
                         courseId={course.id}
                         expanded={expanded}
                         onToggle={toggle}
-                        dropFolderId={dropFolderId}
                         fileDropId={typeof fileDropId === 'number' ? fileDropId : null}
                         onFileDragOver={onFileDragOver}
                         onFileDrop={onFilesDropped}
@@ -477,6 +447,7 @@ export default function CourseStructureTab({ course }: Props) {
                           })
                         }
                         onView={(n) => setPreview(n)}
+                        onMove={(n) => setMoveTarget(n)}
                       />
                     ))}
                   </ul>
@@ -499,6 +470,15 @@ export default function CourseStructureTab({ course }: Props) {
           node={modal.node}
         />
       )}
+
+      <MoveNodeDialog
+        courseId={course.id}
+        courseTitle={course.title}
+        tree={displayNodes}
+        node={moveTarget}
+        onClose={() => setMoveTarget(null)}
+        onMoved={handleMoved}
+      />
 
       <AlertDialog
         open={!!deleteTarget}
@@ -550,10 +530,12 @@ export default function CourseStructureTab({ course }: Props) {
 function RowActions({
   isFolder,
   onEdit,
+  onMove,
   onDelete,
 }: {
   isFolder: boolean;
   onEdit: () => void;
+  onMove: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -566,6 +548,9 @@ function RowActions({
       <DropdownMenuContent align="end">
         <DropdownMenuItem className="cursor-pointer gap-2" onClick={onEdit}>
           <Pencil className="size-4" /> {isFolder ? 'Đổi tên' : 'Chỉnh sửa'}
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer gap-2" onClick={onMove}>
+          <FolderInput className="size-4" /> Di chuyển…
         </DropdownMenuItem>
         <DropdownMenuItem
           className="text-destructive focus:text-destructive cursor-pointer gap-2"
@@ -584,7 +569,6 @@ interface NodeRowProps {
   courseId: number;
   expanded: Set<number>;
   onToggle: (id: number) => void;
-  dropFolderId: number | null;
   fileDropId: number | null;
   onFileDragOver: (e: React.DragEvent, id: number) => void;
   onFileDrop: (e: React.DragEvent, parentId: number) => void;
@@ -593,6 +577,7 @@ interface NodeRowProps {
   onEdit: (node: CourseNodeTree) => void;
   onDelete: (node: CourseNodeTree) => void;
   onView: (node: CourseNodeTree) => void;
+  onMove: (node: CourseNodeTree) => void;
 }
 
 function NodeRow({
@@ -601,7 +586,6 @@ function NodeRow({
   courseId,
   expanded,
   onToggle,
-  dropFolderId,
   fileDropId,
   onFileDragOver,
   onFileDrop,
@@ -610,17 +594,20 @@ function NodeRow({
   onEdit,
   onDelete,
   onView,
+  onMove,
 }: NodeRowProps) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: node.id,
+    data: { parentId: node.parentId },
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const isFolder = node.type === 'FOLDER';
   const isTopFolder = isFolder && depth === 0; // thư mục cấp trên cùng (dưới khóa học)
   const isVideo = node.type === 'FILE' && node.fileKind === 'VIDEO';
   const isDoc = node.type === 'FILE' && node.fileKind === 'DOCUMENT';
+  const kind = fileKindStyle(node.fileKind);
+  const KindIcon = kind.icon;
   const open = expanded.has(node.id);
-  const isDropTarget = dropFolderId === node.id;
   const isFileDropTarget = isFolder && fileDropId === node.id;
 
   const { enqueue, hasActive } = useUploadManager();
@@ -655,22 +642,20 @@ function NodeRow({
   }
 
   return (
-    <li>
-      {/* Ref/droppable chỉ ở hàng header (không bao trùm children) → pointerWithin
-          không nhầm thả-lên-con thành thả-vào-folder. */}
+    // Cả <li> (hàng + các con đang mở) là một khối sắp xếp: kéo qua một thư mục đang mở,
+    // cả khối dịch chuyển cùng nhau thay vì hàng tiêu đề đè lên các con.
+    <li ref={setNodeRef} style={style} className={cn('relative', isDragging && 'z-10')}>
       <div
-        ref={setNodeRef}
         onDragOver={isFolder ? (e) => onFileDragOver(e, node.id) : undefined}
         onDrop={isFolder ? (e) => onFileDrop(e, node.id) : undefined}
         className={cn(
           'border-divider bg-card flex items-center gap-2 rounded-md border px-2 py-1.5',
           isFolder && !isTopFolder && 'bg-muted/30',
           isTopFolder && 'border-primary/30 bg-primary/5',
-          isDragging && 'opacity-50 shadow',
-          isDropTarget && 'ring-primary ring-2',
+          isDragging && 'opacity-60 shadow-md',
           isFileDropTarget && 'ring-primary bg-primary/10 ring-2',
         )}
-        style={{ ...style, marginLeft: depth * 20 }}
+        style={{ marginLeft: depth * 20 }}
       >
         <button
           type="button"
@@ -693,12 +678,12 @@ function NodeRow({
             {open ? <ChevronDown /> : <ChevronRight />}
           </Button>
         ) : (
-          <span className="text-muted-foreground w-8 text-center">
-            {isVideo ? (
-              <Film className="mx-auto size-4" />
-            ) : (
-              <FileText className="mx-auto size-4" />
-            )}
+          <span className="flex w-8 shrink-0 justify-center" title={kind.label}>
+            <span
+              className={cn('flex size-7 items-center justify-center rounded-md', kind.chipClass)}
+            >
+              <KindIcon className="size-4" />
+            </span>
           </span>
         )}
 
@@ -734,8 +719,11 @@ function NodeRow({
             <Loader2 className="size-3 animate-spin" /> Đang tải lên
           </Badge>
         ) : (
-          <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
-            Tài liệu
+          <Badge
+            variant="outline"
+            className={cn('shrink-0 px-1.5 py-0 text-[10px]', FILE_KIND_STYLE.DOCUMENT.badgeClass)}
+          >
+            {FILE_KIND_STYLE.DOCUMENT.label}
           </Badge>
         )}
 
@@ -804,6 +792,7 @@ function NodeRow({
         <RowActions
           isFolder={isFolder}
           onEdit={() => onEdit(node)}
+          onMove={() => onMove(node)}
           onDelete={() => onDelete(node)}
         />
       </div>
@@ -811,27 +800,32 @@ function NodeRow({
       {isFolder && open && (
         <div className="mt-1 space-y-1">
           {node.children && node.children.length > 0 ? (
-            <ul className="space-y-1">
-              {node.children.map((child) => (
-                <NodeRow
-                  key={child.id}
-                  node={child}
-                  depth={depth + 1}
-                  courseId={courseId}
-                  expanded={expanded}
-                  onToggle={onToggle}
-                  dropFolderId={dropFolderId}
-                  fileDropId={fileDropId}
-                  onFileDragOver={onFileDragOver}
-                  onFileDrop={onFileDrop}
-                  onAddFolder={onAddFolder}
-                  onAddFile={onAddFile}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                />
-              ))}
-            </ul>
+            <SortableContext
+              items={node.children.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-1">
+                {node.children.map((child) => (
+                  <NodeRow
+                    key={child.id}
+                    node={child}
+                    depth={depth + 1}
+                    courseId={courseId}
+                    expanded={expanded}
+                    onToggle={onToggle}
+                    fileDropId={fileDropId}
+                    onFileDragOver={onFileDragOver}
+                    onFileDrop={onFileDrop}
+                    onAddFolder={onAddFolder}
+                    onAddFile={onAddFile}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    onMove={onMove}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
           ) : (
             <div
               className="text-muted-foreground flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm italic"
