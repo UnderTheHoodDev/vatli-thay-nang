@@ -35,6 +35,8 @@ export interface SessionInfo {
   hasPassword: boolean;
 }
 
+export type SortOrder = 'asc' | 'desc';
+
 export interface ListMeta {
   total: number;
   page: number;

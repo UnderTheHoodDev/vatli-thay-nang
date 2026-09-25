@@ -9,6 +9,7 @@ import ClassDetailPageClient, {
   type ClassDetailTab,
   type ClassDetailUrlState,
 } from './ClassDetailPageClient';
+import { ATTENDANCE_SORT_KEYS, type ClassStudentSortBy } from '@/types/actions/attendance';
 import type { ClassStudentStatus } from '@/types/class-management';
 
 interface Props {
@@ -27,11 +28,16 @@ function readUrlState(sp: Record<string, string | undefined>): ClassDetailUrlSta
           : 'info';
   // Chỉ nhận giá trị hợp lệ — status lạ trên URL rơi về "tất cả".
   const status: string = sp.status === 'STUDYING' || sp.status === 'LEFT' ? sp.status : ALL_VALUE;
+  const sort: ClassStudentSortBy | '' = ATTENDANCE_SORT_KEYS.includes(sp.sort as ClassStudentSortBy)
+    ? (sp.sort as ClassStudentSortBy)
+    : '';
   return {
     tab,
     q: sp.q ?? '',
     status,
     group: sp.group ?? ALL_VALUE,
+    sort,
+    order: sp.order === 'asc' ? 'asc' : 'desc',
     page: Number(sp.page) || 1,
     pageSize: Number(sp.pageSize) || 50,
   };
@@ -58,6 +64,8 @@ export default async function ClassDetailPage({ params, searchParams }: Props) {
             urlState.group !== ALL_VALUE && urlState.group !== GROUP_UNASSIGNED_VALUE
               ? Number(urlState.group)
               : undefined,
+          sortBy: urlState.sort || undefined,
+          sortOrder: urlState.order,
           page: urlState.page,
           pageSize: urlState.pageSize,
         })
