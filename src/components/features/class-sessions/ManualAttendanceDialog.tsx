@@ -28,7 +28,7 @@ import type {
 } from '@/types/actions/attendance';
 import type { ManualEditAction } from '@/types/class-management';
 
-export type ManualDialogMode = 'mark' | 'remove' | 'note' | 'acknowledgeLeave';
+export type ManualDialogMode = 'mark' | 'remove' | 'note';
 
 interface ModeConfig {
   action: ManualEditAction;
@@ -59,13 +59,6 @@ const MODE_CONFIG: Record<ManualDialogMode, ModeConfig> = {
     description: 'Thêm/cập nhật ghi chú cho lượt điểm danh hiện có.',
     success: 'Đã cập nhật ghi chú',
     requiresSession: true,
-  },
-  acknowledgeLeave: {
-    action: 'ACKNOWLEDGE_LEAVE',
-    title: 'Xác nhận xin nghỉ',
-    description: 'Xác nhận yêu cầu xin nghỉ của học sinh.',
-    success: 'Đã xác nhận xin nghỉ',
-    requiresSession: false,
   },
 };
 

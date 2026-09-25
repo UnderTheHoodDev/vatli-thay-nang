@@ -103,7 +103,7 @@ export default function StudentAttendancePanel({
       <CardContent className="space-y-4 pb-4 sm:pb-6">
         {/* Nút hành động đưa lên đầu cho dễ thấy */}
         <div className="flex flex-wrap items-center gap-2">
-          {!isCompleted && (!myLeaveRequest || myLeaveRequest.status === 'SUBMITTED') && (
+          {!isCompleted && (
             <Button
               variant="outline"
               className="cursor-pointer"
@@ -154,15 +154,9 @@ export default function StudentAttendancePanel({
             <span className="text-foreground font-medium">
               {myLeaveRequest.leaveType === 'EARLY_LEAVE' ? 'Xin rời sớm' : 'Xin nghỉ cả buổi'}
             </span>
-            {myLeaveRequest.status === 'ACKNOWLEDGED' ? (
-              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
-                Đã duyệt
-              </span>
-            ) : (
-              <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
-                Chờ duyệt
-              </span>
-            )}
+            <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+              Đã ghi nhận
+            </span>
           </div>
         )}
 
@@ -193,9 +187,7 @@ export default function StudentAttendancePanel({
         open={leaveDialogOpen}
         onOpenChange={setLeaveDialogOpen}
         classSessionId={classSessionId}
-        existingLeaveRequest={
-          myLeaveRequest && myLeaveRequest.status === 'SUBMITTED' ? myLeaveRequest : null
-        }
+        existingLeaveRequest={myLeaveRequest}
       />
     </Card>
   );

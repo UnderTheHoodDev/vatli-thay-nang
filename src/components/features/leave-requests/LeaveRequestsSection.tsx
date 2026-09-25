@@ -1,10 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { FileX2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -23,15 +21,12 @@ import {
 } from '@/components/ui/table';
 import DataPagination from '@/components/app/DataPagination';
 import EmptyState from '@/components/app/EmptyState';
-import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
-import { handleActionResult } from '@/lib/actions';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { formatDateTime } from '@/lib/format';
-import { acknowledgeLeaveRequestAction } from '@/actions/v1/leave-requests/acknowledge-leave-request';
 import type { LeaveRequestListRow } from '@/types/actions/leave-requests';
 import type { ListMeta } from '@/types/auth';
 
@@ -40,23 +35,14 @@ const LEAVE_TYPE_OPTIONS: ColumnFilterOption[] = [
   { value: 'EARLY_LEAVE', label: 'Rời sớm' },
 ];
 
-const LEAVE_STATUS_OPTIONS: ColumnFilterOption[] = [
-  { value: 'SUBMITTED', label: 'Chờ duyệt' },
-  { value: 'ACKNOWLEDGED', label: 'Đã duyệt' },
-];
-
 interface Props {
   data: LeaveRequestListRow[];
   meta: ListMeta;
 }
 
 export default function LeaveRequestsSection({ data, meta }: Props) {
-  const router = useRouter();
-  const isTA = useIsTeachingAssistant();
-  const [loadingId, setLoadingId] = useState<number | null>(null);
   // Lọc thuần client-side (data đã tải hết) — không cần debounce hay URL sync.
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState<string>(ALL_VALUE);
   const [leaveType, setLeaveType] = useState<string>(ALL_VALUE);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
@@ -68,19 +54,14 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
         !needle ||
         (r.student.fullName ?? '').toLowerCase().includes(needle) ||
         r.student.email.toLowerCase().includes(needle);
-      const matchStatus = status === ALL_VALUE || r.status === status;
       const matchType = leaveType === ALL_VALUE || r.leaveType === leaveType;
-      return matchQ && matchStatus && matchType;
+      return matchQ && matchType;
     });
-  }, [data, q, status, leaveType]);
+  }, [data, q, leaveType]);
 
   // Đổi bộ lọc thì về trang 1 — tránh đứng ở trang không còn dữ liệu.
   const handleQChange = (v: string) => {
     setQ(v);
-    setPage(1);
-  };
-  const handleStatusChange = (v: string) => {
-    setStatus(v);
     setPage(1);
   };
   const handleLeaveTypeChange = (v: string) => {
@@ -97,16 +78,6 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
     () => filteredRows.slice((page - 1) * pageSize, page * pageSize),
     [filteredRows, page, pageSize],
   );
-
-  const handleAcknowledge = async (leaveRequestId: number) => {
-    setLoadingId(leaveRequestId);
-    try {
-      const result = await acknowledgeLeaveRequestAction(leaveRequestId);
-      handleActionResult(result.errors, () => router.refresh(), 'Xác nhận xin nghỉ thành công');
-    } finally {
-      setLoadingId(null);
-    }
-  };
 
   return (
     <Card>
@@ -149,20 +120,12 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
                       onChange={handleLeaveTypeChange}
                     />
                     <TableHead className="min-w-37.5">Thời gian gửi</TableHead>
-                    <ColumnFilterHead
-                      label="Trạng thái"
-                      className="w-28 text-center"
-                      value={status}
-                      options={LEAVE_STATUS_OPTIONS}
-                      onChange={handleStatusChange}
-                    />
-                    <TableHead className="w-28 text-center">Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pagedRows.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-muted-foreground text-center">
+                      <TableCell colSpan={5} className="text-muted-foreground text-center">
                         Không tìm thấy học sinh phù hợp
                       </TableCell>
                     </TableRow>
@@ -185,28 +148,6 @@ export default function LeaveRequestsSection({ data, meta }: Props) {
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {formatDateTime(row.submittedAt)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {row.status === 'ACKNOWLEDGED' ? (
-                            <Badge variant="success">Đã duyệt</Badge>
-                          ) : (
-                            <Badge variant="warning">Chờ duyệt</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {row.status === 'SUBMITTED' && !isTA ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="cursor-pointer"
-                              disabled={loadingId === row.id}
-                              onClick={() => handleAcknowledge(row.id)}
-                            >
-                              {loadingId === row.id ? 'Đang xử lý...' : 'Xác nhận'}
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
                         </TableCell>
                       </TableRow>
                     ))

@@ -1,5 +1,5 @@
 import type { ListMeta } from '@/types/auth';
-import type { LeaveRequestStatus, LeaveType } from '@/types/class-management';
+import type { LeaveType } from '@/types/class-management';
 
 export interface LeaveRequestListRow {
   id: number;
@@ -10,7 +10,6 @@ export interface LeaveRequestListRow {
   };
   reason: string;
   leaveType: LeaveType;
-  status: LeaveRequestStatus;
   submittedAt: string;
 }
 

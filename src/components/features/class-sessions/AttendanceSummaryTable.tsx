@@ -33,7 +33,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -367,11 +366,6 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                       <Badge variant={ATTENDANCE_STATUS_META[row.status].variant}>
                         {ATTENDANCE_STATUS_META[row.status].label}
                       </Badge>
-                      {row.status === 'ON_LEAVE' && (
-                        <span className="text-muted-foreground text-[10px]">
-                          {row.leaveRequest?.status === 'ACKNOWLEDGED' ? 'Đã duyệt' : 'Chờ duyệt'}
-                        </span>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -418,22 +412,6 @@ export default function AttendanceSummaryTable({ classSessionId, summary, onChan
                             >
                               Thêm ghi chú
                             </DropdownMenuItem>
-                            {row.leaveRequest && row.leaveRequest.status === 'SUBMITTED' && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    setDialog({
-                                      mode: 'acknowledgeLeave',
-                                      student: row,
-                                    })
-                                  }
-                                >
-                                  Xác nhận nghỉ
-                                </DropdownMenuItem>
-                              </>
-                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
