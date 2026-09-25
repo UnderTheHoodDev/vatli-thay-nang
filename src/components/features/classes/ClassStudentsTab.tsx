@@ -13,6 +13,7 @@ import { useIsTeachingAssistant } from '@/components/app/RoleProvider';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { ALL_VALUE, PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import ClassStudentsTable, {
+  type ClassStudentsAttendanceSort,
   type ClassStudentsGroupFilter,
   type ClassStudentsStatusFilter,
 } from './ClassStudentsTable';
@@ -27,6 +28,7 @@ interface Props {
   q: string;
   statusFilter: ClassStudentsStatusFilter;
   groupFilter: ClassStudentsGroupFilter;
+  attendanceSort: ClassStudentsAttendanceSort;
   groups: ClassGroupRow[];
   rows: ClassStudentListRow[];
   attendanceStats: ClassAttendanceStudentRow[];
@@ -42,6 +44,7 @@ export default function ClassStudentsTab({
   q,
   statusFilter,
   groupFilter,
+  attendanceSort,
   groups,
   rows,
   attendanceStats,
@@ -108,6 +111,7 @@ export default function ClassStudentsTab({
           loading={loading}
           statusFilter={statusFilter}
           groupFilter={groupFilter}
+          attendanceSort={attendanceSort}
           hasActiveFilter={hasActiveFilter}
         />
       </CardContent>

@@ -1,4 +1,5 @@
-import type { ListMeta } from '@/types/auth';
+import type { ClassStudentSortBy } from '@/types/actions/attendance';
+import type { ListMeta, SortOrder } from '@/types/auth';
 import type {
   ClassGroup,
   ClassGroupColor,
@@ -77,6 +78,9 @@ export interface IListClassStudentsParams {
   classGroupId?: number;
   /** true = chỉ lấy học sinh chưa phân nhóm. */
   unassignedGroup?: boolean;
+  /** Bỏ trống = giữ thứ tự thêm vào lớp (mới nhất trước). */
+  sortBy?: ClassStudentSortBy;
+  sortOrder?: SortOrder;
   page?: number;
   pageSize?: number;
 }

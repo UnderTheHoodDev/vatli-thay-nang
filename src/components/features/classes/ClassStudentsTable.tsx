@@ -35,6 +35,7 @@ import TableSkeleton from '@/components/app/TableSkeleton';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
+import ColumnSortHead from '@/components/app/table-filters/ColumnSortHead';
 import AttendanceSummaryCell from './AttendanceSummaryCell';
 import BulkMarkStudentsLeftModal from './BulkMarkStudentsLeftModal';
 import ClassGroupBadge from './ClassGroupBadge';
@@ -47,7 +48,13 @@ import { restoreStudentAction } from '@/actions/v1/classes/restore-student';
 import { handleActionErrors, handleActionResult, handleActionSuccess } from '@/lib/actions';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { ClassAttendanceStudentRow } from '@/types/actions/attendance';
+import {
+  ATTENDANCE_COUNT_LABEL,
+  ATTENDANCE_SORT_KEYS,
+  type ClassAttendanceStudentRow,
+  type ClassStudentSortBy,
+} from '@/types/actions/attendance';
+import type { SortOrder } from '@/types/auth';
 import type { ClassGroupRow, ClassStudentListRow } from '@/types/actions/class-management';
 
 const SKELETON_COLUMNS = [
@@ -100,6 +107,18 @@ export interface ClassStudentsGroupFilter {
   onChange: (value: string) => void;
 }
 
+/** Sắp xếp gắn thẳng vào header cột Chuyên cần — '' = giữ thứ tự mặc định. */
+export interface ClassStudentsAttendanceSort {
+  value: ClassStudentSortBy | '';
+  order: SortOrder;
+  onChange: (value: ClassStudentSortBy | '', order: SortOrder) => void;
+}
+
+const ATTENDANCE_SORT_OPTIONS = ATTENDANCE_SORT_KEYS.map((value) => ({
+  value,
+  label: ATTENDANCE_COUNT_LABEL[value],
+}));
+
 interface Props {
   classId: number;
   rows: ClassStudentListRow[];
@@ -109,6 +128,7 @@ interface Props {
   /** Không truyền = header tĩnh (dùng ở ngữ cảnh không có URL filter). */
   statusFilter?: ClassStudentsStatusFilter;
   groupFilter?: ClassStudentsGroupFilter;
+  attendanceSort?: ClassStudentsAttendanceSort;
   /** true = rows rỗng vì đang lọc, không phải vì lớp chưa có học sinh nào. */
   hasActiveFilter?: boolean;
 }
@@ -121,6 +141,7 @@ export default function ClassStudentsTable({
   loading,
   statusFilter,
   groupFilter,
+  attendanceSort,
   hasActiveFilter,
 }: Props) {
   const isTA = useIsTeachingAssistant();
@@ -340,7 +361,15 @@ export default function ClassStudentsTable({
             ) : (
               <TableHead>Trạng thái</TableHead>
             )}
-            <TableHead>Chuyên cần</TableHead>
+            {attendanceSort ? (
+              <ColumnSortHead
+                label="Chuyên cần"
+                options={ATTENDANCE_SORT_OPTIONS}
+                {...attendanceSort}
+              />
+            ) : (
+              <TableHead>Chuyên cần</TableHead>
+            )}
             {!isTA && <TableHead className="w-44 text-right">Hành động</TableHead>}
           </TableRow>
         </TableHeader>

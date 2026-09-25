@@ -15,6 +15,7 @@ import ClassSessionsTab from '@/components/features/classes/ClassSessionsTab';
 import { useResolved } from '@/lib/actions';
 import { ALL_VALUE, GROUP_UNASSIGNED_VALUE } from '@/lib/constants';
 import type {
+  ClassStudentsAttendanceSort,
   ClassStudentsGroupFilter,
   ClassStudentsStatusFilter,
 } from '@/components/features/classes/ClassStudentsTable';
@@ -22,6 +23,8 @@ import type { ListAttendanceSummaryResponse } from '@/actions/v1/attendance/list
 import type { ListClassSessionsResponse } from '@/actions/v1/class-sessions/list-class-sessions';
 import type { ListClassStudentsResponse } from '@/actions/v1/classes/list-class-students';
 import type { ClassGroupRow } from '@/types/actions/class-management';
+import type { ClassStudentSortBy } from '@/types/actions/attendance';
+import type { SortOrder } from '@/types/auth';
 import {
   CLASS_STUDENT_STATUS_LABEL,
   type ClassDetail,
@@ -37,6 +40,9 @@ export interface ClassDetailUrlState {
   status: string;
   /** ALL_VALUE | GROUP_UNASSIGNED_VALUE | "<classGroupId>". */
   group: string;
+  /** Chỉ số chuyên cần đang sắp xếp; '' = thứ tự mặc định. */
+  sort: ClassStudentSortBy | '';
+  order: SortOrder;
   page: number;
   pageSize: number;
   [key: string]: string | number;
@@ -56,6 +62,8 @@ const DEFAULTS: ClassDetailUrlState = {
   q: '',
   status: ALL_VALUE,
   group: ALL_VALUE,
+  sort: '',
+  order: 'desc',
   page: 1,
   pageSize: 50,
 };
@@ -74,6 +82,7 @@ interface StudentsSectionProps {
   q: string;
   statusFilter: ClassStudentsStatusFilter;
   groupFilter: ClassStudentsGroupFilter;
+  attendanceSort: ClassStudentsAttendanceSort;
   groups: ClassGroupRow[];
   studentsPromise: Promise<ListClassStudentsResponse>;
   attendanceSummaryPromise: Promise<ListAttendanceSummaryResponse>;
@@ -88,6 +97,7 @@ function StudentsSection({
   q,
   statusFilter,
   groupFilter,
+  attendanceSort,
   groups,
   studentsPromise,
   attendanceSummaryPromise,
@@ -105,6 +115,7 @@ function StudentsSection({
       q={q}
       statusFilter={statusFilter}
       groupFilter={groupFilter}
+      attendanceSort={attendanceSort}
       groups={groups}
       rows={rows}
       attendanceStats={attendanceStats}
@@ -183,6 +194,11 @@ export default function ClassDetailPageClient({
     ],
     onChange: (v) => filters.setValue('group', v),
   };
+  const attendanceSort: ClassStudentsAttendanceSort = {
+    value: urlState.sort,
+    order: urlState.order,
+    onChange: (value, order) => filters.push({ sort: value, order }),
+  };
   const q = filters.value('q');
   const onQChange = (v: string) => filters.setText('q', v);
   const onPageChange = (p: number) => filters.setPaging({ page: p });
@@ -257,6 +273,7 @@ export default function ClassDetailPageClient({
                 q={q}
                 statusFilter={statusFilter}
                 groupFilter={groupFilter}
+                attendanceSort={attendanceSort}
                 groups={groups}
                 rows={[]}
                 attendanceStats={[]}
@@ -273,6 +290,7 @@ export default function ClassDetailPageClient({
               q={q}
               statusFilter={statusFilter}
               groupFilter={groupFilter}
+              attendanceSort={attendanceSort}
               groups={groups}
               studentsPromise={studentsPromise}
               attendanceSummaryPromise={attendanceSummaryPromise}

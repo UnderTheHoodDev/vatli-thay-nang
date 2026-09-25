@@ -99,3 +99,22 @@ export interface ClassAttendanceCounts {
 export interface ClassAttendanceStudentRow extends ClassAttendanceCounts {
   studentId: number;
 }
+
+export const ATTENDANCE_COUNT_LABEL: Record<keyof ClassAttendanceCounts, string> = {
+  totalSessions: 'Tổng số buổi',
+  present: 'Đã điểm danh',
+  leaveFull: 'Nghỉ cả buổi',
+  leaveEarly: 'Nghỉ giữa chừng',
+  totalLeave: 'Tổng nghỉ',
+  absentNoCheckin: 'Vắng không điểm danh',
+};
+
+/** Chỉ số sắp xếp được ở bảng học sinh — khớp enum ClassStudentSortBy phía BE. */
+export const ATTENDANCE_SORT_KEYS = [
+  'present',
+  'totalLeave',
+  'leaveEarly',
+  'absentNoCheckin',
+] as const;
+
+export type ClassStudentSortBy = (typeof ATTENDANCE_SORT_KEYS)[number];
