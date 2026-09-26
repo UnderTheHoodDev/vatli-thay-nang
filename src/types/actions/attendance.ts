@@ -2,7 +2,6 @@ import type { ListMeta } from '@/types/auth';
 import type {
   AttendanceSessionStatus,
   AttendanceSource,
-  LeaveRequestStatus,
   LeaveType,
   ManualEditAction,
 } from '@/types/class-management';
@@ -39,7 +38,6 @@ export interface AttendanceSummaryStudentLog {
 export interface AttendanceSummaryLeaveRequest {
   reason: string;
   leaveType: LeaveType;
-  status: LeaveRequestStatus;
   submittedAt: string;
 }
 

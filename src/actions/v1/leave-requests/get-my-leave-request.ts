@@ -9,7 +9,6 @@ export interface MyLeaveRequest {
   id: number;
   reason: string;
   leaveType: LeaveType;
-  status: 'SUBMITTED' | 'ACKNOWLEDGED';
   submittedAt: string;
 }
 
