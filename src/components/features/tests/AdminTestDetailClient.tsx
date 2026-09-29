@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -17,6 +18,8 @@ import {
 } from 'lucide-react';
 import { exportSubmissionsAction } from '@/actions/v1/tests/export-submissions';
 import { gradeSubmissionAction } from '@/actions/v1/tests/grade-submission';
+import { cancelReopenSubmissionAction } from '@/actions/v1/tests/reopen-submission';
+import ReopenSubmissionDialog from './ReopenSubmissionDialog';
 import { listSubmissions, type ListSubmissionsResponse } from '@/actions/v1/tests/list-submissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { handleActionErrors, handleActionSuccess } from '@/lib/actions';
+import { handleActionErrors, handleActionResult, handleActionSuccess } from '@/lib/actions';
 import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { SubmissionRow, TestDetail, TestFile, TestPhase } from '@/types/tests';
@@ -221,6 +224,9 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
   // chưa chấm lên trước), nên index cũ + 1 sẽ trỏ sang một học sinh khác — admin bấm
   // "Bài tiếp" là bỏ sót người.
   const [queue, setQueue] = useState<{ ids: number[]; pos: number } | null>(null);
+  // Mở lại nộp bù: hàng đang chỉnh hạn, và hàng đang huỷ (khoá nút cho khỏi bấm chồng).
+  const [reopening, setReopening] = useState<SubmissionRow | null>(null);
+  const [cancelingId, setCancelingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (submissions.errors.length) handleActionErrors(submissions.errors);
@@ -258,6 +264,20 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
     setRows(res.data);
     setStats(res.stats);
   }, [test.id]);
+
+  const cancelReopen = useCallback(
+    async (studentId: number) => {
+      setCancelingId(studentId);
+      try {
+        const res = await cancelReopenSubmissionAction(courseId, test.id, studentId);
+        const ok = handleActionResult(res.errors, undefined, 'Đã huỷ mở lại bài');
+        if (ok) await refresh();
+      } finally {
+        setCancelingId(null);
+      }
+    },
+    [courseId, test.id, refresh],
+  );
 
   // Bài đã nộp nhưng chưa chấm — dùng để tô điểm thẻ số + gợi ý "chấm tiếp" và làm nổi
   // bật hàng cần xử lý trong bảng, thay vì bắt admin tự dò cột trạng thái.
@@ -382,7 +402,14 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{r.email}</TableCell>
                     <TableCell>
-                      <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
+                      <div className="flex flex-col items-start gap-1">
+                        <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].text}</Badge>
+                        {r.reopen && (
+                          <span className="text-xs text-emerald-700">
+                            Mở đến {formatDateTime(r.reopen.reopenUntil)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatDateTime(r.submittedAt)}
@@ -407,6 +434,30 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                       )}
                     </TableCell>
                     <TableCell className="text-right">
+                      {r.status === 'NOT_SUBMITTED' && !r.leftCourse && (
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="cursor-pointer"
+                            onClick={() => setReopening(r)}
+                          >
+                            <CalendarClock />
+                            {r.reopen ? 'Sửa hạn' : 'Mở lại'}
+                          </Button>
+                          {r.reopen && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive cursor-pointer"
+                              disabled={cancelingId === r.studentId}
+                              onClick={() => cancelReopen(r.studentId)}
+                            >
+                              Huỷ
+                            </Button>
+                          )}
+                        </div>
+                      )}
                       {r.status !== 'NOT_SUBMITTED' && (
                         <Button
                           size="sm"
@@ -448,6 +499,18 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
           onClose={() => setQueue(null)}
           onNavigate={(pos) => setQueue((q) => (q ? { ...q, pos } : q))}
           onGraded={refresh}
+        />
+      )}
+
+      {reopening && (
+        <ReopenSubmissionDialog
+          key={reopening.studentId}
+          open
+          onOpenChange={(o) => !o && setReopening(null)}
+          courseId={courseId}
+          testId={test.id}
+          row={reopening}
+          onSaved={refresh}
         />
       )}
     </div>

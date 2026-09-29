@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Award,
   BarChart3,
+  CalendarClock,
   FileText,
   Lock,
   Play,
@@ -80,8 +81,10 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const mountedRef = useRef(true);
   const requestSeqRef = useRef(0);
 
-  const deadlineMs =
-    test?.phase === 'ONGOING' && test.myAttempt
+  // Được admin mở lại nộp bù thì hạn là reopenUntil, kể cả khi bài đã kết thúc.
+  const deadlineMs = test?.myReopen
+    ? new Date(test.myReopen.reopenUntil).getTime()
+    : test?.phase === 'ONGOING' && test.myAttempt
       ? new Date(test.myAttempt.deadlineAt).getTime()
       : null;
 
@@ -171,9 +174,12 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
 
   // Giới hạn thời gian làm bài: đang mở mà CHƯA bấm Bắt đầu thì đề bị giấu (BE chốt),
   // chỉ hiện màn bắt đầu. Đã bắt đầu thì chạy đếm ngược tới hạn cá nhân.
-  const notStarted = ongoing && !test.myAttempt;
+  // Đang trong hạn nộp bù admin cấp — bỏ qua cả phase lẫn màn "Bắt đầu làm bài".
+  const reopened = test.myReopen !== null && deadlineMs !== null && deadlineMs > nowMs;
+  const submittable = (ongoing || reopened) && !scheduled;
+  const notStarted = ongoing && !test.myAttempt && !reopened;
   const remainingMs = deadlineMs === null ? null : Math.max(0, deadlineMs - nowMs);
-  const expired = ongoing && deadlineMs !== null && deadlineMs - nowMs <= 0;
+  const expired = submittable && deadlineMs !== null && deadlineMs - nowMs <= 0;
 
   async function handleStart() {
     if (starting) return;
@@ -258,8 +264,24 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
         </Card>
       ) : (
         <>
+          {/* Được mở lại nộp bù: nói rõ hạn, vì trạng thái bài vẫn hiện "Đã kết thúc". */}
+          {reopened && (
+            <div className="flex items-start gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <CalendarClock className="mt-0.5 size-4 shrink-0" />
+              <div>
+                <p className="font-medium">
+                  Giáo viên đã mở lại bài này cho bạn nộp đến{' '}
+                  {formatDateTimeShort(test.myReopen!.reopenUntil)}.
+                </p>
+                {test.myReopen!.reason && (
+                  <p className="mt-0.5 text-emerald-700">Lý do: {test.myReopen!.reason}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Banner đếm ngược — chỉ khi bài đang mở và đã bắt đầu lượt làm. */}
-          {ongoing && remainingMs !== null && (
+          {submittable && remainingMs !== null && (
             <div
               role="timer"
               aria-live="off"
@@ -327,7 +349,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
                 key={test.mySubmission?.updatedAt ?? 'chua-nop'}
                 courseId={courseId}
                 testId={testId}
-                ongoing={ongoing}
+                ongoing={submittable}
                 deadlineAt={test.myAttempt?.deadlineAt ?? test.endTime}
                 expired={expired}
                 status={test.mySubmissionStatus}

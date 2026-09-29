@@ -51,8 +51,9 @@ export interface TestRow {
 
 /** Lượt làm bài của học sinh — trả từ getTest và POST /tests/:id/start. */
 export interface TestAttempt {
-  startedAt: string;
-  /** Hạn nộp cá nhân = min(startedAt + durationMinutes, endTime). */
+  /** null khi được mở lại nộp bù mà chưa từng bấm Bắt đầu. */
+  startedAt: string | null;
+  /** Hạn nộp cá nhân = min(startedAt + durationMinutes, endTime), hoặc reopenUntil. */
   deadlineAt: string;
 }
 
@@ -87,6 +88,12 @@ export interface MySubmission {
   feedback: string | null;
 }
 
+/** Lượt admin mở lại cho học sinh nộp bù — bỏ qua phase và đồng hồ làm bài. */
+export interface TestReopen {
+  reopenUntil: string;
+  reason: string | null;
+}
+
 export interface StudentTestDetail extends TestDetail {
   /** null = chưa bấm Bắt đầu làm bài (khi đó đề bị giấu nếu bài đang mở). */
   myAttempt: TestAttempt | null;
@@ -94,6 +101,8 @@ export interface StudentTestDetail extends TestDetail {
   myScore: number | null;
   /** null = chưa nộp bài nào. */
   mySubmission: MySubmission | null;
+  /** Khác null = đang được mở lại nộp bù; hạn nộp là reopenUntil. */
+  myReopen: TestReopen | null;
 }
 
 export interface SubmissionRow {
@@ -109,6 +118,8 @@ export interface SubmissionRow {
   files: TestFile[];
   /** Đã bị thu hồi ghi danh nhưng còn bài nộp — không tính vào stats. */
   leftCourse: boolean;
+  /** Lượt mở lại đang cấp; null = không có. Đã nộp bài thì luôn null. */
+  reopen: TestReopen | null;
 }
 
 export interface ScoreBin {
