@@ -438,49 +438,51 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {canReopen && !r.leftCourse && (
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="cursor-pointer"
-                            onClick={() => setReopening(r)}
-                          >
-                            <CalendarClock />
-                            {r.reopen ? 'Sửa hạn' : 'Mở lại'}
-                          </Button>
-                          {r.reopen && (
+                      <div className="flex items-center justify-end gap-1">
+                        {canReopen && !r.leftCourse && (
+                          <>
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive cursor-pointer"
-                              disabled={cancelingId === r.studentId}
-                              onClick={() => cancelReopen(r.studentId)}
+                              variant="outline"
+                              className="cursor-pointer"
+                              onClick={() => setReopening(r)}
                             >
-                              Huỷ
+                              <CalendarClock />
+                              {r.reopen ? 'Sửa hạn' : 'Mở lại'}
                             </Button>
-                          )}
-                        </div>
-                      )}
-                      {/* Mở lại + Chấm bài cùng nằm ở cột Hành động, xếp dọc cho gọn. */}
-                      {r.status !== 'NOT_SUBMITTED' && (
-                        <Button
-                          size="sm"
-                          // Bài chờ chấm dùng nút primary để nổi bật việc cần làm; bài đã
-                          // chấm rồi chỉ là xem lại nên giữ outline cho nhẹ mắt.
-                          variant={needsGrade ? 'default' : 'outline'}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            setQueue({
-                              ids: gradable.map((g) => g.studentId),
-                              pos: gradable.findIndex((g) => g.studentId === r.studentId),
-                            })
-                          }
-                        >
-                          <ClipboardCheck />
-                          {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
-                        </Button>
-                      )}
+                            {r.reopen && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive cursor-pointer"
+                                disabled={cancelingId === r.studentId}
+                                onClick={() => cancelReopen(r.studentId)}
+                              >
+                                Huỷ
+                              </Button>
+                            )}
+                          </>
+                        )}
+                        {/* Mở lại + Chấm bài cùng nằm ở cột Hành động, xếp dọc cho gọn. */}
+                        {r.status !== 'NOT_SUBMITTED' && (
+                          <Button
+                            size="sm"
+                            // Bài chờ chấm dùng nút primary để nổi bật việc cần làm; bài đã
+                            // chấm rồi chỉ là xem lại nên giữ outline cho nhẹ mắt.
+                            variant={needsGrade ? 'default' : 'outline'}
+                            className="cursor-pointer"
+                            onClick={() =>
+                              setQueue({
+                                ids: gradable.map((g) => g.studentId),
+                                pos: gradable.findIndex((g) => g.studentId === r.studentId),
+                              })
+                            }
+                          >
+                            <ClipboardCheck />
+                            {r.status === 'GRADED' ? 'Xem lại' : 'Chấm bài'}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
