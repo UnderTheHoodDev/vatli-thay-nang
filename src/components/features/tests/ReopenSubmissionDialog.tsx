@@ -23,6 +23,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   courseId: number;
   testId: number;
+  maxScore: number;
   row: SubmissionRow;
   onSaved: () => void;
 }
@@ -46,6 +47,7 @@ export default function ReopenSubmissionDialog({
   onOpenChange,
   courseId,
   testId,
+  maxScore,
   row,
   onSaved,
 }: Props) {
@@ -97,6 +99,26 @@ export default function ReopenSubmissionDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Nộp đè xoá điểm + nhận xét cũ (quy tắc sẵn có khi nộp lại) — phải nói trước. */}
+          {row.status !== 'NOT_SUBMITTED' && (
+            <div className="border-destructive/30 bg-destructive/5 text-foreground space-y-1 rounded-md border px-3 py-2 text-sm">
+              <p className="font-medium">Em này đã nộp bài rồi.</p>
+              <p>
+                Nếu em ấy nộp đè bài mới, bài cũ bị thay
+                {row.status === 'GRADED' && row.score !== null ? (
+                  <>
+                    {' '}
+                    và{' '}
+                    <strong>
+                      điểm {row.score}/{maxScore} cùng nhận xét sẽ bị xoá
+                    </strong>{' '}
+                    để chấm lại từ đầu
+                  </>
+                ) : null}
+                .
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="reopen-until">Nộp được đến</Label>
             <Input

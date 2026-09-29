@@ -212,6 +212,7 @@ export function TestAttachmentsCard({ attachments }: { attachments: TestFile[] }
 }
 
 export default function AdminTestDetailClient({ courseId, test, submissionsPromise }: Props) {
+  const isTA = useIsTeachingAssistant();
   const submissions = use(submissionsPromise);
   const [rows, setRows] = useState(submissions.data);
   const [stats, setStats] = useState(submissions.stats);
@@ -264,6 +265,9 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
     setRows(res.data);
     setStats(res.stats);
   }, [test.id]);
+
+  // Mở lại là quyền ADMIN (BE trả 403 cho trợ giảng), và chỉ có nghĩa khi bài đã mở.
+  const canReopen = !isTA && test.phase !== 'SCHEDULED';
 
   const cancelReopen = useCallback(
     async (studentId: number) => {
@@ -434,7 +438,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {r.status === 'NOT_SUBMITTED' && !r.leftCourse && (
+                      {canReopen && !r.leftCourse && (
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             size="sm"
@@ -458,6 +462,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                           )}
                         </div>
                       )}
+                      {/* Mở lại + Chấm bài cùng nằm ở cột Hành động, xếp dọc cho gọn. */}
                       {r.status !== 'NOT_SUBMITTED' && (
                         <Button
                           size="sm"
@@ -509,6 +514,7 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
           onOpenChange={(o) => !o && setReopening(null)}
           courseId={courseId}
           testId={test.id}
+          maxScore={test.maxScore}
           row={reopening}
           onSaved={refresh}
         />
