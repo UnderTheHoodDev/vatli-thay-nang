@@ -47,7 +47,7 @@ import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { SubmissionRow, TestDetail, TestFile, TestPhase } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
-import TestAttachmentViewer from './TestAttachmentViewer';
+import TestAttachmentViewer, { GRADING_MODAL_SIZE } from './TestAttachmentViewer';
 import TestFormModal from './TestFormModal';
 
 interface Props {
@@ -639,7 +639,7 @@ function GradingDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
-      <DialogContent size="full" aria-describedby={undefined}>
+      <DialogContent size="full" className={GRADING_MODAL_SIZE} aria-describedby={undefined}>
         <div className="flex h-full min-h-0 flex-col">
           <DialogHeader className="border-divider shrink-0 border-b px-4 py-3">
             <div className="flex items-center justify-between gap-3 pr-8">
@@ -670,20 +670,24 @@ function GradingDialog({
             </div>
           </DialogHeader>
 
-          <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 lg:grid-cols-[1fr_320px]">
-            <div className="min-w-0 space-y-3">
+          <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 lg:grid-cols-[1fr_320px] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden">
+            <div className="min-w-0 lg:-m-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:p-1">
+              <TestAttachmentViewer
+                files={row.files}
+                emptyHint="Học sinh không nộp tệp nào"
+                variant="slider"
+              />
+            </div>
+
+            <div className="space-y-4 lg:-m-1 lg:max-h-full lg:self-start lg:overflow-y-auto lg:p-1">
               {row.note && (
-                <div className="bg-muted rounded-lg p-3 text-sm">
+                <div className="bg-muted max-h-32 overflow-y-auto rounded-lg p-3 text-sm">
                   <p className="text-muted-foreground mb-1 text-xs font-medium">
                     Ghi chú của học sinh
                   </p>
                   {row.note}
                 </div>
               )}
-              <TestAttachmentViewer files={row.files} emptyHint="Học sinh không nộp tệp nào" />
-            </div>
-
-            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="grade-score">Điểm (0 – {maxScore})</Label>
                 <Input

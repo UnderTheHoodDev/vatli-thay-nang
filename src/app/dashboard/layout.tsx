@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="font-opensans bg-muted/40 min-h-svh">
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider defaultOpen>
         <AppSidebar title="Lớp học Vật Lí Thầy Năng" items={DASHBOARD_NAV} />
         <SidebarInset className="bg-muted/40 min-w-0">
           <AppTopbar email={session.email} role={session.role} />
