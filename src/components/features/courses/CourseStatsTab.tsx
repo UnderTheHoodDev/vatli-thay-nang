@@ -33,7 +33,7 @@ import { getStudentStatsAction } from '@/actions/v1/courses/get-student-stats';
 import { exportCourseStatsAction } from '@/actions/v1/courses/export-course-stats';
 import type { CourseStatsRow, CourseStudentStatsDetail } from '@/types/course-management';
 
-const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-36', 'w-32', 'w-24', 'w-24', 'w-24'];
+const SKELETON_COLUMNS = ['w-8', 'w-48', 'w-36', 'w-32', 'w-20', 'w-28', 'w-24', 'w-24'];
 
 interface Props {
   courseId: number;
@@ -155,6 +155,12 @@ export default function CourseStatsTab({ courseId }: Props) {
                 ? 'Chưa có học sinh ghi danh hoặc chưa ai xem'
                 : `Hiển thị ${start}–${end} trên tổng ${total} học sinh`}
             </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              <strong className="text-foreground font-medium">Lượt xem</strong> = số lần xem hết
+              video (đủ 90% nội dung, cộng dồn qua nhiều lần mở).{' '}
+              <strong className="text-foreground font-medium">% đã xem</strong> = phần nội dung khác
+              nhau đã xem, không tính trùng khi tua lại.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">Hiển thị</span>
@@ -202,6 +208,7 @@ export default function CourseStatsTab({ courseId }: Props) {
                   <TableHead>Email</TableHead>
                   <TableHead>Lần truy cập gần nhất</TableHead>
                   <TableHead className="text-right">Lượt xem</TableHead>
+                  <TableHead className="w-36">% đã xem</TableHead>
                   <TableHead className="text-right">Số giờ xem</TableHead>
                   <TableHead className="w-28 text-right">Hành động</TableHead>
                 </TableRow>
@@ -221,6 +228,9 @@ export default function CourseStatsTab({ courseId }: Props) {
                       <TableCell>{r.email}</TableCell>
                       <TableCell>{r.lastViewedAt ? formatDate(r.lastViewedAt) : '—'}</TableCell>
                       <TableCell className="text-right">{r.totalViewCount}</TableCell>
+                      <TableCell>
+                        <CoverageBar percent={r.coveragePercent} />
+                      </TableCell>
                       <TableCell className="text-right">{formatHours(r.totalWatchedSec)}</TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -252,7 +262,7 @@ export default function CourseStatsTab({ courseId }: Props) {
           if (!open) setDrilldown(null);
         }}
       >
-        <DialogContent size="lg">
+        <DialogContent size="lg" className="sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>
               {drilldown
@@ -271,13 +281,13 @@ export default function CourseStatsTab({ courseId }: Props) {
               description="Học sinh chưa xem video nào trong khóa học này."
             />
           ) : drilldown ? (
-            <div className="max-h-[60vh] overflow-y-auto">
+            <div className="max-h-[60vh] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Đường dẫn</TableHead>
                     <TableHead>Video</TableHead>
                     <TableHead className="text-right">Lượt xem</TableHead>
+                    <TableHead className="w-32">% đã xem</TableHead>
                     <TableHead className="text-right">Số giờ xem</TableHead>
                     <TableHead className="text-right">Vị trí cuối</TableHead>
                     <TableHead>Xem gần nhất</TableHead>
@@ -286,11 +296,16 @@ export default function CourseStatsTab({ courseId }: Props) {
                 <TableBody>
                   {drilldown.files.map((f) => (
                     <TableRow key={f.nodeId}>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {f.pathTitles.length ? f.pathTitles.join(' / ') : '(gốc)'}
+                      <TableCell className="max-w-72 whitespace-normal">
+                        <div className="text-foreground font-medium">{f.nodeTitle}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {f.pathTitles.length ? f.pathTitles.join(' / ') : '(gốc)'}
+                        </div>
                       </TableCell>
-                      <TableCell>{f.nodeTitle}</TableCell>
                       <TableCell className="text-right">{f.viewCount}</TableCell>
+                      <TableCell>
+                        <CoverageBar percent={f.coveragePercent} />
+                      </TableCell>
                       <TableCell className="text-right">{formatHours(f.totalWatchedSec)}</TableCell>
                       <TableCell className="text-right">
                         {formatPosition(f.lastPositionSec, f.durationSeconds)}
@@ -304,6 +319,21 @@ export default function CourseStatsTab({ courseId }: Props) {
           ) : null}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function CoverageBar({ percent }: { percent: number }) {
+  const value = Math.max(0, Math.min(100, percent ?? 0));
+  return (
+    <div className="flex items-center gap-2" title={`Đã xem ${value}% nội dung`}>
+      <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+        <div
+          className={value >= 90 ? 'h-full bg-emerald-500' : 'bg-primary h-full'}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+      <span className="text-muted-foreground w-11 text-right text-xs tabular-nums">{value}%</span>
     </div>
   );
 }
