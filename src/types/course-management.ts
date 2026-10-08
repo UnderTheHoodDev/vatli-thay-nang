@@ -81,7 +81,12 @@ export interface CourseStatsRow {
   email: string;
   fullName: string | null;
   enrolledAt: string;
+  /** Số lần xem hết video (≥90% nội dung, cộng dồn qua nhiều lần mở). */
   totalViewCount: number;
+  /** Số lần mở video. */
+  openCount: number;
+  /** % nội dung khác nhau đã xem trên tổng thời lượng các video của khoá. */
+  coveragePercent: number;
   totalWatchedSec: number;
   lastViewedAt: string | null;
 }
@@ -93,7 +98,10 @@ export interface CourseStudentStatsFile {
   /** Breadcrumb các folder cha (từ gốc → gần nhất). */
   pathTitles: string[];
   durationSeconds: number | null;
+  /** Số lần xem hết video này. */
   viewCount: number;
+  openCount: number;
+  coveragePercent: number;
   totalWatchedSec: number;
   lastPositionSec: number;
   lastViewedAt: string | null;

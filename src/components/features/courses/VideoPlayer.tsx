@@ -3,9 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import 'plyr/dist/plyr.css';
-import { endView, getProgress, heartbeat, startView } from '@/lib/video-tracking-client';
+import {
+  getProgress,
+  sendBeat,
+  startView,
+  TrackingTokenExpiredError,
+  type BeatPayload,
+} from '@/lib/video-tracking-client';
 import { cn } from '@/lib/utils';
 import type { BunnyVideoStatus } from '@/types/course-management';
+import { PlaybackTracker } from './playback-tracker';
 
 interface Props {
   nodeId: number;
@@ -24,7 +31,6 @@ interface Props {
 }
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
-const MAX_DELTA_SEC = 60;
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 // plyr xuất kiểu CommonJS (`export = Plyr`) nên lấy kiểu instance qua InstanceType.
 type PlyrInstance = InstanceType<typeof import('plyr')>;
@@ -47,15 +53,12 @@ export default function VideoPlayer({
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const viewIdRef = useRef<number | null>(null);
-  const lastTickRef = useRef<number>(0);
-  const accumulatedRef = useRef<number>(0);
-
-  // Vị trí + trạng thái phát THẬT (từ <video>). Khi fallback iframe, các ref này
-  // không cập nhật → tracking tự dùng cơ chế ước lượng (accumulated).
+  // Vị trí phát THẬT + bộ ghi nhận đoạn đã xem, chỉ có khi phát bằng <video>. Iframe dự
+  // phòng của Bunny không cho biết video có đang chạy hay không → không ghi thời gian/đoạn
+  // nào, cũng không đẩy vị trí xem tiếp (trước đây ước lượng theo đồng hồ nên ghi khống).
   const playerReadyRef = useRef(false);
-  const isPlayingRef = useRef(false);
   const currentTimeRef = useRef(0);
+  const trackerRef = useRef<PlaybackTracker | null>(null);
 
   // Lấy vị trí resume trước khi mount player.
   useEffect(() => {
@@ -101,17 +104,11 @@ export default function VideoPlayer({
     const onTimeUpdate = () => {
       currentTimeRef.current = video.currentTime;
     };
-    const onPlay = () => {
-      isPlayingRef.current = true;
-    };
-    const onPauseOrEnd = () => {
-      isPlayingRef.current = false;
-    };
     video.addEventListener('loadedmetadata', onLoadedMeta);
     video.addEventListener('timeupdate', onTimeUpdate);
-    video.addEventListener('play', onPlay);
-    video.addEventListener('pause', onPauseOrEnd);
-    video.addEventListener('ended', onPauseOrEnd);
+    const tracker = new PlaybackTracker(video);
+    const detachTracker = tracker.attach();
+    trackerRef.current = tracker;
 
     let hls: Hls | null = null;
     let player: PlyrInstance | null = null;
@@ -225,12 +222,10 @@ export default function VideoPlayer({
     return () => {
       destroyed = true;
       playerReadyRef.current = false;
-      isPlayingRef.current = false;
       video.removeEventListener('loadedmetadata', onLoadedMeta);
       video.removeEventListener('timeupdate', onTimeUpdate);
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPauseOrEnd);
-      video.removeEventListener('ended', onPauseOrEnd);
+      detachTracker();
+      if (trackerRef.current === tracker) trackerRef.current = null;
       if (watchdog) clearTimeout(watchdog);
       if (player) {
         try {
@@ -243,71 +238,86 @@ export default function VideoPlayer({
     };
   }, [videoUrl, bunnyStatus, initialPosition, useIframeFallback]);
 
-  // Tracking lifecycle (start / heartbeat / end). Không phụ thuộc cơ chế phát.
+  // Tracking lifecycle: mở lượt xem (qua Vercel, có session) rồi gửi heartbeat THẲNG tới
+  // backend bằng vé theo dõi. Chỉ gửi khi có gì mới (đang phát / vừa dừng); video đứng yên
+  // thì im lặng — trước đây vẫn gửi đều 10s/lần dù tab bỏ không.
   useEffect(() => {
     if (bunnyStatus !== 'FINISHED' || initialPosition == null) return;
     if (!track) return; // admin preview: không ghi tracking
 
-    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let token: string | null = null;
     let cancelled = false;
+    let opening: Promise<void> | null = null;
+    // Gửi tuần tự để vị trí xem tiếp không bị lần gửi cũ đến sau ghi đè.
+    let chain: Promise<void> = Promise.resolve();
 
-    const currentPos = () =>
-      playerReadyRef.current
-        ? Math.round(currentTimeRef.current)
-        : initialPosition + accumulatedRef.current;
+    const position = () =>
+      playerReadyRef.current ? Math.round(currentTimeRef.current) : initialPosition;
+    const duration = () => {
+      const d = Math.round(videoRef.current?.duration ?? NaN);
+      return trackerRef.current && Number.isFinite(d) && d > 0 ? d : undefined;
+    };
 
-    const begin = async () => {
+    const open = () =>
+      (opening ??= (async () => {
+        try {
+          const res = await startView(nodeId, position());
+          if (!cancelled) token = res.data.trackingToken;
+        } catch (err) {
+          console.warn('[video-tracking] start failed', err);
+        } finally {
+          opening = null;
+        }
+      })());
+
+    const flush = async (final: boolean, keepalive = false) => {
+      // Mở lượt xem lỗi (mất mạng lúc vào trang) → thử lại; số liệu vẫn nằm trong tracker.
+      if (!token && !final && !cancelled) await open();
+      if (!token) return;
+      const tracker = trackerRef.current;
+      const pending = tracker?.take() ?? { segments: [], watchedSeconds: 0 };
+      if (!final && !pending.segments.length && !pending.watchedSeconds) return;
+      const payload: BeatPayload = {
+        segments: pending.segments,
+        watchedSecondsDelta: pending.watchedSeconds,
+        currentPositionSec: position(),
+        durationSec: duration(),
+        final,
+      };
       try {
-        const res = await startView(nodeId, initialPosition);
-        if (cancelled) return;
-        viewIdRef.current = res.data.viewId;
-        lastTickRef.current = Date.now();
-        accumulatedRef.current = 0;
-
-        intervalId = setInterval(async () => {
-          const now = Date.now();
-          const elapsed = Math.min(
-            MAX_DELTA_SEC,
-            Math.max(0, Math.round((now - lastTickRef.current) / 1000)),
-          );
-          lastTickRef.current = now;
-
-          let watchedDelta: number;
-          if (playerReadyRef.current) {
-            watchedDelta = isPlayingRef.current ? elapsed : 0;
-          } else {
-            watchedDelta = document.hidden ? 0 : elapsed;
-            accumulatedRef.current += watchedDelta;
-          }
-
-          if (viewIdRef.current == null) return;
-          try {
-            const hb = await heartbeat(viewIdRef.current, watchedDelta, currentPos());
-            if (hb.data.newViewId) viewIdRef.current = hb.data.newViewId;
-          } catch (err) {
-            console.warn('[video-tracking] heartbeat failed', err);
-          }
-        }, HEARTBEAT_INTERVAL_MS);
+        await sendBeat(token, payload, { keepalive });
       } catch (err) {
-        console.warn('[video-tracking] start failed', err);
+        tracker?.restore(pending);
+        if (err instanceof TrackingTokenExpiredError && !final) {
+          token = null;
+          await open();
+        } else {
+          console.warn('[video-tracking] beat failed', err);
+        }
       }
     };
-
-    const onBeforeUnload = () => {
-      if (viewIdRef.current != null) endView(viewIdRef.current, currentPos());
+    const queueFlush = () => {
+      chain = chain.then(() => flush(false));
     };
-    window.addEventListener('pagehide', onBeforeUnload);
+    // Lần gửi cuối lúc rời trang phải đi ngay (keepalive), không xếp hàng sau lần khác.
+    const flushFinal = () => void flush(true, true);
 
-    void begin();
+    void open();
+    const intervalId = setInterval(queueFlush, HEARTBEAT_INTERVAL_MS);
+    if (trackerRef.current) trackerRef.current.onStop = queueFlush;
+    const onHidden = () => {
+      if (document.visibilityState === 'hidden') queueFlush();
+    };
+    document.addEventListener('visibilitychange', onHidden);
+    window.addEventListener('pagehide', flushFinal);
 
     return () => {
       cancelled = true;
-      window.removeEventListener('pagehide', onBeforeUnload);
-      if (intervalId) clearInterval(intervalId);
-      if (viewIdRef.current != null) {
-        endView(viewIdRef.current, currentPos());
-        viewIdRef.current = null;
-      }
+      clearInterval(intervalId);
+      if (trackerRef.current) trackerRef.current.onStop = null;
+      document.removeEventListener('visibilitychange', onHidden);
+      window.removeEventListener('pagehide', flushFinal);
+      flushFinal();
     };
   }, [nodeId, initialPosition, bunnyStatus, track]);
 
