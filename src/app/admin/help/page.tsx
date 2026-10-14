@@ -553,6 +553,13 @@ export default async function AdminHelpPage() {
               dẫn&quot; chỉ hiện với học sinh SAU KHI bài đã bắt đầu, nên có thể viết luôn đề bài
               dạng chữ vào đây nếu không cần ảnh/PDF.
             </p>
+            <p>
+              Chấm xong bài nào là học sinh đó thấy <strong>điểm và nhận xét ngay</strong>, không
+              chờ bài kết thúc (phổ điểm cả lớp vẫn chỉ hiện sau khi kết thúc). Bài đã chấm thì học
+              sinh không tự nộp lại được — nếu cần cho em đó nộp lại, bấm{' '}
+              <strong>&quot;Mở lại&quot;</strong> ở dòng của em trong danh sách bài nộp; nộp lại sẽ
+              xoá điểm cũ để chấm lại.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Shot
                 src="khoa-hoc/06-bai-kiem-tra.png"
