@@ -170,7 +170,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const scheduled = test.phase === 'SCHEDULED';
   const ongoing = test.phase === 'ONGOING';
   const ended = test.phase === 'ENDED';
-  const hasResult = ended && test.mySubmissionStatus === 'GRADED';
+  // Chấm xong là thấy điểm + nhận xét ngay, không chờ bài kết thúc.
+  const hasResult = test.mySubmissionStatus === 'GRADED';
 
   // Giới hạn thời gian làm bài: đang mở mà CHƯA bấm Bắt đầu thì đề bị giấu (BE chốt),
   // chỉ hiện màn bắt đầu. Đã bắt đầu thì chạy đếm ngược tới hạn cá nhân.
@@ -180,6 +181,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const notStarted = ongoing && !test.myAttempt && !reopened;
   const remainingMs = deadlineMs === null ? null : Math.max(0, deadlineMs - nowMs);
   const expired = submittable && deadlineMs !== null && deadlineMs - nowMs <= 0;
+  // Đã chấm thì không tự nộp lại được (BE chặn) — trừ khi giáo viên mở lại cho em đó.
+  const gradedLocked = test.mySubmissionStatus === 'GRADED' && !reopened;
 
   async function handleStart() {
     if (starting) return;
@@ -280,8 +283,8 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             </div>
           )}
 
-          {/* Banner đếm ngược — chỉ khi bài đang mở và đã bắt đầu lượt làm. */}
-          {submittable && remainingMs !== null && (
+          {/* Đếm ngược — chỉ khi đã bắt đầu lượt làm và còn nộp được (chưa khoá vì đã chấm). */}
+          {submittable && !gradedLocked && remainingMs !== null && (
             <div
               role="timer"
               aria-live="off"
@@ -352,6 +355,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
                 ongoing={submittable}
                 deadlineAt={test.myAttempt?.deadlineAt ?? test.endTime}
                 expired={expired}
+                gradedLocked={gradedLocked}
                 status={test.mySubmissionStatus}
                 mySubmission={test.mySubmission}
                 onSubmitted={load}
@@ -413,9 +417,9 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
               ) : (
                 <Card>
                   <CardContent className="text-muted-foreground py-10 text-center text-sm">
-                    {ended
-                      ? 'Giáo viên chưa chấm bài của bạn.'
-                      : 'Điểm chỉ hiện sau khi bài kiểm tra kết thúc.'}
+                    {test.mySubmissionStatus === 'NOT_SUBMITTED'
+                      ? 'Bạn chưa nộp bài.'
+                      : 'Giáo viên chưa chấm bài của bạn. Điểm và nhận xét sẽ hiện ở đây ngay khi chấm xong.'}
                   </CardContent>
                 </Card>
               )}
@@ -487,6 +491,7 @@ function SubmitTab({
   ongoing,
   deadlineAt,
   expired,
+  gradedLocked,
   status,
   mySubmission,
   onSubmitted,
@@ -499,6 +504,8 @@ function SubmitTab({
   deadlineAt: string;
   /** Đồng hồ cá nhân đã về 0 — khoá form + tự nộp phần đang dở. */
   expired: boolean;
+  /** Bài đã chấm và không được mở lại — khoá nộp lại để điểm/nhận xét không bị xoá. */
+  gradedLocked: boolean;
   status: TDetail['mySubmissionStatus'];
   mySubmission: MySubmission | null;
   onSubmitted: () => Promise<boolean>;
@@ -559,17 +566,29 @@ function SubmitTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired]);
 
-  // Hết giờ là khoá hẳn. BE cũng chặn (403) — đây chỉ là để không mời gọi bấm.
-  if (!ongoing || expired) {
+  // Hết giờ hoặc đã chấm là khoá hẳn. BE cũng chặn (403) — đây chỉ là để không mời gọi bấm.
+  const timeLocked = !ongoing || expired;
+  if (timeLocked || gradedLocked) {
     return (
       <Card>
         <CardContent className="text-muted-foreground space-y-2 py-10 text-center text-sm">
           <Lock className="mx-auto size-8" />
-          <p>{expired ? 'Đã hết thời gian làm bài.' : 'Đã hết thời gian nộp bài.'}</p>
+          <p>
+            {expired
+              ? 'Đã hết thời gian làm bài.'
+              : timeLocked
+                ? 'Đã hết thời gian nộp bài.'
+                : 'Bài của bạn đã được chấm nên không nộp lại được nữa.'}
+          </p>
           {saving ? (
             <p className="text-foreground">Đang tự động nộp bài của bạn…</p>
           ) : autoSubmitted ? (
             <p className="text-foreground">Bài đang dở đã được tự động nộp.</p>
+          ) : status === 'GRADED' ? (
+            <p className="text-foreground">
+              Xem điểm và nhận xét ở tab Kết quả.
+              {!timeLocked && ' Cần nộp lại thì liên hệ giáo viên để được mở lại.'}
+            </p>
           ) : status !== 'NOT_SUBMITTED' ? (
             <p className="text-foreground">Bài của bạn đã được ghi nhận.</p>
           ) : null}
@@ -609,11 +628,20 @@ function SubmitTab({
   return (
     <Card>
       <CardContent className="space-y-4 py-4 sm:py-6">
-        {mySubmission && (
-          <p className="bg-muted rounded-md p-3 text-sm">
-            Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong>. Có thể nộp
-            lại (thay bài cũ) đến <strong>{formatDateTimeShort(deadlineAt)}</strong>.
+        {status === 'GRADED' ? (
+          // Chỉ tới được đây khi giáo viên đã mở lại (gradedLocked = false).
+          <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+            Bài đã được chấm. Nộp lại sẽ <strong>thay bài cũ và xoá điểm hiện tại</strong> — giáo
+            viên sẽ chấm lại.
           </p>
+        ) : (
+          mySubmission && (
+            <p className="bg-muted rounded-md p-3 text-sm">
+              Đã nộp lúc <strong>{formatDateTimeShort(mySubmission.updatedAt)}</strong>. Có thể nộp
+              lại (thay bài cũ) đến <strong>{formatDateTimeShort(deadlineAt)}</strong>, cho tới khi
+              giáo viên chấm bài.
+            </p>
+          )
         )}
 
         <div className="space-y-2">

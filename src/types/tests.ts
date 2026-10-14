@@ -66,7 +66,7 @@ export interface AdminTestRow extends TestRow {
 /** Danh sách bài kiểm tra — góc nhìn HỌC SINH (chỉ bài của mình). */
 export interface StudentTestRow extends TestRow {
   mySubmissionStatus: TestSubmissionStatus;
-  /** Chỉ có giá trị khi phase = ENDED và bài đã được chấm. */
+  /** Có giá trị ngay khi bài đã được chấm (không chờ bài kết thúc). */
   myScore: number | null;
 }
 
