@@ -1,7 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  FileText,
+  RotateCcw,
+  RotateCw,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { buildOfficeEmbedUrl, mapToViewer, type ViewerKind } from '@/lib/document-viewer';
@@ -18,7 +27,11 @@ interface Props {
    * Mặc định 'scroll': cuộn dọc cả tập.
    */
   variant?: 'scroll' | 'slider';
+  /** Hiện nút xoay ảnh (chấm bài) — chỉ xoay khi xem, không đổi file gốc. */
+  rotatable?: boolean;
 }
+
+type RotateHandler = (index: number, delta: number) => void;
 
 /**
  * Kích thước modal chấm bài: rộng 80% (sàn 960px để còn đủ 2 cột), cao 100% - 20px. Ảnh phóng to
@@ -30,6 +43,9 @@ export const GRADING_MODAL_SIZE =
 
 interface ViewFile extends TestFile {
   kind: ViewerKind;
+  /** Vị trí trong danh sách đã sort — khoá góc xoay, vì fileUrl có thể trùng. */
+  index: number;
+  rotation: number;
 }
 
 /** Tải từng tệp một: R2 không zip hộ, mà mở 30 tab thì trình duyệt chặn. */
@@ -56,15 +72,30 @@ function downloadAll(items: ViewFile[]) {
  * - 1 PDF: nhúng thẳng.
  * - Trộn nhiều loại: danh sách card, ảnh render inline, còn lại có nút xem/tải.
  */
-export default function TestAttachmentViewer({ files, emptyHint, variant = 'scroll' }: Props) {
+export default function TestAttachmentViewer({
+  files,
+  emptyHint,
+  variant = 'scroll',
+  rotatable = false,
+}: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [rotations, setRotations] = useState<Record<number, number>>({});
+  const onRotate: RotateHandler | undefined = rotatable
+    ? (index, delta) =>
+        setRotations((prev) => ({ ...prev, [index]: ((prev[index] ?? 0) + delta + 360) % 360 }))
+    : undefined;
 
   const items: ViewFile[] = useMemo(
     () =>
       [...files]
         .sort((a, b) => a.order - b.order)
-        .map((f) => ({ ...f, kind: mapToViewer(f.fileName, f.mimeType ?? '') })),
-    [files],
+        .map((f, index) => ({
+          ...f,
+          kind: mapToViewer(f.fileName, f.mimeType ?? ''),
+          index,
+          rotation: rotations[index] ?? 0,
+        })),
+    [files, rotations],
   );
 
   // Lightbox CHỈ duyệt ảnh: nếu cho nó index theo `items`, bấm next từ ảnh cuối sẽ
@@ -88,6 +119,7 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
           items={items}
           keysEnabled={lightboxIndex === null}
           onZoom={(f) => setLightboxIndex(images.indexOf(f))}
+          onRotate={onRotate}
         />
         <Lightbox
           items={images}
@@ -95,6 +127,7 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
           onClose={() => setLightboxIndex(null)}
           onChange={setLightboxIndex}
           fitGradingModal
+          onRotate={onRotate}
         />
       </>
     );
@@ -154,13 +187,7 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
                 aria-label={`Phóng to ${f.fileName}`}
                 className="border-divider block w-full cursor-zoom-in overflow-hidden rounded-lg border"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={f.fileUrl}
-                  alt={f.fileName}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  className="h-auto w-full"
-                />
+                <RotatedImage file={f} loading={i === 0 ? 'eager' : 'lazy'} />
               </button>
             ))}
           </div>
@@ -177,6 +204,9 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
                   <p className="truncate text-sm font-medium">{f.fileName}</p>
                   <p className="text-muted-foreground text-xs">{formatBytes(f.fileSize)}</p>
                 </div>
+                {f.kind === 'image' && onRotate && (
+                  <RotateButtons onRotate={(d) => onRotate(f.index, d)} />
+                )}
                 {f.kind === 'image' ? (
                   <Button
                     size="sm"
@@ -206,13 +236,7 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
                   onClick={() => setLightboxIndex(images.indexOf(f))}
                   className="mt-3 block w-full cursor-zoom-in"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={f.fileUrl}
-                    alt={f.fileName}
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    className="h-auto w-full rounded"
-                  />
+                  <RotatedImage file={f} loading={i === 0 ? 'eager' : 'lazy'} className="rounded" />
                 </button>
               )}
 
@@ -243,6 +267,7 @@ export default function TestAttachmentViewer({ files, emptyHint, variant = 'scro
         index={lightboxIndex}
         onClose={() => setLightboxIndex(null)}
         onChange={setLightboxIndex}
+        onRotate={onRotate}
       />
     </div>
   );
@@ -270,6 +295,93 @@ function DownloadButton({ items }: { items: ViewFile[] }) {
   );
 }
 
+const ROTATE_ACTIONS = [
+  { delta: -90, label: 'Xoay trái', Icon: RotateCcw },
+  { delta: 90, label: 'Xoay phải', Icon: RotateCw },
+] as const;
+
+function RotateButtons({
+  onRotate,
+  className,
+}: {
+  onRotate: (delta: number) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex gap-1', className)}>
+      {ROTATE_ACTIONS.map(({ delta, label, Icon }) => (
+        <Button
+          key={delta}
+          type="button"
+          size="icon-sm"
+          variant="outline"
+          aria-label={label}
+          title={label}
+          onClick={() => onRotate(delta)}
+          className="cursor-pointer"
+        >
+          <Icon />
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+/** Tỉ lệ ảnh theo URL — đổi slide/mở lightbox khỏi phải chờ onLoad mới dựng được khung xoay. */
+const imageRatios = new Map<string, number>();
+
+/**
+ * Ảnh rộng hết khung, xoay theo bội 90°. transform không đổi layout, nên khi xoay ngang
+ * phải tự dựng khung theo tỉ lệ ảnh đã xoay (lấy từ naturalWidth/Height) rồi đặt ảnh giữa.
+ */
+function RotatedImage({
+  file,
+  loading,
+  className,
+}: {
+  file: ViewFile;
+  loading?: 'eager' | 'lazy';
+  className?: string;
+}) {
+  const [ratio, setRatio] = useState(() => imageRatios.get(file.fileUrl) ?? null);
+  const sideways = file.rotation % 180 !== 0;
+
+  function onLoad(e: SyntheticEvent<HTMLImageElement>) {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (!naturalWidth || !naturalHeight) return;
+    imageRatios.set(file.fileUrl, naturalWidth / naturalHeight);
+    setRatio(naturalWidth / naturalHeight);
+  }
+
+  return (
+    <div
+      className={cn('relative w-full overflow-hidden', className)}
+      style={sideways && ratio ? { aspectRatio: 1 / ratio } : undefined}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={file.fileUrl}
+        alt={file.fileName}
+        loading={loading}
+        onLoad={onLoad}
+        className={cn(
+          'h-auto',
+          sideways ? 'absolute top-1/2 left-1/2 max-w-none' : 'block w-full',
+          sideways && !ratio && 'invisible',
+        )}
+        style={
+          sideways
+            ? {
+                width: ratio ? `${ratio * 100}%` : '100%',
+                transform: `translate(-50%, -50%) rotate(${file.rotation}deg)`,
+              }
+            : { transform: `rotate(${file.rotation}deg)` }
+        }
+      />
+    </div>
+  );
+}
+
 /**
  * Chấm bài: mỗi lần 1 ảnh, rộng hết khung và cuộn dọc TRONG khung nếu ảnh cao — chữ viết
  * tay cần đọc ở độ rộng thật, thu cả ảnh vào khung thì không đọc được (còn có click để
@@ -279,11 +391,13 @@ function ImageSlider({
   items,
   keysEnabled,
   onZoom,
+  onRotate,
 }: {
   items: ViewFile[];
   /** Tắt khi lightbox đang mở — nó tự duyệt ảnh bằng ←→, không để hai bên cùng ăn phím. */
   keysEnabled: boolean;
   onZoom: (file: ViewFile) => void;
+  onRotate?: RotateHandler;
 }) {
   const [index, setIndex] = useState(0);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -330,7 +444,10 @@ function ImageSlider({
           <p className="text-muted-foreground text-sm">
             {count} tệp{count > 1 ? ` · ảnh ${current + 1}/${count}` : ''}
           </p>
-          <DownloadButton items={items} />
+          <div className="flex items-center gap-2">
+            {onRotate && <RotateButtons onRotate={(d) => onRotate(file.index, d)} />}
+            <DownloadButton items={items} />
+          </div>
         </div>
         {count > 1 && (
           <div ref={stripRef} className="flex gap-2 overflow-x-auto pb-1">
@@ -347,7 +464,13 @@ function ImageSlider({
                 )}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.fileUrl} alt="" loading="lazy" className="size-full object-cover" />
+                <img
+                  src={f.fileUrl}
+                  alt=""
+                  loading="lazy"
+                  className="size-full object-cover"
+                  style={{ transform: `rotate(${f.rotation}deg)` }}
+                />
                 <span className="bg-background/80 absolute right-0 bottom-0 px-1 text-[10px]">
                   {i + 1}
                 </span>
@@ -368,8 +491,7 @@ function ImageSlider({
             aria-label={`Phóng to ${file.fileName}`}
             className="block w-full cursor-zoom-in"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={file.fileUrl} alt={file.fileName} className="h-auto w-full" />
+            <RotatedImage file={file} />
           </button>
         </div>
         {count > 1 && (
@@ -409,6 +531,7 @@ function Lightbox({
   onClose,
   onChange,
   fitGradingModal,
+  onRotate,
 }: {
   items: ViewFile[];
   index: number | null;
@@ -416,6 +539,7 @@ function Lightbox({
   onChange: (i: number) => void;
   /** Cùng kích thước với modal chấm bài chứa slider. */
   fitGradingModal?: boolean;
+  onRotate?: RotateHandler;
 }) {
   // Duyệt ảnh bằng mũi tên bàn phím — Escape đã có sẵn từ Dialog (radix đóng khi nhấn
   // Escape). Đặt TRƯỚC early-return để không phá thứ tự hook giữa các lần render.
@@ -432,6 +556,7 @@ function Lightbox({
   // items đổi (đổi bài, xoá file) khi lightbox đang mở → index cũ có thể trỏ ra ngoài.
   if (index === null || index < 0 || index >= items.length) return null;
   const file = items[index];
+  const sideways = file.rotation % 180 !== 0;
   const hasPrev = index > 0;
   const hasNext = index < items.length - 1;
 
@@ -452,15 +577,18 @@ function Lightbox({
       >
         <DialogTitle className="sr-only">{file.fileName}</DialogTitle>
         <div
-          className={cn('relative h-full', !fitGradingModal && 'flex items-center justify-center')}
+          className={cn(
+            'relative h-full',
+            // container-type size: ảnh xoay ngang cần giới hạn theo cạnh còn lại của khung (cqw/cqh).
+            !fitGradingModal && '[container-type:size] flex items-center justify-center',
+          )}
         >
           {fitGradingModal ? (
             // Chấm bài: ảnh rộng hết khung, cuộn dọc TRONG khung để đọc chữ viết tay ở độ rộng thật;
             // ảnh thấp hơn khung thì căn giữa. Nút/caption nằm ngoài phần cuộn nên không trôi theo ảnh.
             <div key={index} className="absolute inset-0 overflow-y-auto">
               <div className="flex min-h-full items-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file.fileUrl} alt={file.fileName} className="block h-auto w-full" />
+                <RotatedImage file={file} />
               </div>
             </div>
           ) : (
@@ -468,7 +596,11 @@ function Lightbox({
             <img
               src={file.fileUrl}
               alt={file.fileName}
-              className="max-h-full max-w-full object-contain"
+              className={cn(
+                'object-contain',
+                sideways ? 'max-h-[100cqw] max-w-[100cqh]' : 'max-h-full max-w-full',
+              )}
+              style={{ transform: `rotate(${file.rotation}deg)` }}
             />
           )}
 
@@ -476,6 +608,13 @@ function Lightbox({
             <X className="size-3.5" />
             <span className="sr-only">Đóng</span>
           </DialogClose>
+
+          {onRotate && (
+            <RotateButtons
+              onRotate={(d) => onRotate(file.index, d)}
+              className="absolute top-4 right-14 [&_button]:shadow-md"
+            />
+          )}
 
           {hasPrev && (
             <Button

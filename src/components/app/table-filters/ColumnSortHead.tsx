@@ -51,7 +51,8 @@ export default function ColumnSortHead<V extends string>({
       ariaLabel={`Sắp xếp theo ${label.toLowerCase()}`}
       active={!!active}
       triggerIcon={active ? OrderIcon : ArrowUpDown}
-      activeSuffix={active?.label}
+      // Chỉ một chỉ số thì nhãn đã nói lên tất cả, khỏi lặp "Điểm · Điểm".
+      activeSuffix={options.length > 1 ? active?.label : undefined}
       items={[{ value: UNSORTED, label: 'Không sắp xếp' }, ...options]}
       selectedValue={active ? value : UNSORTED}
       selectedIcon={OrderIcon}

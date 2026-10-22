@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import ColumnFilterHead, {
   type ColumnFilterOption,
 } from '@/components/app/table-filters/ColumnFilterHead';
+import ColumnSortHead from '@/components/app/table-filters/ColumnSortHead';
 import TableSearchInput from '@/components/app/table-filters/TableSearchInput';
 import { ALL_VALUE } from '@/lib/constants';
 import { Label } from '@/components/ui/label';
@@ -45,6 +46,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { handleActionErrors, handleActionResult, handleActionSuccess } from '@/lib/actions';
 import { formatDateTime as formatDateTimeFull } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import type { SortOrder } from '@/types/auth';
 import type { SubmissionRow, TestDetail, TestFile, TestPhase } from '@/types/tests';
 import ScoreDistributionChart from './ScoreDistributionChart';
 import TestAttachmentViewer, { GRADING_MODAL_SIZE } from './TestAttachmentViewer';
@@ -74,6 +76,8 @@ const STATUS: Record<
 const SUBMISSION_STATUS_OPTIONS: ColumnFilterOption[] = (
   Object.keys(STATUS) as SubmissionRow['status'][]
 ).map((value) => ({ value, label: STATUS[value].text }));
+
+const SCORE_SORT_OPTIONS = [{ value: 'score' as const, label: 'Điểm' }];
 
 function formatDateTime(iso: string | null): string {
   return iso ? formatDateTimeFull(iso) : '—';
@@ -218,6 +222,10 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
   const [stats, setStats] = useState(submissions.stats);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(ALL_VALUE);
+  const [scoreSort, setScoreSort] = useState<{ value: 'score' | ''; order: SortOrder }>({
+    value: '',
+    order: 'desc',
+  });
 
   // Hàng đợi chấm bài = danh sách studentId ĐÓNG BĂNG lúc mở panel, cùng vị trí hiện tại.
   //
@@ -246,12 +254,20 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
   // Lọc phía client trên danh sách đã tải sẵn — nhanh, không cần gọi lại BE.
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const filtered = rows.filter((r) => {
       if (statusFilter !== ALL_VALUE && r.status !== statusFilter) return false;
       if (!q) return true;
       return (r.fullName ?? '').toLowerCase().includes(q) || r.email.toLowerCase().includes(q);
     });
-  }, [rows, search, statusFilter]);
+    if (!scoreSort.value) return filtered;
+    const dir = scoreSort.order === 'asc' ? 1 : -1;
+    // Bài chưa có điểm luôn nằm cuối, dù sắp xếp chiều nào.
+    return filtered.sort((a, b) =>
+      a.score === null || b.score === null
+        ? Number(a.score === null) - Number(b.score === null)
+        : (a.score - b.score) * dir,
+    );
+  }, [rows, search, statusFilter, scoreSort]);
 
   const currentRow = useMemo(() => {
     if (!queue) return null;
@@ -372,7 +388,14 @@ export default function AdminTestDetailClient({ courseId, test, submissionsPromi
                   onChange={setStatusFilter}
                 />
                 <TableHead>Nộp lúc</TableHead>
-                <TableHead className="text-center">Điểm</TableHead>
+                <ColumnSortHead
+                  label="Điểm"
+                  value={scoreSort.value}
+                  order={scoreSort.order}
+                  options={SCORE_SORT_OPTIONS}
+                  onChange={(value, order) => setScoreSort({ value, order })}
+                  className="text-center"
+                />
                 <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
@@ -676,6 +699,7 @@ function GradingDialog({
                 files={row.files}
                 emptyHint="Học sinh không nộp tệp nào"
                 variant="slider"
+                rotatable
               />
             </div>
 
