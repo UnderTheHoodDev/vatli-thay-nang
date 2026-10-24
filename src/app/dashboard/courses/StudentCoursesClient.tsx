@@ -3,8 +3,7 @@
 import { Suspense, use, useCallback, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import DataPagination from '@/components/app/DataPagination';
@@ -78,7 +77,7 @@ function CoursesGridSection({
           <EmptyState
             icon={BookOpen}
             title="Chưa có khóa học"
-            description="Hiện chưa có khóa học nào được phát hành."
+            description="Bạn chưa được ghi danh vào khóa học nào. Liên hệ quản trị viên để được thêm vào khóa học."
           />
         </CardContent>
       </Card>
@@ -108,14 +107,6 @@ function CoursesGridSection({
                     <BookOpen className="size-10" />
                   </div>
                 )}
-                {row.isEnrolled && (
-                  <Badge
-                    variant="success"
-                    className="absolute top-2 right-2 flex items-center gap-1"
-                  >
-                    <CheckCircle2 className="size-3" /> Đã ghi danh
-                  </Badge>
-                )}
               </div>
               <CardHeader className="pt-4 pb-2">
                 <CardTitle className="line-clamp-2 text-base">{row.title}</CardTitle>
@@ -132,7 +123,7 @@ function CoursesGridSection({
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-primary text-sm font-semibold">{formatVnd(row.price)}</span>
                   <span className="text-primary group-hover:text-primary/80 inline-flex items-center gap-1.5 text-sm font-medium">
-                    {row.isEnrolled ? 'Tiếp tục học' : 'Vào học'}
+                    Vào học
                     <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
                   </span>
                 </div>
