@@ -43,6 +43,7 @@ import type {
   StudentTestDetail as TDetail,
   TestFilePayload,
 } from '@/types/tests';
+import ClassRankCard from './ClassRankCard';
 import ScoreDistributionChart from './ScoreDistributionChart';
 import TestAttachmentViewer from './TestAttachmentViewer';
 import TestFileUploader from './TestFileUploader';
@@ -370,23 +371,33 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
             <TabsContent value="result" className="mt-4">
               {hasResult ? (
                 <div className="space-y-4">
-                  <Card>
-                    <CardContent className="space-y-3 py-4 sm:py-6">
-                      <p className="text-muted-foreground text-sm">Điểm của bạn</p>
-                      <p className="text-3xl font-semibold">
-                        {test.myScore}
-                        <span className="text-muted-foreground text-lg"> / {test.maxScore}</span>
-                      </p>
-                      {test.myScore !== null && (
-                        <Progress
-                          value={(test.myScore / test.maxScore) * 100}
-                          indicatorClassName={
-                            SCORE_TIER_CLASS[scoreTier(test.myScore, test.maxScore)]
-                          }
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                      <CardContent className="flex h-full flex-col justify-center space-y-3 py-4 sm:py-6">
+                        <p className="text-muted-foreground text-sm">Điểm của bạn</p>
+                        <p className="text-3xl font-semibold">
+                          {test.myScore}
+                          <span className="text-muted-foreground text-lg"> / {test.maxScore}</span>
+                        </p>
+                        {test.myScore !== null && (
+                          <Progress
+                            value={(test.myScore / test.maxScore) * 100}
+                            indicatorClassName={
+                              SCORE_TIER_CLASS[scoreTier(test.myScore, test.maxScore)]
+                            }
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                    {participants && (
+                      <ClassRankCard
+                        rank={participants.myRank}
+                        gradedCount={participants.gradedCount}
+                        pendingCount={participants.pendingCount}
+                        minGraded={participants.minGradedForDistribution}
+                      />
+                    )}
+                  </div>
 
                   {test.mySubmission?.feedback && (
                     <Card>
@@ -714,6 +725,8 @@ function StatsTab({
               {participants.myScore !== null && (
                 <span className="text-muted-foreground ml-2 font-normal">
                   · điểm của bạn: {participants.myScore}/{maxScore}
+                  {participants.myRank &&
+                    ` · hạng ${participants.myRank.rank}/${participants.gradedCount}`}
                 </span>
               )}
             </p>
