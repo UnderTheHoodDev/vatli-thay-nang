@@ -15,6 +15,8 @@ import StudentTestDetail from './StudentTestDetail';
 
 interface Props {
   courseId: number;
+  openTestId: number | null;
+  onOpenTestChange: (testId: number | null) => void;
 }
 
 const PHASE: Record<TestPhase, { text: string; variant: 'secondary' | 'default' | 'outline' }> = {
@@ -63,10 +65,9 @@ function CountdownBadge({ endTime }: { endTime: string }) {
   );
 }
 
-export default function StudentTestsPanel({ courseId }: Props) {
+export default function StudentTestsPanel({ courseId, openTestId, onOpenTestChange }: Props) {
   const [tests, setTests] = useState<StudentTestRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openId, setOpenId] = useState<number | null>(null);
   const mountedRef = useRef(true);
   const requestSeqRef = useRef(0);
 
@@ -93,7 +94,7 @@ export default function StudentTestsPanel({ courseId }: Props) {
   }, [load]);
 
   function openTest(id: number) {
-    setOpenId(id);
+    onOpenTestChange(id);
   }
 
   function handleCardKeyDown(e: KeyboardEvent<HTMLDivElement>, id: number) {
@@ -105,13 +106,13 @@ export default function StudentTestsPanel({ courseId }: Props) {
     if (e.key === ' ') openTest(id);
   }
 
-  if (openId !== null) {
+  if (openTestId !== null) {
     return (
       <StudentTestDetail
         courseId={courseId}
-        testId={openId}
+        testId={openTestId}
         onBack={() => {
-          setOpenId(null);
+          onOpenTestChange(null);
           void load();
         }}
       />
