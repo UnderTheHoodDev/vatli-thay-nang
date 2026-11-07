@@ -79,6 +79,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   const [starting, setStarting] = useState(false);
   // Đồng hồ đếm ngược thời gian làm bài — tick mỗi giây khi có lượt đang chạy.
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
   const mountedRef = useRef(true);
   const requestSeqRef = useRef(0);
 
@@ -112,6 +113,7 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
     }
 
     setTest(res.data);
+    if (res.serverTime) setClockOffsetMs(new Date(res.serverTime).getTime() - Date.now());
     setLoading(false);
 
     // Chưa tới giờ thì BE chặn tab thống kê (403) — đừng gọi cho phí.
@@ -177,11 +179,11 @@ export default function StudentTestDetail({ courseId, testId, onBack }: Props) {
   // Giới hạn thời gian làm bài: đang mở mà CHƯA bấm Bắt đầu thì đề bị giấu (BE chốt),
   // chỉ hiện màn bắt đầu. Đã bắt đầu thì chạy đếm ngược tới hạn cá nhân.
   // Đang trong hạn nộp bù admin cấp — bỏ qua cả phase lẫn màn "Bắt đầu làm bài".
-  const reopened = test.myReopen !== null && deadlineMs !== null && deadlineMs > nowMs;
+  const remainingMs = deadlineMs === null ? null : Math.max(0, deadlineMs - nowMs - clockOffsetMs);
+  const reopened = test.myReopen !== null && remainingMs !== null && remainingMs > 0;
   const submittable = (ongoing || reopened) && !scheduled;
   const notStarted = ongoing && !test.myAttempt && !reopened;
-  const remainingMs = deadlineMs === null ? null : Math.max(0, deadlineMs - nowMs);
-  const expired = submittable && deadlineMs !== null && deadlineMs - nowMs <= 0;
+  const expired = submittable && remainingMs === 0;
   // Đã chấm thì không tự nộp lại được (BE chặn) — trừ khi giáo viên mở lại cho em đó.
   const gradedLocked = test.mySubmissionStatus === 'GRADED' && !reopened;
 
